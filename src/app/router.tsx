@@ -5,6 +5,8 @@ import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
 import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
+import { JurorHomePage } from '@/features/scoring/JurorHomePage'
+import { ScoringPage } from '@/features/scoring/ScoringPage'
 import { TeamsPage } from '@/features/teams/TeamsPage'
 import { EventJurorsPage } from '@/features/users/EventJurorsPage'
 import { UsersPage } from '@/features/users/UsersPage'
@@ -28,8 +30,8 @@ export const routes: RouteObject[] = [
           </RequireRole>
         ),
         children: [
-          { index: true, element: <PlaceholderPage title="scoring.title" /> },
-          { path: ':eventId/:teamId', element: <PlaceholderPage title="scoring.scoreTeam" /> },
+          { index: true, element: <JurorHomePage /> },
+          { path: ':eventId/:teamId', element: <ScoringPage /> },
         ],
       },
       {

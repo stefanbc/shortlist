@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { eventPhase } from '@/domain/eventPhase'
 import type { Id } from '@/domain/types'
 import { useEvent } from '@/features/events/api'
@@ -247,4 +247,114 @@ export function useScoreSync(eventId: Id): { pending: number; rejected: number; 
     else rejected++
   }
   return { pending, rejected, online }
+}
+
+export type CellSync = { status: 'pending' } | { status: 'rejected'; reason: RejectReason }
+
+/** Per cell (`${teamId}:${criterionId}`), the signed-in juror's taps for the event that the
+ * server hasn't accepted yet: still pending, or rejected with the reason. A cell missing
+ * here is saved (or empty). Never includes another juror's taps. */
+export function useMyCellSync(eventId: Id): Record<string, CellSync> {
+  const jurorId = useSession((state) => state.profile?.id)
+  const items = useScoreQueue((state) => state.items)
+  return useMemo(() => {
+    const cells: Record<string, CellSync> = {}
+    for (const item of Object.values(items)) {
+      if (item.eventId !== eventId || item.jurorId !== jurorId) continue
+      cells[item.key] =
+        item.status === 'rejected'
+          ? { status: 'rejected', reason: item.reason ?? 'invalid' }
+          : { status: 'pending' }
+    }
+    return cells
+  }, [items, eventId, jurorId])
+}
+
+export const myNoteKey = (teamId: Id, jurorId?: Id) => ['notes', 'mine', teamId, jurorId] as const
+
+/** The signed-in juror's private note on a team ('' when there is none). */
+export function useMyNote(teamId: Id) {
+  const jurorId = useSession((state) => state.profile?.id)
+  return useQuery({
+    queryKey: myNoteKey(teamId, jurorId),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('juror_notes')
+        .select('body')
+        .eq('team_id', teamId)
+        .eq('juror_id', jurorId as Id)
+        .maybeSingle()
+      if (error) throw error
+      return data?.body ?? ''
+    },
+    enabled: Boolean(teamId && jurorId),
+    // A refetch must never overwrite what the juror is typing.
+    refetchOnWindowFocus: false,
+  })
+}
+
+export const NOTE_SAVE_DELAY_MS = 600
+
+export type NoteSaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+/** Saves the juror's note `NOTE_SAVE_DELAY_MS` after the last keystroke (upsert on
+ * team + juror). `flush()` saves a waiting edit now; it also runs on unmount, so leaving the
+ * team never drops the last words typed. */
+export function useSaveNote(): {
+  save(teamId: Id, body: string): void
+  flush(): void
+  status: NoteSaveStatus
+} {
+  const queryClient = useQueryClient()
+  const jurorId = useSession((state) => state.profile?.id)
+  const [status, setStatus] = useState<NoteSaveStatus>('idle')
+  const waiting = useRef<{ teamId: Id; body: string } | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const mounted = useRef(true)
+
+  const write = useCallback(
+    async (teamId: Id, body: string) => {
+      if (!jurorId) return
+      if (mounted.current) setStatus('saving')
+      const { error } = await supabase
+        .from('juror_notes')
+        .upsert({ team_id: teamId, juror_id: jurorId, body }, { onConflict: 'team_id,juror_id' })
+      if (error) {
+        if (mounted.current) setStatus('error')
+        return
+      }
+      queryClient.setQueryData(myNoteKey(teamId, jurorId), body)
+      if (mounted.current) setStatus('saved')
+    },
+    [jurorId, queryClient],
+  )
+
+  const flush = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current)
+    timer.current = null
+    const next = waiting.current
+    waiting.current = null
+    if (next) void write(next.teamId, next.body)
+  }, [write])
+
+  const save = useCallback(
+    (teamId: Id, body: string) => {
+      // A different team's waiting edit goes out first rather than being replaced.
+      if (waiting.current && waiting.current.teamId !== teamId) flush()
+      waiting.current = { teamId, body }
+      if (timer.current) clearTimeout(timer.current)
+      timer.current = setTimeout(flush, NOTE_SAVE_DELAY_MS)
+    },
+    [flush],
+  )
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      flush()
+    }
+  }, [flush])
+
+  return { save, flush, status }
 }

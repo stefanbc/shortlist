@@ -27,7 +27,18 @@ vi.mock('@/features/events/api', async (importOriginal) => {
     useSaveEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useSetEventStatus: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useCopyEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+    useEventUpdates: () => {},
   }
+})
+
+// The scoring screen's own data (see ScoringPage.test.tsx); here it stays loading.
+vi.mock('@/features/teams/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/teams/api')>()
+  return { ...actual, useTeams: () => ({ data: undefined, isLoading: true }) }
+})
+vi.mock('@/features/criteria/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/criteria/api')>()
+  return { ...actual, useCriteria: () => ({ data: undefined, isLoading: true }) }
 })
 
 function renderAt(path: string) {
@@ -58,7 +69,7 @@ describe('router', () => {
 
   it('juror scoring uses the slim shell without organizer navigation', async () => {
     renderAt('/score/e1/t1')
-    expect(await screen.findByRole('heading', { name: 'Score team' })).toBeInTheDocument()
+    expect(await screen.findByText('Loading the team…')).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Preferences' })).toBeInTheDocument()
   })
@@ -77,7 +88,7 @@ describe('router', () => {
 
   it('gates /score behind the juror role guard', async () => {
     renderAt('/score/e1/t1')
-    await screen.findByRole('heading', { name: 'Score team' })
+    await screen.findByText('Loading the team…')
     expect(document.querySelector('[data-guard-role="juror"]')).toBeInTheDocument()
   })
 })

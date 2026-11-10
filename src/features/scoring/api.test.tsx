@@ -5,7 +5,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { EventRow } from '@/features/events/api'
 import { ScoreRejectedError, queueId, useScoreQueue, type QueuedScore } from '@/stores/scoreQueue'
 import { useSession } from '@/stores/session'
-import { myScoresKey, sendScore, timeoutSignal, useMyScores, useScoreSync } from './api'
+import {
+  NOTE_SAVE_DELAY_MS,
+  myNoteKey,
+  myScoresKey,
+  sendScore,
+  timeoutSignal,
+  useMyCellSync,
+  useMyNote,
+  useMyScores,
+  useSaveNote,
+  useScoreSync,
+} from './api'
 
 const { mockRpc, mockFrom, mockUseEvent, authSession } = vi.hoisted(() => ({
   mockRpc: vi.fn(),
@@ -557,5 +568,98 @@ describe('useScoreSync', () => {
     rerender()
 
     await waitFor(() => expect(items()).toEqual({}))
+  })
+})
+
+describe('useMyCellSync', () => {
+  it("reports this juror's pending and rejected cells for the event only", () => {
+    seed(
+      queued({ key: 'team-1:crit-1', status: 'pending' }),
+      queued({ key: 'team-1:crit-2', criterionId: 'crit-2', status: 'rejected', reason: 'locked' }),
+      queued({ key: 'team-1:crit-3', criterionId: 'crit-3', jurorId: B }),
+      queued({ key: 'team-9:crit-1', teamId: 'team-9', eventId: 'ev-2' }),
+    )
+    const { result } = renderHook(() => useMyCellSync('ev-1'))
+    expect(result.current).toEqual({
+      'team-1:crit-1': { status: 'pending' },
+      'team-1:crit-2': { status: 'rejected', reason: 'locked' },
+    })
+  })
+})
+
+describe('juror notes', () => {
+  /** Stand-in for `from('juror_notes').select('body').eq().eq().maybeSingle()`. */
+  function noteReturns(body: string | null) {
+    const eq = vi.fn()
+    const chain = {
+      eq,
+      maybeSingle: () => Promise.resolve({ data: body === null ? null : { body }, error: null }),
+    }
+    eq.mockReturnValue(chain)
+    mockFrom.mockReturnValue({ select: () => chain })
+    return eq
+  }
+
+  it('useMyNote loads the juror’s own note for the team, or an empty string', async () => {
+    const eq = noteReturns(null)
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useMyNote('team-1'), { wrapper })
+    await waitFor(() => expect(result.current.data).toBe(''))
+    expect(mockFrom).toHaveBeenCalledWith('juror_notes')
+    expect(eq).toHaveBeenCalledWith('team_id', 'team-1')
+    expect(eq).toHaveBeenCalledWith('juror_id', A)
+  })
+
+  it('useSaveNote upserts once, 600 ms after the last edit, and caches the body', async () => {
+    vi.useFakeTimers()
+    const upsert = vi.fn().mockResolvedValue({ error: null })
+    mockFrom.mockReturnValue({ upsert })
+    const { wrapper, queryClient } = setup()
+    const { result } = renderHook(() => useSaveNote(), { wrapper })
+
+    act(() => result.current.save('team-1', 'Strong'))
+    act(() => vi.advanceTimersByTime(NOTE_SAVE_DELAY_MS - 1))
+    act(() => result.current.save('team-1', 'Strong demo'))
+    act(() => vi.advanceTimersByTime(NOTE_SAVE_DELAY_MS - 1))
+    expect(upsert).not.toHaveBeenCalled()
+
+    act(() => vi.advanceTimersByTime(1))
+    await settle()
+    expect(upsert).toHaveBeenCalledTimes(1)
+    expect(upsert).toHaveBeenCalledWith(
+      { team_id: 'team-1', juror_id: A, body: 'Strong demo' },
+      { onConflict: 'team_id,juror_id' },
+    )
+    expect(queryClient.getQueryData(myNoteKey('team-1', A))).toBe('Strong demo')
+    expect(result.current.status).toBe('saved')
+  })
+
+  it('useSaveNote saves a waiting edit right away on unmount', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null })
+    mockFrom.mockReturnValue({ upsert })
+    const { wrapper } = setup()
+    const { result, unmount } = renderHook(() => useSaveNote(), { wrapper })
+
+    act(() => result.current.save('team-1', 'Remember the demo'))
+    unmount()
+    await settle()
+    expect(upsert).toHaveBeenCalledWith(
+      { team_id: 'team-1', juror_id: A, body: 'Remember the demo' },
+      { onConflict: 'team_id,juror_id' },
+    )
+  })
+
+  it('useSaveNote reports an error when the write fails', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: { message: 'offline' } })
+    mockFrom.mockReturnValue({ upsert })
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useSaveNote(), { wrapper })
+
+    act(() => {
+      result.current.save('team-1', 'x')
+      result.current.flush()
+    })
+    await settle()
+    expect(result.current.status).toBe('error')
   })
 })

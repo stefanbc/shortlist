@@ -193,7 +193,81 @@
   },
   "scoring": {
     "title": "Your teams",
-    "scoreTeam": "Score team"
+    "noEventTitle": "No event yet",
+    "noEventBody": "When an organizer adds you to an event's jury, its teams show up here.",
+    "noTeamsTitle": "No teams yet",
+    "noTeamsBody": "The organizer hasn't added teams to {{event}} yet.",
+    "homeHint": "Teams in pitch order. Open any team to score it, and come back to unfinished ones any time.",
+    "status": {
+      "notStarted": "Not started",
+      "inProgress": "{{done}}/{{total}} scored",
+      "complete": "Complete",
+      "noShow": "No-show",
+      "notSaved": "Not saved: {{count}}"
+    },
+    "nowPitching": "Now pitching",
+    "openNowPitching": "Score {{team}}",
+    "teamPosition": "Team {{n}} / {{total}}",
+    "progressLabel": "{{done}} of {{total}} criteria scored",
+    "criteriaNav": "Criteria",
+    "criterionPosition": "Criterion {{n}} of {{total}}",
+    "tileLabel": "Criterion {{n}}: {{name}}, {{state}}",
+    "tileScore": "score {{value}}",
+    "tileNoScore": "no score",
+    "tileNotSaved": "{{value}} not saved",
+    "tilePending": "score {{value}}, saving",
+    "weight": "Weight {{weight}}",
+    "noScore": "No score",
+    "scoreButtons": "Score for {{criterion}}",
+    "clear": "Clear score",
+    "previous": "Previous criterion",
+    "next": "Next criterion",
+    "backToTeams": "All teams",
+    "tapHint": "Tap a score to save it and move on. Swipe the card or tap a tile to jump.",
+    "keyHint": "Keys 1–5 score, . adds a half, Backspace clears, ↑ ↓ move, Enter goes to the next one.",
+    "loading": "Loading the team…",
+    "teamNotFoundTitle": "Team not found",
+    "teamNotFoundBody": "This team isn't part of the event anymore. Pick another one from your list.",
+    "timer": {
+      "left": "{{time}} left",
+      "over": "{{time}} over",
+      "start": "Start {{minutes}}-min timer",
+      "reset": "Reset timer",
+      "onStageLabel": "Pitch time for the team on stage"
+    },
+    "sync": {
+      "saved": "All saved",
+      "pending": "Saving {{count}}…",
+      "offline": "Offline: {{count}} waiting",
+      "offlineIdle": "Offline",
+      "rejected": "Not saved: {{count}}"
+    },
+    "rejected": {
+      "not_open": "Scoring isn't open, so this score wasn't saved.",
+      "locked": "Scoring is locked, so this score wasn't saved.",
+      "not_assigned": "You're not on this event's jury, so this score wasn't saved.",
+      "invalid": "The server refused this score, so it wasn't saved. Enter it again or tell the organizer."
+    },
+    "rejectedTitle": "Some scores weren't saved",
+    "disabled": {
+      "setup": "Scoring opens {{time}}. You can look around until then.",
+      "locked": "Scoring is locked. Your saved scores are final.",
+      "noShow": "This team is marked as a no-show, so it isn't scored."
+    },
+    "note": {
+      "toggle": "Private note",
+      "placeholder": "Only you can see this note. Jot down what to remember about this team.",
+      "label": "Private note about {{team}}",
+      "saving": "Saving note…",
+      "saved": "Note saved",
+      "error": "Note not saved. Check your connection; it saves again as you type."
+    },
+    "nowPitchingDialog": {
+      "title": "{{team}} is now pitching",
+      "description": "Switch to scoring {{team}}? The scores you've given so far stay saved.",
+      "switch": "Switch",
+      "stay": "Stay here"
+    }
   },
   "reports": {
     "podium": "Podium",

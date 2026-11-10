@@ -193,7 +193,81 @@
   },
   "scoring": {
     "title": "Echipele tale",
-    "scoreTeam": "Notează echipa"
+    "noEventTitle": "Niciun eveniment încă",
+    "noEventBody": "Când un organizator te adaugă în juriul unui eveniment, echipele lui apar aici.",
+    "noTeamsTitle": "Nicio echipă încă",
+    "noTeamsBody": "Organizatorul nu a adăugat încă echipe la {{event}}.",
+    "homeHint": "Echipele în ordinea prezentării. Deschide orice echipă ca s-o notezi și revino oricând la cele neterminate.",
+    "status": {
+      "notStarted": "Neînceput",
+      "inProgress": "{{done}}/{{total}} notate",
+      "complete": "Complet",
+      "noShow": "Absentă",
+      "notSaved": "Nesalvate: {{count}}"
+    },
+    "nowPitching": "Prezintă acum",
+    "openNowPitching": "Notează {{team}}",
+    "teamPosition": "Echipa {{n}} / {{total}}",
+    "progressLabel": "{{done}} din {{total}} criterii notate",
+    "criteriaNav": "Criterii",
+    "criterionPosition": "Criteriul {{n}} din {{total}}",
+    "tileLabel": "Criteriul {{n}}: {{name}}, {{state}}",
+    "tileScore": "nota {{value}}",
+    "tileNoScore": "fără notă",
+    "tileNotSaved": "{{value}} nesalvată",
+    "tilePending": "nota {{value}}, se salvează",
+    "weight": "Pondere {{weight}}",
+    "noScore": "Fără notă",
+    "scoreButtons": "Nota pentru {{criterion}}",
+    "clear": "Șterge nota",
+    "previous": "Criteriul anterior",
+    "next": "Criteriul următor",
+    "backToTeams": "Toate echipele",
+    "tapHint": "Atinge o notă ca s-o salvezi și să treci mai departe. Glisează cardul sau atinge un criteriu ca să sari la el.",
+    "keyHint": "Tastele 1–5 notează, . adaugă o jumătate, Backspace șterge, ↑ ↓ mută, Enter trece la următorul.",
+    "loading": "Se încarcă echipa…",
+    "teamNotFoundTitle": "Echipa nu a fost găsită",
+    "teamNotFoundBody": "Echipa nu mai face parte din eveniment. Alege alta din listă.",
+    "timer": {
+      "left": "mai sunt {{time}}",
+      "over": "depășit cu {{time}}",
+      "start": "Pornește cronometrul de {{minutes}} min",
+      "reset": "Resetează cronometrul",
+      "onStageLabel": "Timpul de prezentare al echipei de pe scenă"
+    },
+    "sync": {
+      "saved": "Totul salvat",
+      "pending": "Se salvează {{count}}…",
+      "offline": "Offline: {{count}} în așteptare",
+      "offlineIdle": "Offline",
+      "rejected": "Nesalvate: {{count}}"
+    },
+    "rejected": {
+      "not_open": "Jurizarea nu este deschisă, așa că nota nu a fost salvată.",
+      "locked": "Jurizarea este închisă, așa că nota nu a fost salvată.",
+      "not_assigned": "Nu faci parte din juriul acestui eveniment, așa că nota nu a fost salvată.",
+      "invalid": "Serverul a refuzat nota, așa că nu a fost salvată. Introdu-o din nou sau anunță organizatorul."
+    },
+    "rejectedTitle": "Unele note nu au fost salvate",
+    "disabled": {
+      "setup": "Jurizarea începe {{time}}. Până atunci poți explora.",
+      "locked": "Jurizarea este închisă. Notele salvate sunt finale.",
+      "noShow": "Echipa este marcată ca absentă, așa că nu se notează."
+    },
+    "note": {
+      "toggle": "Notiță privată",
+      "placeholder": "Doar tu vezi această notiță. Notează ce vrei să-ți amintești despre echipă.",
+      "label": "Notiță privată despre {{team}}",
+      "saving": "Se salvează notița…",
+      "saved": "Notiță salvată",
+      "error": "Notița nu a fost salvată. Verifică conexiunea; se salvează din nou când scrii."
+    },
+    "nowPitchingDialog": {
+      "title": "{{team}} prezintă acum",
+      "description": "Treci la notarea echipei {{team}}? Notele date până acum rămân salvate.",
+      "switch": "Schimbă",
+      "stay": "Rămân aici"
+    }
   },
   "reports": {
     "podium": "Podium",

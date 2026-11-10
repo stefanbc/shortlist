@@ -3,10 +3,10 @@ import { renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
-import { toEventRow, useActiveEvent } from './api'
+import { toEventRow, useActiveEvent, useEventUpdates, type EventRow } from './api'
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { from: vi.fn() },
+  supabase: { from: vi.fn(), channel: vi.fn(), removeChannel: vi.fn() },
 }))
 
 /** A minimal stand-in for the chainable supabase query builder: `.select().order()`
@@ -167,5 +167,71 @@ describe('useActiveEvent', () => {
 
     await waitFor(() => expect(result.current).not.toBeNull())
     expect(result.current?.id).toBe('most-recent')
+  })
+})
+
+describe('useEventUpdates', () => {
+  type Handler = (payload: { new: Record<string, unknown> }) => void
+
+  function mockChannel() {
+    let handler: Handler | null = null
+    const channel = {
+      on: vi.fn((_type: string, _filter: unknown, cb: Handler) => {
+        handler = cb
+        return channel
+      }),
+      subscribe: vi.fn(() => channel),
+    }
+    vi.mocked(supabase.channel).mockReturnValue(channel as never)
+    return { channel, emit: (row: Record<string, unknown>) => handler?.({ new: row }) }
+  }
+
+  const DB_ROW = {
+    id: 'ev-1',
+    name: 'Astra Hack',
+    starts_at: '2026-01-01T09:00:00.000Z',
+    ends_at: '2026-01-01T18:00:00.000Z',
+    status_override: 'locked',
+    locked_at: '2026-01-01T17:00:00.000Z',
+    pitch_minutes: 7,
+    now_pitching_team_id: 'team-4',
+    now_pitching_since: '2026-01-01T12:00:00.000Z',
+  }
+
+  it('subscribes to UPDATEs of this event row and writes them into the event cache', () => {
+    const { channel, emit } = mockChannel()
+    const queryClient = new QueryClient()
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
+    const local = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+    renderHook(() => useEventUpdates('ev-1'), { wrapper: local })
+
+    expect(channel.on).toHaveBeenCalledWith(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'events', filter: 'id=eq.ev-1' },
+      expect.any(Function),
+    )
+    expect(channel.subscribe).toHaveBeenCalled()
+
+    emit(DB_ROW)
+    expect(queryClient.getQueryData<EventRow>(['events', 'ev-1'])).toMatchObject({
+      statusOverride: 'locked',
+      nowPitchingTeamId: 'team-4',
+    })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['events'], exact: true })
+  })
+
+  it('removes the channel on unmount', () => {
+    const { channel } = mockChannel()
+    const { unmount } = renderHook(() => useEventUpdates('ev-1'), { wrapper })
+    unmount()
+    expect(supabase.removeChannel).toHaveBeenCalledWith(channel)
+  })
+
+  it('does nothing without an event id', () => {
+    mockChannel()
+    renderHook(() => useEventUpdates(''), { wrapper })
+    expect(supabase.channel).not.toHaveBeenCalled()
   })
 })

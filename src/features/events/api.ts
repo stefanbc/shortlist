@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import type { ParseKeys, TFunction } from 'i18next'
 import { eventPhase, type EventTiming, type StatusOverride } from '@/domain/eventPhase'
 import { eventInputSchema, type EventInput } from '@/domain/schemas'
@@ -72,6 +73,30 @@ export function useEvent(id: Id): UseQueryResult<EventRow> {
     },
     enabled: Boolean(id),
   })
+}
+
+/** Keeps the cached event live: subscribes to Realtime UPDATEs of the event's row (who is
+ * pitching, open/lock overrides, dates) and writes each new row into `['events', id]`.
+ * The channel is removed on unmount. */
+export function useEventUpdates(eventId: Id): void {
+  const queryClient = useQueryClient()
+  useEffect(() => {
+    if (!eventId) return
+    const channel = supabase
+      .channel(`event:${eventId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${eventId}` },
+        (payload) => {
+          queryClient.setQueryData(['events', eventId], toEventRow(payload.new as EventDbRow))
+          void queryClient.invalidateQueries({ queryKey: ['events'], exact: true })
+        },
+      )
+      .subscribe()
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [eventId, queryClient])
 }
 
 /** Creates a blank event (no `id`) or updates an existing one's name/dates/pitch length. */
