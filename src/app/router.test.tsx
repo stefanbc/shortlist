@@ -14,6 +14,18 @@ vi.mock('./guards', () => ({
   ),
 }))
 
+// EventsPage/EventSettingsPage own their data-fetching behaviour (see their own tests);
+// here we only need them to render without a QueryClientProvider or a live backend.
+vi.mock('@/features/events/api', () => ({
+  useEvents: () => ({ data: [], isLoading: false }),
+  useEvent: () => ({ data: undefined, isLoading: true }),
+  useSaveEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useSetEventStatus: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCopyEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  toDateTimeLocal: (value: string) => value,
+  fromDateTimeLocal: (value: string) => value,
+}))
+
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(<RouterProvider router={router} />)

@@ -2,6 +2,8 @@ import { Navigate, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
+import { EventSettingsPage } from '@/features/events/EventSettingsPage'
+import { EventsPage } from '@/features/events/EventsPage'
 import { RequireRole } from './guards'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
@@ -35,12 +37,12 @@ export const routes: RouteObject[] = [
         ),
         children: [
           { index: true, element: <PlaceholderPage title="dashboard.title" /> },
-          { path: 'events', element: <PlaceholderPage title="events.title" /> },
+          { path: 'events', element: <EventsPage /> },
           {
             path: 'events/:eventId',
             children: [
               { index: true, element: <Navigate to="settings" replace /> },
-              { path: 'settings', element: <PlaceholderPage title="events.settings" /> },
+              { path: 'settings', element: <EventSettingsPage /> },
               { path: 'teams', element: <PlaceholderPage title="events.teams" /> },
               { path: 'criteria', element: <PlaceholderPage title="events.criteria" /> },
               { path: 'jurors', element: <PlaceholderPage title="events.jurors" /> },
