@@ -43,8 +43,8 @@ function EventSummary({ event, now }: { event: EventRow; now: Date }) {
 
 /** "Now pitching" control: pick a team directly, advance to the next one in pitch order,
  * or clear the stage. All three go through `set_now_pitching`, kept live for jurors via
- * `useEventUpdates`. */
-function NowPitchingCard({ event, teams }: { event: EventRow; teams: TeamWithProject[] }) {
+ * `useEventUpdates`. Exported for its own direct test. */
+export function NowPitchingCard({ event, teams }: { event: EventRow; teams: TeamWithProject[] }) {
   const { t } = useTranslation()
   const setNowPitching = useSetNowPitching()
 

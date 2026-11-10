@@ -37,7 +37,9 @@ export function toScoreRow(row: ScoreDbRow): Score & { updatedAt: string } {
 }
 
 /** Fetches every score row for the event, paging past `SCORES_PAGE_SIZE` rather than
- * silently truncating at PostgREST's default limit. */
+ * silently truncating at PostgREST's default limit. Orders by `id` (the primary key) so
+ * each page is a fixed, non-overlapping slice -- without an explicit order, Postgres is
+ * free to return rows in a different sequence per page, which can skip or repeat rows. */
 async function fetchAllScores(eventId: Id): Promise<ScoreDbRow[]> {
   const rows: ScoreDbRow[] = []
   let from = 0
@@ -46,6 +48,7 @@ async function fetchAllScores(eventId: Id): Promise<ScoreDbRow[]> {
       .from('scores')
       .select(SCORE_COLUMNS)
       .eq('event_id', eventId)
+      .order('id', { ascending: true })
       .range(from, from + SCORES_PAGE_SIZE - 1)
     if (error) throw error
     const page = data as ScoreDbRow[]

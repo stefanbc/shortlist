@@ -160,7 +160,7 @@ describe('useEventScores', () => {
     vi.useRealTimers()
   })
 
-  it('pages past 1000 rows', async () => {
+  it('orders deterministically before paging, and returns every row exactly once across pages', async () => {
     mockChannel()
     const page1 = Array.from({ length: 1000 }, (_, i) => ({
       team_id: `t${i}`,
@@ -173,19 +173,27 @@ describe('useEventScores', () => {
       { team_id: 'tLast', criterion_id: 'c1', juror_id: 'j1', value: 3, updated_at: '2026-01-01T00:00:00Z' },
     ]
     let call = 0
-    vi.mocked(supabase.from).mockImplementation(() => {
-      const node = {
-        select: () => node,
-        eq: () => node,
-        range: () => Promise.resolve({ data: call++ === 0 ? page1 : page2, error: null }),
-      }
-      return node as never
-    })
+    const order = vi.fn(() => node)
+    const range = vi.fn(() => Promise.resolve({ data: call++ === 0 ? page1 : page2, error: null }))
+    const node = { select: () => node, eq: () => node, order, range }
+    vi.mocked(supabase.from).mockImplementation(() => node as never)
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     const { result } = renderHook(() => useEventScores('ev-1'), { wrapper: wrapper(queryClient) })
 
     await waitFor(() => expect(result.current.data).toHaveLength(1001))
+
+    // Every row appears exactly once -- no gap or overlap between the two pages.
+    const teamIds = result.current.data!.map((row) => row.teamId)
+    expect(new Set(teamIds).size).toBe(1001)
+
+    // .order() must run before each .range() call, not just be called at some point --
+    // otherwise Postgres has no fixed row order and pages can overlap or skip rows.
+    expect(order).toHaveBeenCalled()
+    expect(range).toHaveBeenCalledTimes(2)
+    for (let i = 0; i < range.mock.invocationCallOrder.length; i++) {
+      expect(order.mock.invocationCallOrder[i]).toBeLessThan(range.mock.invocationCallOrder[i])
+    }
   })
 })
 
