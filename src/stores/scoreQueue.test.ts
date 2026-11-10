@@ -143,6 +143,19 @@ describe('scoreQueue', () => {
     expect(item('team-1:crit-2')!).toMatchObject({ value: 2, status: 'pending' })
   })
 
+  it('wrong_juror keeps the item pending (never removed or rejected) and stops the flush', async () => {
+    enqueue({ ...cell(), value: 3 }, T0)
+    enqueue({ ...cell({ criterionId: 'crit-2' }), value: 2 }, T0)
+    const send = vi.fn<SendScore>().mockResolvedValue('wrong_juror')
+
+    await flush(send)
+
+    expect(send).toHaveBeenCalledTimes(1)
+    expect(item('team-1:crit-1')).toMatchObject({ value: 3, status: 'pending' })
+    expect(item('team-1:crit-1')!.reason).toBeUndefined()
+    expect(item('team-1:crit-2')).toMatchObject({ value: 2, status: 'pending' })
+  })
+
   it('locked marks rejected with reason', async () => {
     enqueue({ ...cell(), value: 3 }, T0)
     enqueue({ ...cell({ criterionId: 'crit-2' }), value: 2 }, T0)

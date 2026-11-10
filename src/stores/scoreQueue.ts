@@ -2,12 +2,13 @@ import { create } from 'zustand'
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware'
 import type { Id } from '@/domain/types'
 
-/** What `upsert_score` answers (see supabase/migrations/0003_rpc.sql). */
-export type SaveResult = 'saved' | 'not_open' | 'locked' | 'not_assigned'
+/** What `upsert_score` answers (see supabase/migrations/0005_upsert_score_juror_guard.sql).
+ * `wrong_juror`: the tap is not the signed-in caller's; nothing was written. */
+export type SaveResult = 'saved' | 'not_open' | 'locked' | 'not_assigned' | 'wrong_juror'
 
 /** Why a queued score was rejected: the server's verdict, or 'invalid' when the server
  * refused the call itself (a client bug such as a bad value), so it can't block the queue. */
-export type RejectReason = Exclude<SaveResult, 'saved'> | 'invalid'
+export type RejectReason = Exclude<SaveResult, 'saved' | 'wrong_juror'> | 'invalid'
 
 export interface QueuedScore {
   /** `${teamId}:${criterionId}` */
@@ -158,6 +159,9 @@ export const useScoreQueue = create<ScoreQueueState>()(
             }
             return // Transient: keep everything pending and try again on the next trigger.
           }
+          // Not the owner's session (yet): not a verdict on the tap. Keep it pending and stop,
+          // like a transient failure; it goes out once its juror's session is active.
+          if (result === 'wrong_juror') return
           settle(next, result === 'saved' ? 'remove' : result)
         }
       }

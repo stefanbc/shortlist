@@ -627,7 +627,13 @@ export type Database = {
       set_event_status: { Args: { p_event: string; p_override: string }; Returns: undefined }
       set_now_pitching: { Args: { p_event: string; p_team: string }; Returns: undefined }
       upsert_score: {
-        Args: { p_criterion: string; p_tapped_at: string; p_team: string; p_value: number }
+        Args: {
+          p_criterion: string
+          p_juror: string
+          p_tapped_at: string
+          p_team: string
+          p_value: number
+        }
         Returns: string
       }
     }

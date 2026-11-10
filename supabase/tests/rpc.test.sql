@@ -4,7 +4,7 @@ begin;
 set local client_min_messages = warning;
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(48);
 
 -- Test helpers (rolled back with the transaction).
 create schema tests;
@@ -60,70 +60,94 @@ insert into event_jurors (event_id, juror_id) values
 -- ---------------------------------------------------------------- upsert_score as juror A
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
 
+select hasnt_function('public', 'upsert_score', array['uuid', 'uuid', 'numeric', 'timestamp with time zone'],
+  'the 4-argument upsert_score (no p_juror) is gone');
+select function_privs_are('public', 'upsert_score',
+  array['uuid', 'uuid', 'numeric', 'timestamp with time zone', 'uuid'], 'anon', array[]::text[],
+  'anon cannot execute upsert_score');
+
+-- p_juror must be the caller: a queued tap sent under someone else's session writes nothing.
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now()),
-  'saved', 'upsert_score saved when open');
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(),
+               '00000000-0000-0000-0000-0000000000b3'),
+  'wrong_juror', 'wrong_juror when p_juror is not the caller');
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 4, now() - interval '25 minute',
+               '00000000-0000-0000-0000-0000000000b3'),
+  'wrong_juror', 'wrong_juror is checked before the lock (no late attempt logged)');
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), null),
+  'wrong_juror', 'wrong_juror when p_juror is null');
+reset role;
+select is((select count(*) from scores)::int, 0, 'wrong_juror stores no score');
+select is((select count(*) from late_score_attempts)::int, 0, 'wrong_juror logs no late attempt');
+select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
+
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(),
+               '00000000-0000-0000-0000-0000000000b1'),
+  'saved', 'upsert_score saved when open (matching p_juror)');
 select is(
   (select value from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   4::numeric, 'saved value is stored for the caller');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3.5, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3.5, now(), auth.uid()),
   'saved', 'second save of the same cell succeeds');
 select is(
   (select count(*)::int || ':' || max(value)::text from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   '1:3.5', 'second save updates the existing score');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002', 4, now(), auth.uid()),
   'not_open', 'not_open in setup');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000003', 4, now() - interval '11 minute'),
+  upsert_score('30000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000003', 4, now() - interval '11 minute', auth.uid()),
   'saved', 'saved within grace: tapped before close, received 10 min after');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 4, now() - interval '25 minute'),
+  upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 4, now() - interval '25 minute', auth.uid()),
   'locked', 'locked after grace');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 4, now() - interval '6 minute'),
+  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 4, now() - interval '6 minute', auth.uid()),
   'saved', 'tap before close is accepted within grace');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 2, now() + interval '1 hour'),
+  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 2, now() + interval '1 hour', auth.uid()),
   'locked', 'future tapped_at is clamped so a post-close tap is rejected');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000001', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid()),
   'not_open', 'no_show team rejects');
 
 select throws_ok(
-  $$ select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3.25, now()) $$,
+  $$ select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3.25, now(), auth.uid()) $$,
   '23514', null, 'invalid score value is rejected');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', null, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', null, now(), auth.uid()),
   'saved', 'null value is accepted while open');
 select is(
   (select count(*)::int from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   0, 'null value deletes the score');
 
 -- Ruling R8: an older tap never overwrites a newer one (saves and clears alike).
-select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now());
+select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid());
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3, now() - interval '1 minute'),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3, now() - interval '1 minute', auth.uid()),
   'saved', 'older tap is reported as saved');
 select is(
   (select value from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   4::numeric, 'older tap does not overwrite the newer stored value');
-select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', null, now() - interval '2 minute');
+select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', null, now() - interval '2 minute', auth.uid());
 select is(
   (select value from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   4::numeric, 'older clear does not delete the newer stored value');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', null, now() - interval '25 minute'),
+  upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', null, now() - interval '25 minute', auth.uid()),
   'locked', 'null value outside grace is rejected too');
 
 select throws_ok(
@@ -151,30 +175,30 @@ select is(
 -- ---------------------------------------------------------------- other jurors
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b3');
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid()),
   'not_assigned', 'not_assigned for a juror not on the event');
 
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b2');
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid()),
   'not_assigned', 'not_assigned for a deactivated juror');
 
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b4');
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid()),
   'saved', 'juror R saves while assigned');
 reset role;
 delete from event_jurors where juror_id = '00000000-0000-0000-0000-0000000000b4';
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b4');
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 5, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 5, now(), auth.uid()),
   'not_assigned', 'not_assigned after juror removed from event');
 
 -- ---------------------------------------------------------------- admin actions
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000a1');
 
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now(), auth.uid()),
   'not_assigned', 'admin cannot score');
 
 update criteria set weight = 25 where id = '20000000-0000-0000-0000-000000000001';
@@ -297,7 +321,7 @@ where id = '10000000-0000-0000-0000-000000000007';
 
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000007', 4, now()),
+  upsert_score('30000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000007', 4, now(), auth.uid()),
   'locked', 'after a direct lock, a tap once grace has passed returns locked (ends_at still in the future)');
 reset role;
 
@@ -312,12 +336,12 @@ select is(
 select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
 
 select throws_ok(
-  $$ select upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 999, now() - interval '25 minute') $$,
+  $$ select upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 999, now() - interval '25 minute', auth.uid()) $$,
   '23514', null, 'locked-out tap with an out-of-range value raises instead of being logged');
 
 -- Event 5 closed 5 min ago (within grace) and started 2 hours ago.
 select is(
-  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 3, now() - interval '3 hour'),
+  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 3, now() - interval '3 hour', auth.uid()),
   'locked', 'grace does not accept a tap made before starts_at');
 reset role;
 

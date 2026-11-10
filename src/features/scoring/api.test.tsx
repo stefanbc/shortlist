@@ -7,10 +7,12 @@ import { ScoreRejectedError, queueId, useScoreQueue, type QueuedScore } from '@/
 import { useSession } from '@/stores/session'
 import { myScoresKey, sendScore, timeoutSignal, useMyScores, useScoreSync } from './api'
 
-const { mockRpc, mockFrom, mockUseEvent } = vi.hoisted(() => ({
+const { mockRpc, mockFrom, mockUseEvent, authSession } = vi.hoisted(() => ({
   mockRpc: vi.fn(),
   mockFrom: vi.fn(),
   mockUseEvent: vi.fn(),
+  /** The user the Supabase client would send requests as. */
+  authSession: { userId: null as string | null },
 }))
 
 vi.mock('@/lib/supabase', () => ({
@@ -18,7 +20,14 @@ vi.mock('@/lib/supabase', () => ({
     rpc: mockRpc,
     from: mockFrom,
     // The session store subscribes at import time.
-    auth: { onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
+    auth: {
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+      getSession: () =>
+        Promise.resolve({
+          data: { session: authSession.userId ? { user: { id: authSession.userId } } : null },
+          error: null,
+        }),
+    },
   },
 }))
 vi.mock('@/features/events/api', () => ({ useEvent: mockUseEvent }))
@@ -26,7 +35,9 @@ vi.mock('@/features/events/api', () => ({ useEvent: mockUseEvent }))
 const A = 'juror-a'
 const B = 'juror-b'
 
+/** Signs `jurorId` in everywhere: the Supabase auth session and the profile store. */
 function signIn(jurorId: string) {
+  authSession.userId = jurorId
   useSession.setState({
     status: 'signedIn',
     profile: { id: jurorId, displayName: jurorId, email: null, role: 'juror', active: true },
@@ -105,6 +116,12 @@ function setup() {
 
 const items = () => useScoreQueue.getState().items
 
+/** Lets pending promise chains (getSession → rpc → store update) run, without touching timers. */
+const settle = () =>
+  act(async () => {
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+  })
+
 beforeEach(() => {
   localStorage.clear()
   useScoreQueue.setState({ items: {} })
@@ -130,7 +147,40 @@ describe('sendScore', () => {
       p_criterion: 'crit-1',
       p_value: null,
       p_tapped_at: '2026-11-10T10:00:00.000Z',
+      p_juror: A,
     })
+  })
+
+  it("returns wrong_juror when the server says the tap is not the caller's", async () => {
+    rpcReturns(ok('wrong_juror'))
+    await expect(sendScore(queued())).resolves.toBe('wrong_juror')
+  })
+
+  it('sends nothing and answers wrong_juror when the auth session is another juror', async () => {
+    authSession.userId = B // auth already switched; the profile store may still say A
+    await expect(sendScore(queued({ jurorId: A }))).resolves.toBe('wrong_juror')
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('sends nothing and answers wrong_juror with no auth session', async () => {
+    authSession.userId = null
+    await expect(sendScore(queued())).resolves.toBe('wrong_juror')
+    expect(mockRpc).not.toHaveBeenCalled()
+  })
+
+  it('clears the fallback timeout once the request finishes', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal(
+      'AbortSignal',
+      Object.assign(function AbortSignal() {}, {
+        timeout: undefined,
+      }) as unknown as typeof AbortSignal,
+    )
+    rpcReturns(ok('saved'))
+
+    await sendScore(queued())
+
+    expect(vi.getTimerCount()).toBe(0)
   })
 
   it.each(['not_open', 'locked', 'not_assigned'])(
@@ -184,11 +234,28 @@ describe('timeoutSignal', () => {
       }) as unknown as typeof AbortSignal,
     )
 
-    const signal = timeoutSignal(15_000)
+    const { signal } = timeoutSignal(15_000)
     expect(signal.aborted).toBe(false)
 
     vi.advanceTimersByTime(15_000)
     expect(signal.aborted).toBe(true)
+  })
+
+  it('clear() cancels the fallback timer', () => {
+    vi.useFakeTimers()
+    vi.stubGlobal(
+      'AbortSignal',
+      Object.assign(function AbortSignal() {}, {
+        timeout: undefined,
+      }) as unknown as typeof AbortSignal,
+    )
+
+    const { signal, clear } = timeoutSignal(15_000)
+    clear()
+    vi.advanceTimersByTime(15_000)
+
+    expect(signal.aborted).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
   })
 })
 
@@ -241,6 +308,8 @@ describe('useMyScores', () => {
   })
 })
 
+// Tests that fake setInterval poll with vi.waitFor (real timers): RTL's waitFor polls via
+// setInterval and would never re-check.
 describe('useScoreSync', () => {
   it('flushes after enqueue and invalidates my scores once saved', async () => {
     rpcReturns(ok('saved'))
@@ -301,7 +370,7 @@ describe('useScoreSync', () => {
     expect(mockRpc).toHaveBeenCalledTimes(1)
   })
 
-  it('stops a flush in progress when the session switches to another juror', async () => {
+  it('stops a flush in progress when the auth session switches to another juror (profile store lagging)', async () => {
     seed(queued(), queued({ key: 'team-1:crit-2', criterionId: 'crit-2' }))
     let release!: (r: RpcResponse) => void
     mockRpc.mockReturnValueOnce({
@@ -312,13 +381,34 @@ describe('useScoreSync', () => {
     renderHook(() => useScoreSync('ev-1'), { wrapper })
     await waitFor(() => expect(mockRpc).toHaveBeenCalledTimes(1))
 
-    act(() => signIn(B))
+    // Auth switches straight to B; the profile store lags behind and still says A.
+    authSession.userId = B
     await act(async () => release(ok('saved')))
 
     expect(mockRpc).toHaveBeenCalledTimes(1)
     expect(Object.values(items())).toEqual([
       expect.objectContaining({ jurorId: A, key: 'team-1:crit-2', status: 'pending' }),
     ])
+  })
+
+  it('keeps a tap the server calls wrong_juror pending, and sends it once the owner is back', async () => {
+    rpcReturns(ok('wrong_juror'), ok('saved'))
+    const { wrapper } = setup()
+    const { result } = renderHook(() => useScoreSync('ev-1'), { wrapper })
+
+    tap()
+    await waitFor(() => expect(mockRpc).toHaveBeenCalledTimes(1))
+    await act(async () => {})
+    expect(result.current).toMatchObject({ pending: 1, rejected: 0 })
+    expect(Object.values(items())).toEqual([
+      expect.objectContaining({ jurorId: A, status: 'pending' }),
+    ])
+
+    act(() => {
+      window.dispatchEvent(new Event('online'))
+    })
+    await waitFor(() => expect(items()).toEqual({}))
+    expect(mockRpc).toHaveBeenCalledTimes(2)
   })
 
   it('keeps the tap while offline and sends it when the browser comes back online', async () => {
@@ -366,7 +456,9 @@ describe('useScoreSync', () => {
     rpcReturns(offline, ok('saved'))
     const { wrapper } = setup()
     renderHook(() => useScoreSync('ev-1'), { wrapper })
-    await waitFor(() => expect(mockRpc).toHaveBeenCalledTimes(1))
+    // Not vi.waitFor: it advances fake timers itself, which would skew the 10 s count.
+    await settle()
+    expect(mockRpc).toHaveBeenCalledTimes(1)
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(9_999)
@@ -376,7 +468,7 @@ describe('useScoreSync', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1)
     })
-    await waitFor(() => expect(items()).toEqual({}))
+    await vi.waitFor(() => expect(items()).toEqual({}))
     expect(mockRpc).toHaveBeenCalledTimes(2)
   })
 
@@ -409,7 +501,7 @@ describe('useScoreSync', () => {
       await vi.advanceTimersByTimeAsync(10_000)
     })
 
-    await waitFor(() => expect(items()).toEqual({}))
+    await vi.waitFor(() => expect(items()).toEqual({}))
     expect(mockRpc).toHaveBeenCalledTimes(1)
   })
 
@@ -422,7 +514,6 @@ describe('useScoreSync', () => {
     const { result } = renderHook(() => useScoreSync('ev-1'), { wrapper })
 
     tap()
-    // setInterval is faked, so poll with vi.waitFor (real timers) rather than RTL waitFor.
     await vi.waitFor(() => expect(result.current.rejected).toBe(1))
     expect(mockRpc).toHaveBeenCalledTimes(1)
 
@@ -430,7 +521,7 @@ describe('useScoreSync', () => {
       await vi.advanceTimersByTimeAsync(10_000)
     })
 
-    await waitFor(() => expect(items()).toEqual({}))
+    await vi.waitFor(() => expect(items()).toEqual({}))
     expect(mockRpc).toHaveBeenCalledTimes(2)
   })
 
@@ -442,7 +533,7 @@ describe('useScoreSync', () => {
     // Mounting while open retries every reason once; let that one go out and fail again.
     rpcReturns({ data: null, error: { message: 'bad value', code: '23514' }, status: 400 })
     renderHook(() => useScoreSync('ev-1'), { wrapper })
-    await waitFor(() => expect(mockRpc).toHaveBeenCalledTimes(1))
+    await vi.waitFor(() => expect(mockRpc).toHaveBeenCalledTimes(1))
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(30_000)

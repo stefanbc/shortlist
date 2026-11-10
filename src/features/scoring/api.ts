@@ -33,12 +33,15 @@ const SYNC_INTERVAL_MS = 10_000
 const RETRY_WHILE_OPEN: readonly RejectReason[] = ['not_open', 'not_assigned']
 
 /** `AbortSignal.timeout`, or a timer-driven controller where it's missing (Safari < 16):
- * without it every send would throw and the queue would be "transient forever". */
-export function timeoutSignal(ms: number): AbortSignal {
-  if (typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms)
+ * without it every send would throw and the queue would be "transient forever". Call
+ * `clear()` once the request settles so the fallback timer doesn't linger. */
+export function timeoutSignal(ms: number): { signal: AbortSignal; clear: () => void } {
+  if (typeof AbortSignal.timeout === 'function') {
+    return { signal: AbortSignal.timeout(ms), clear: () => {} }
+  }
   const controller = new AbortController()
-  setTimeout(() => controller.abort(), ms)
-  return controller.signal
+  const timer = setTimeout(() => controller.abort(), ms)
+  return { signal: controller.signal, clear: () => clearTimeout(timer) }
 }
 
 const SAVE_RESULTS: ReadonlySet<string> = new Set<SaveResult>([
@@ -46,21 +49,27 @@ const SAVE_RESULTS: ReadonlySet<string> = new Set<SaveResult>([
   'not_open',
   'locked',
   'not_assigned',
+  'wrong_juror',
 ])
 
 type UpsertScoreArgs = Omit<Database['public']['Functions']['upsert_score']['Args'], 'p_value'> & {
   p_value: number | null
 }
 
-function rpcUpsertScore(args: UpsertScoreArgs) {
-  return supabase
-    .rpc(
-      'upsert_score',
-      // The generated Args type says `p_value: number`, but the SQL function accepts null
-      // to clear the juror's score for the cell (see supabase/migrations/0003_rpc.sql).
-      args as Database['public']['Functions']['upsert_score']['Args'],
-    )
-    .abortSignal(timeoutSignal(SEND_TIMEOUT_MS))
+async function rpcUpsertScore(args: UpsertScoreArgs) {
+  const timeout = timeoutSignal(SEND_TIMEOUT_MS)
+  try {
+    return await supabase
+      .rpc(
+        'upsert_score',
+        // The generated Args type says `p_value: number`, but the SQL function accepts null
+        // to clear the juror's score for the cell (see supabase/migrations/0005_*.sql).
+        args as Database['public']['Functions']['upsert_score']['Args'],
+      )
+      .abortSignal(timeout.signal)
+  } finally {
+    timeout.clear()
+  }
 }
 
 /** No response (offline, timeout, abort), an auth problem (401/403 — expired or swapped
@@ -78,11 +87,18 @@ function isTransient(status: number): boolean {
 }
 
 export const sendScore: SendScore = async (q) => {
+  // The request goes out with whatever token the client holds *now*. Check that against the
+  // auth session itself (the profile store updates asynchronously after an auth switch);
+  // the server re-checks p_juror against auth.uid() and answers 'wrong_juror' too.
+  const { data: auth } = await supabase.auth.getSession()
+  if (auth.session?.user.id !== q.jurorId) return 'wrong_juror'
+
   const { data, error, status } = await rpcUpsertScore({
     p_team: q.teamId,
     p_criterion: q.criterionId,
     p_value: q.value,
     p_tapped_at: q.tappedAt,
+    p_juror: q.jurorId,
   })
   if (error) {
     if (isTransient(status)) throw new Error(`upsert_score failed (${status}): ${error.message}`)
@@ -151,11 +167,8 @@ export function useScoreSync(eventId: Id): { pending: number; rejected: number; 
     if (!jurorId) return
     const savedEvents = new Set<Id>()
     await useScoreQueue.getState().flush(async (q) => {
-      // The Supabase client sends as whoever is signed in *now*: if the session switched
-      // mid-flush, stop (transient, so the item stays pending for its owner).
-      if (useSession.getState().profile?.id !== q.jurorId) {
-        throw new Error('session changed during flush')
-      }
+      // sendScore answers 'wrong_juror' if the session is no longer q's juror; the queue
+      // then keeps the item pending and stops.
       const result = await sendScore(q)
       if (result === 'saved') {
         savedEvents.add(q.eventId)
