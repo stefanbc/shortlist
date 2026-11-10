@@ -33,7 +33,9 @@ export const teamInputSchema = z.object({
     description: z.string().max(5000).nullable(),
     // Id (uuid string) or null.
     themeId: z.uuid().nullable(),
-    repoUrl: z.url().nullable(),
+    // http/https only -- repoUrl is rendered as a clickable link in the
+    // admin UI, so javascript:/data: etc. must be rejected (XSS).
+    repoUrl: z.url({ protocol: /^https?$/ }).nullable(),
   }),
 })
 export type TeamInput = z.infer<typeof teamInputSchema>

@@ -181,6 +181,38 @@ describe('teamInputSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects a javascript: repoUrl (XSS vector)', () => {
+    const result = teamInputSchema.safeParse({
+      ...base,
+      project: { ...base.project, repoUrl: 'javascript:alert(1)' },
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects a data: repoUrl (XSS vector)', () => {
+    const result = teamInputSchema.safeParse({
+      ...base,
+      project: { ...base.project, repoUrl: 'data:text/html,x' },
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts an https repoUrl', () => {
+    const result = teamInputSchema.safeParse({
+      ...base,
+      project: { ...base.project, repoUrl: 'https://github.com/x/y' },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('accepts an http repoUrl', () => {
+    const result = teamInputSchema.safeParse({
+      ...base,
+      project: { ...base.project, repoUrl: 'http://github.com/x/y' },
+    })
+    expect(result.success).toBe(true)
+  })
+
   it('rejects a description over 5000 chars', () => {
     const result = teamInputSchema.safeParse({
       ...base,

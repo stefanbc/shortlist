@@ -77,6 +77,11 @@ describe('closedAt', () => {
     const timing = makeTiming({ statusOverride: 'open' })
     expect(closedAt(timing).toISOString()).toBe(ENDS_AT)
   })
+
+  it('falls back to endsAt when override is locked but lockedAt is null', () => {
+    const timing = makeTiming({ statusOverride: 'locked', lockedAt: null })
+    expect(closedAt(timing).toISOString()).toBe(ENDS_AT)
+  })
 })
 
 describe('GRACE_MINUTES', () => {
