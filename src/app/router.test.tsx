@@ -6,9 +6,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { routes } from './router'
 
 // Route gating is RequireRole's own concern (see guards.test.tsx); here we only
-// care that each route renders in the right shell, so the guard is a passthrough.
+// care that each route renders in the right shell AND is wired to the right role,
+// so the guard is a passthrough that records which role it was given.
 vi.mock('./guards', () => ({
-  RequireRole: ({ children }: { children: ReactNode }) => children,
+  RequireRole: ({ role, children }: { role: 'admin' | 'juror'; children: ReactNode }) => (
+    <div data-guard-role={role}>{children}</div>
+  ),
 }))
 
 function renderAt(path: string) {
@@ -48,5 +51,17 @@ describe('router', () => {
     renderAt('/nowhere')
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to start' })).toHaveAttribute('href', '/')
+  })
+
+  it('gates /admin behind the admin role guard', async () => {
+    renderAt('/admin')
+    await screen.findByRole('heading', { name: 'Live event' })
+    expect(document.querySelector('[data-guard-role="admin"]')).toBeInTheDocument()
+  })
+
+  it('gates /score behind the juror role guard', async () => {
+    renderAt('/score/e1/t1')
+    await screen.findByRole('heading', { name: 'Score team' })
+    expect(document.querySelector('[data-guard-role="juror"]')).toBeInTheDocument()
   })
 })

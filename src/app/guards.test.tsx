@@ -9,10 +9,13 @@ type AuthCallback = (event: string, session: { user: { id: string } } | null) =>
 // Plain closures (not vi.fn() mock state) so they survive Vitest's automatic
 // mock-state reset between tests: the session store subscribes exactly once,
 // during this file's initial import, and every test needs that same handle.
-const { authCallbacks, mockFrom } = vi.hoisted(() => ({
+const { authCallbacks, mockFrom, mockSignOut } = vi.hoisted(() => ({
   authCallbacks: [] as AuthCallback[],
   mockFrom: vi.fn(),
+  mockSignOut: vi.fn().mockResolvedValue({ error: null }),
 }))
+
+const { toastError } = vi.hoisted(() => ({ toastError: vi.fn() }))
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
@@ -21,10 +24,14 @@ vi.mock('@/lib/supabase', () => ({
         authCallbacks.push(cb)
         return { data: { subscription: { unsubscribe: vi.fn() } } }
       }),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
+      signOut: mockSignOut,
     },
     from: mockFrom,
   },
+}))
+
+vi.mock('sonner', () => ({
+  toast: { error: toastError },
 }))
 
 type ProfileRow = {
@@ -78,6 +85,8 @@ function renderGuarded(initialPath: string) {
 
 beforeEach(() => {
   useSession.setState({ status: 'loading', profile: null })
+  mockSignOut.mockClear()
+  toastError.mockClear()
 })
 
 describe('RequireRole', () => {
@@ -112,5 +121,17 @@ describe('RequireRole', () => {
     renderGuarded('/admin')
     emitSession('a1')
     await waitFor(() => expect(screen.getByText('Admin home')).toBeInTheDocument())
+  })
+
+  it('signs out, toasts, and redirects to /login for a deactivated profile', async () => {
+    mockProfileRow({ id: 'j1', display_name: 'Jane', email: null, role: 'juror', active: false })
+    renderGuarded('/admin')
+    emitSession('j1')
+
+    expect(await screen.findByText('Login page')).toBeInTheDocument()
+    expect(mockSignOut).toHaveBeenCalledTimes(1)
+    expect(toastError).toHaveBeenCalledWith(
+      'Your account was deactivated. Contact the event organizer.',
+    )
   })
 })
