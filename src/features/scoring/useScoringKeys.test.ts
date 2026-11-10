@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useScoringKeys } from './useScoringKeys'
 
-function setup(enabled = true) {
+function setup() {
   const handlers = {
     onSet: vi.fn(),
     onHalf: vi.fn(),
@@ -11,7 +11,7 @@ function setup(enabled = true) {
     onPrev: vi.fn(),
     onNext: vi.fn(),
   }
-  renderHook(() => useScoringKeys({ ...handlers, enabled }))
+  renderHook(() => useScoringKeys(handlers))
   return handlers
 }
 
@@ -88,13 +88,5 @@ describe('useScoringKeys', () => {
     await user.keyboard('{Meta>}3{/Meta}{Control>}{Backspace}{/Control}')
     expect(h.onSet).not.toHaveBeenCalled()
     expect(h.onClear).not.toHaveBeenCalled()
-  })
-
-  it('does nothing while disabled', async () => {
-    const user = userEvent.setup()
-    const h = setup(false)
-    await user.keyboard('3{ArrowDown}')
-    expect(h.onSet).not.toHaveBeenCalled()
-    expect(h.onNext).not.toHaveBeenCalled()
   })
 })

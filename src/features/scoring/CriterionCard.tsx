@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, CircleAlert, Lock, Eraser } from 'lucide-react'
+import { ChevronLeft, ChevronRight, CircleAlert, Eraser, Lock, X } from 'lucide-react'
 import { motion, useReducedMotion, type PanInfo } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/Button'
@@ -24,6 +24,8 @@ type CriterionCardProps = {
   direction: number
   onPick(value: number): void
   onClear(): void
+  /** Drops a rejected tap so the cell shows what the server has. */
+  onDiscard(): void
   onPrev(): void
   onNext(): void
 }
@@ -39,6 +41,7 @@ export function CriterionCard({
   direction,
   onPick,
   onClear,
+  onDiscard,
   onPrev,
   onNext,
 }: CriterionCardProps) {
@@ -104,10 +107,27 @@ export function CriterionCard({
       </div>
 
       {cell.state === 'rejected' && (
-        <p className="mb-4 flex gap-2 rounded-control bg-danger-soft px-3 py-2.5 text-sm text-danger">
-          <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-          {t(`scoring.rejected.${cell.reason}`)}
-        </p>
+        <div className="mb-4 rounded-control bg-danger-soft px-3 py-2.5 text-sm text-danger">
+          <p className="flex gap-2">
+            <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+            <span>
+              {t(`scoring.rejected.${cell.reason}`)}{' '}
+              <span className="font-semibold">
+                {cell.saved === null
+                  ? t('scoring.rejectedNothingSaved')
+                  : t('scoring.rejectedSaved', { value: formatScore(cell.saved, i18n.language) })}
+              </span>
+            </span>
+          </p>
+          <Button
+            variant="ghost"
+            onClick={onDiscard}
+            className="mt-1 -mb-1 ml-4 text-danger hover:bg-danger/10 hover:text-danger"
+          >
+            <X aria-hidden />
+            {t('scoring.discardRejected')}
+          </Button>
+        </div>
       )}
 
       {disabled && (

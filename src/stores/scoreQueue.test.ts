@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   SCORE_QUEUE_STORAGE_KEY,
   ScoreRejectedError,
+  queueId,
   UNKNOWN_JUROR,
   useScoreQueue,
   type QueuedScore,
@@ -204,6 +205,21 @@ describe('scoreQueue', () => {
     expect(item('team-1:crit-1')!.status).toBe('pending')
     expect(item('team-1:crit-1')!.reason).toBeUndefined()
     expect(item('team-9:crit-1')!).toMatchObject({ status: 'rejected', reason: 'locked' })
+  })
+
+  it('discardRejected drops a rejected item and never a pending one', async () => {
+    enqueue({ ...cell(), value: 3 }, T0)
+    await flush(vi.fn<SendScore>().mockResolvedValue('locked'))
+    enqueue({ ...cell({ criterionId: 'crit-2' }), value: 4 }, T0)
+    const rejectedId = queueId(item('team-1:crit-1')!)
+    const pendingId = queueId(item('team-1:crit-2')!)
+
+    useScoreQueue.getState().discardRejected(pendingId)
+    expect(item('team-1:crit-2')!.status).toBe('pending')
+
+    useScoreQueue.getState().discardRejected(rejectedId)
+    expect(item('team-1:crit-1')).toBeUndefined()
+    expect(item('team-1:crit-2')!.status).toBe('pending')
   })
 
   it('concurrent flush calls share one run (no double send)', async () => {

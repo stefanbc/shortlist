@@ -229,6 +229,17 @@ describe('useEventUpdates', () => {
     expect(supabase.removeChannel).toHaveBeenCalledWith(channel)
   })
 
+  it('gives every subscription its own topic, so a remount never reuses a leaving channel', () => {
+    mockChannel()
+    const first = renderHook(() => useEventUpdates('ev-1'), { wrapper })
+    first.unmount()
+    const second = renderHook(() => useEventUpdates('ev-1'), { wrapper })
+    second.unmount()
+    const topics = vi.mocked(supabase.channel).mock.calls.map(([topic]) => topic)
+    expect(topics).toHaveLength(2)
+    expect(topics[0]).not.toBe(topics[1])
+  })
+
   it('does nothing without an event id', () => {
     mockChannel()
     renderHook(() => useEventUpdates(''), { wrapper })

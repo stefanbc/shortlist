@@ -1,4 +1,4 @@
-import { ChevronLeft, SearchX } from 'lucide-react'
+import { ChevronLeft, ListChecks, SearchX } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
@@ -15,10 +15,10 @@ import { useTeams, type TeamWithProject } from '@/features/teams/api'
 import { cn } from '@/lib/cn'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { useNow } from '@/lib/useNow'
-import { useScoreQueue } from '@/stores/scoreQueue'
+import { queueId, scoreKey, useScoreQueue } from '@/stores/scoreQueue'
 import { useSession } from '@/stores/session'
-import { useMyCellSync, useMyScores, useScoreSync } from './api'
-import { cellViews, countScored, type CellView } from './cells'
+import { useMyCellSync, useMySavedScores, useMyScores, useScoreSync } from './api'
+import { cellViews, countScored, firstUnsaved, type CellView } from './cells'
 import { CriterionCard } from './CriterionCard'
 import { CriterionList } from './CriterionList'
 import { CriterionStrip } from './CriterionStrip'
@@ -73,6 +73,23 @@ export function ScoringPage() {
     )
   }
 
+  if (criteria.length === 0) {
+    return (
+      <Page className="max-w-5xl">
+        <EmptyState
+          icon={ListChecks}
+          title={t('scoring.noCriteriaTitle')}
+          description={t('scoring.noCriteriaBody')}
+          action={
+            <Link to="/score" className={buttonClasses({ variant: 'secondary' })}>
+              {t('scoring.backToTeams')}
+            </Link>
+          }
+        />
+      </Page>
+    )
+  }
+
   return (
     <>
       <TeamScoring
@@ -103,12 +120,14 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
   const now = useNow(15_000)
   const jurorId = useSession((state) => state.profile?.id)
   const enqueue = useScoreQueue((state) => state.enqueue)
+  const discardRejected = useScoreQueue((state) => state.discardRejected)
   const { data: themes } = useThemes(event.id)
   const scores = useMyScores(event.id)
+  const saved = useMySavedScores(event.id)
   const sync = useScoreSync(event.id)
   const cellSync = useMyCellSync(event.id)
 
-  const cells = cellViews(team.id, criteria, scores, cellSync)
+  const cells = cellViews(team.id, criteria, scores, cellSync, saved.data)
   const scored = countScored(cells)
   const theme = themes?.find((candidate) => candidate.id === team.project.themeId)
   const onStage = event.nowPitchingTeamId === team.id
@@ -128,13 +147,13 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
         : null
   const disabled = disabledReason !== null
 
-  // Start where the juror left off: the first criterion without a saved score.
-  const [index, setIndex] = useState(() =>
-    Math.max(
-      0,
-      cells.findIndex((c) => c.state === 'empty' || c.state === 'rejected'),
-    ),
-  )
+  // Where the juror is: the criterion they picked, else where they left off. The resume
+  // point is fixed once, when the saved scores first arrive (a cold load starts before they
+  // do), and only matters until the juror moves or scores.
+  const [chosen, setChosen] = useState<number | null>(null)
+  const [resumeAt, setResumeAt] = useState<number | null>(null)
+  if (resumeAt === null && saved.isFetched) setResumeAt(firstUnsaved(cells))
+  const index = chosen ?? resumeAt ?? firstUnsaved(cells)
   const [direction, setDirection] = useState(1)
   const current = Math.min(index, criteria.length - 1)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -150,12 +169,14 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
     const next = Math.max(0, Math.min(criteria.length - 1, target))
     if (next === current) return
     setDirection(next > current ? 1 : -1)
-    setIndex(next)
+    setChosen(next)
   }
 
   function write(criterionIndex: number, value: number | null) {
     if (disabled || !jurorId) return
     const criterion = criteria[criterionIndex]
+    // Scoring pins the juror here: a late resume point must not pull them away.
+    if (chosen === null) setChosen(criterionIndex)
     enqueue({ eventId: event.id, teamId: team.id, criterionId: criterion.id, value, jurorId })
   }
 
@@ -168,7 +189,10 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
       advanceTimer.current = null
       setDirection(1)
       // Only move on if the juror is still on the criterion they just scored.
-      setIndex((at) => (at === from && from < criteria.length - 1 ? from + 1 : at))
+      setChosen((at) => {
+        const still = at ?? from
+        return still === from && from < criteria.length - 1 ? from + 1 : still
+      })
     }, AUTO_ADVANCE_MS)
   }
 
@@ -191,8 +215,6 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
     onPrev: () => go(current - 1),
     onNext: () => go(current + 1),
   })
-
-  if (criteria.length === 0) return null
 
   const nav = { criteria, cells, currentIndex: current, onSelect: go }
 
@@ -257,6 +279,11 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
             swipeable={!wide}
             direction={direction}
             onPick={pick}
+            onDiscard={() => {
+              if (jurorId) {
+                discardRejected(queueId({ jurorId, key: scoreKey(team.id, criteria[current].id) }))
+              }
+            }}
             onClear={() => {
               cancelAdvance()
               write(current, null)

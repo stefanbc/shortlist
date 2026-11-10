@@ -54,6 +54,9 @@ type ScoreQueueState = {
   /** Puts `jurorId`'s rejected items for the event back to pending, optionally only those
    * rejected for one of `reasons`. */
   retryRejected(eventId: Id, jurorId: Id, reasons?: readonly RejectReason[]): void
+  /** Drops one rejected item (by `queueId`) once the juror has seen why it wasn't saved, so
+   * the cell falls back to the server's value. Does nothing to a pending item. */
+  discardRejected(id: string): void
 }
 
 export const scoreKey = (teamId: Id, criterionId: Id) => `${teamId}:${criterionId}`
@@ -212,6 +215,14 @@ export const useScoreQueue = create<ScoreQueueState>()(
               }
             }
             return changed ? { items } : state
+          }),
+
+        discardRejected: (id) =>
+          set((state) => {
+            if (state.items[id]?.status !== 'rejected') return state
+            const items = { ...state.items }
+            delete items[id]
+            return { items }
           }),
       }
     },

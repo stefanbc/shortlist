@@ -126,9 +126,10 @@ function overlayQueue(
   return merged
 }
 
-export function useMyScores(eventId: Id): Record<string, number> {
+/** The juror's scores as the server has them, without queued taps on top. */
+export function useMySavedScores(eventId: Id) {
   const jurorId = useSession((state) => state.profile?.id)
-  const { data } = useQuery({
+  return useQuery({
     queryKey: myScoresKey(eventId, jurorId),
     queryFn: async () => {
       // RLS returns only the signed-in juror's own rows.
@@ -143,6 +144,11 @@ export function useMyScores(eventId: Id): Record<string, number> {
     },
     enabled: Boolean(eventId && jurorId),
   })
+}
+
+export function useMyScores(eventId: Id): Record<string, number> {
+  const jurorId = useSession((state) => state.profile?.id)
+  const { data } = useMySavedScores(eventId)
   const items = useScoreQueue((state) => state.items)
   return useMemo(
     () => overlayQueue(data ?? {}, items, eventId, jurorId),

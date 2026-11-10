@@ -224,7 +224,7 @@
     "next": "Next criterion",
     "backToTeams": "All teams",
     "tapHint": "Tap a score to save it and move on. Swipe the card or tap a tile to jump.",
-    "keyHint": "Keys 1–5 score, . adds a half, Backspace clears, ↑ ↓ move, Enter goes to the next one.",
+    "keyHint": "Keys 1–5 score, . makes it .5, Backspace clears, ↑ ↓ move, Enter goes to the next one.",
     "loading": "Loading the team…",
     "teamNotFoundTitle": "Team not found",
     "teamNotFoundBody": "This team isn't part of the event anymore. Pick another one from your list.",
@@ -267,7 +267,12 @@
       "description": "Switch to scoring {{team}}? The scores you've given so far stay saved.",
       "switch": "Switch",
       "stay": "Stay here"
-    }
+    },
+    "rejectedSaved": "Saved score: {{value}}",
+    "rejectedNothingSaved": "Nothing is saved for this criterion.",
+    "discardRejected": "Discard unsaved score",
+    "noCriteriaTitle": "No criteria yet",
+    "noCriteriaBody": "The organizer hasn't set up the scoring criteria for this event yet. Check back once they have."
   },
   "reports": {
     "podium": "Podium",

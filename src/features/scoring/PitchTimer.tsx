@@ -39,9 +39,16 @@ export function PitchTimer({ pitchMinutes, onStageSince }: PitchTimerProps) {
     }
   }, [running])
 
+  function startLocal() {
+    // One reading for both, so the first frame shows the full pitch time.
+    const at = Date.now()
+    setLocalStart(at)
+    setNow(at)
+  }
+
   if (start === null) {
     return (
-      <Button variant="secondary" onClick={() => setLocalStart(Date.now())}>
+      <Button variant="secondary" onClick={startLocal}>
         <Timer aria-hidden />
         {t('scoring.timer.start', { minutes: pitchMinutes })}
       </Button>

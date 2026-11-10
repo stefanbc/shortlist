@@ -11,8 +11,6 @@ export type ScoringKeyHandlers = {
   onPrev(): void
   /** `ArrowDown` / `Enter`: next criterion. */
   onNext(): void
-  /** Off while a dialog owns the keyboard. */
-  enabled?: boolean
 }
 
 /** Elements whose own keyboard behaviour must win over the scoring shortcuts. */
@@ -34,10 +32,8 @@ export function useScoringKeys(handlers: ScoringKeyHandlers): void {
   useEffect(() => {
     latest.current = handlers
   })
-  const enabled = handlers.enabled ?? true
 
   useEffect(() => {
-    if (!enabled) return
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
       if (ownsKeys(event.target, event.key)) return
@@ -53,5 +49,5 @@ export function useScoringKeys(handlers: ScoringKeyHandlers): void {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [enabled])
+  }, [])
 }

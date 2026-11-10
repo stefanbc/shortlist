@@ -75,6 +75,12 @@ export function useEvent(id: Id): UseQueryResult<EventRow> {
   })
 }
 
+/** Distinguishes each subscription's topic. supabase-js hands back the existing channel for
+ * a topic it already knows, so a page mounting right after another page's cleanup would get
+ * the channel that is still leaving: its subscribe() is a no-op and it is torn down when the
+ * server acknowledges the leave, silently ending the updates. */
+let subscriptionSeq = 0
+
 /** Keeps the cached event live: subscribes to Realtime UPDATEs of the event's row (who is
  * pitching, open/lock overrides, dates) and writes each new row into `['events', id]`.
  * The channel is removed on unmount. */
@@ -83,7 +89,7 @@ export function useEventUpdates(eventId: Id): void {
   useEffect(() => {
     if (!eventId) return
     const channel = supabase
-      .channel(`event:${eventId}`)
+      .channel(`event:${eventId}:${++subscriptionSeq}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'events', filter: `id=eq.${eventId}` },

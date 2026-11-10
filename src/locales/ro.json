@@ -224,7 +224,7 @@
     "next": "Criteriul următor",
     "backToTeams": "Toate echipele",
     "tapHint": "Atinge o notă ca s-o salvezi și să treci mai departe. Glisează cardul sau atinge un criteriu ca să sari la el.",
-    "keyHint": "Tastele 1–5 notează, . adaugă o jumătate, Backspace șterge, ↑ ↓ mută, Enter trece la următorul.",
+    "keyHint": "Tastele 1–5 notează, . o face ,5, Backspace șterge, ↑ ↓ mută, Enter trece la următorul.",
     "loading": "Se încarcă echipa…",
     "teamNotFoundTitle": "Echipa nu a fost găsită",
     "teamNotFoundBody": "Echipa nu mai face parte din eveniment. Alege alta din listă.",
@@ -267,7 +267,12 @@
       "description": "Treci la notarea echipei {{team}}? Notele date până acum rămân salvate.",
       "switch": "Schimbă",
       "stay": "Rămân aici"
-    }
+    },
+    "rejectedSaved": "Nota salvată: {{value}}",
+    "rejectedNothingSaved": "Nu există nicio notă salvată pentru acest criteriu.",
+    "discardRejected": "Renunță la nota nesalvată",
+    "noCriteriaTitle": "Niciun criteriu încă",
+    "noCriteriaBody": "Organizatorul nu a stabilit încă criteriile de notare pentru acest eveniment. Revino după ce le adaugă."
   },
   "reports": {
     "podium": "Podium",

@@ -15,11 +15,23 @@ import { useSession } from '@/stores/session'
 import { useMyNote, useSaveNote, useScoreSync } from './api'
 import { ScoringPage } from './ScoringPage'
 
+type ScoreRow = { team_id: string; criterion_id: string; value: number }
+
+/** The juror's scores on the server, and an optional gate that holds the response back. */
+const server = vi.hoisted(() => ({
+  rows: [] as ScoreRow[],
+  gate: null as Promise<void> | null,
+}))
+
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     from: () => ({
-      // The juror's server-side scores: none yet.
-      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+      select: () => ({
+        eq: async () => {
+          if (server.gate) await server.gate
+          return { data: server.rows, error: null }
+        },
+      }),
     }),
     auth: {
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
@@ -94,10 +106,16 @@ function renderPage({
   event = openEvent(),
   teamId = 't1',
   sync = { pending: 0, rejected: 0, online: true },
-}: { event?: EventRow; teamId?: string; sync?: ReturnType<typeof useScoreSync> } = {}) {
+  criteria = CRITERIA,
+}: {
+  event?: EventRow
+  teamId?: string
+  sync?: ReturnType<typeof useScoreSync>
+  criteria?: Criterion[]
+} = {}) {
   vi.mocked(useEvent).mockReturnValue({ data: event, isLoading: false } as never)
   vi.mocked(useTeams).mockReturnValue({ data: TEAMS, isLoading: false } as never)
-  vi.mocked(useCriteria).mockReturnValue({ data: CRITERIA, isLoading: false } as never)
+  vi.mocked(useCriteria).mockReturnValue({ data: criteria, isLoading: false } as never)
   vi.mocked(useThemes).mockReturnValue({ data: THEMES, isLoading: false } as never)
   vi.mocked(useScoreSync).mockReturnValue(sync)
   vi.mocked(useMyNote).mockReturnValue({ data: '', isSuccess: true } as never)
@@ -125,6 +143,8 @@ const queued = (criterionId: string) =>
 const currentCriterion = (name: string) => screen.findByRole('heading', { level: 2, name })
 
 beforeEach(() => {
+  server.rows = []
+  server.gate = null
   useScoreQueue.setState({ items: {} })
   useSession.setState({
     status: 'signedIn',
@@ -276,6 +296,102 @@ describe('ScoringPage', () => {
     expect(screen.getByText('Not saved: 1')).toBeInTheDocument()
     // A rejected score doesn't count as scored.
     expect(screen.getByLabelText('0 of 9 criteria scored')).toBeInTheDocument()
+  })
+
+  it('shows the saved server value beside a rejected tap and lets the juror discard the tap', async () => {
+    const user = userEvent.setup()
+    server.rows = [{ team_id: 't1', criterion_id: 'c1', value: 3 }]
+    const rejected: QueuedScore = {
+      key: scoreKey('t1', 'c1'),
+      jurorId: JUROR,
+      eventId: 'ev-1',
+      teamId: 't1',
+      criterionId: 'c1',
+      value: 4,
+      tappedAt: '2026-11-10T10:00:00.000Z',
+      status: 'rejected',
+      reason: 'locked',
+    }
+    const pending: QueuedScore = {
+      ...rejected,
+      key: scoreKey('t1', 'c2'),
+      criterionId: 'c2',
+      status: 'pending',
+      reason: undefined,
+    }
+    useScoreQueue.setState({
+      items: { [queueId(rejected)]: rejected, [queueId(pending)]: pending },
+    })
+    renderPage({
+      event: openEvent({ statusOverride: 'locked', lockedAt: '2026-11-10T19:00:00.000Z' }),
+    })
+    await currentCriterion('Încadrarea în temă')
+
+    expect(await screen.findByText('Saved score: 3')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Discard unsaved score' }))
+
+    expect(useScoreQueue.getState().items[queueId(rejected)]).toBeUndefined()
+    expect(useScoreQueue.getState().items[queueId(pending)]?.status).toBe('pending')
+    const strip = screen.getByRole('navigation', { name: 'Criteria' })
+    expect(within(strip).getByRole('button', { name: /^Criterion 1/ })).toHaveAccessibleName(
+      /score 3$/,
+    )
+  })
+
+  it('says when nothing is saved behind a rejected tap', async () => {
+    const rejected: QueuedScore = {
+      key: scoreKey('t1', 'c1'),
+      jurorId: JUROR,
+      eventId: 'ev-1',
+      teamId: 't1',
+      criterionId: 'c1',
+      value: 4,
+      tappedAt: '2026-11-10T10:00:00.000Z',
+      status: 'rejected',
+      reason: 'not_open',
+    }
+    useScoreQueue.setState({ items: { [queueId(rejected)]: rejected } })
+    renderPage()
+    await currentCriterion('Încadrarea în temă')
+    expect(await screen.findByText('Nothing is saved for this criterion.')).toBeInTheDocument()
+  })
+
+  it('resumes at the first unscored criterion once the saved scores arrive', async () => {
+    let release!: () => void
+    server.gate = new Promise((resolve) => (release = resolve))
+    server.rows = ['c1', 'c2'].map((id) => ({ team_id: 't1', criterion_id: id, value: 4 }))
+    renderPage()
+    await currentCriterion('Încadrarea în temă')
+
+    release()
+    expect(await currentCriterion('Potențial business')).toBeInTheDocument()
+  })
+
+  it('does not move the juror when saved scores arrive after they navigated', async () => {
+    const user = userEvent.setup()
+    let release!: () => void
+    server.gate = new Promise((resolve) => (release = resolve))
+    server.rows = ['c1', 'c2', 'c3', 'c4'].map((id) => ({
+      team_id: 't1',
+      criterion_id: id,
+      value: 4,
+    }))
+    renderPage()
+    await currentCriterion('Încadrarea în temă')
+
+    await user.keyboard('{ArrowDown}')
+    await currentCriterion('Originalitate și Utilitate')
+    release()
+
+    expect(await screen.findByLabelText('4 of 9 criteria scored')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Originalitate și Utilitate' }),
+    ).toBeInTheDocument()
+  })
+
+  it('explains an event without criteria instead of a blank screen', async () => {
+    renderPage({ criteria: [] })
+    expect(await screen.findByText('No criteria yet')).toBeInTheDocument()
   })
 
   it('shows the sync state from pending counts', async () => {
