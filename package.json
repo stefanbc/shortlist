@@ -13,9 +13,11 @@
     "test:db": "supabase test db",
     "test:e2e": "playwright test",
     "gen:types": "supabase gen types typescript --local > src/lib/database.types.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "exceljs": "^4.4.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -39,6 +41,7 @@
     "jsdom": "^31.0.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^8.3.6",
