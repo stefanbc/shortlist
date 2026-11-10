@@ -85,7 +85,7 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
         {...attributes}
         {...listeners}
         aria-label={t('common.dragHandle')}
-        className="flex h-11 w-8 shrink-0 touch-none items-center justify-center rounded-control text-ink-faint hover:text-ink focus-visible:outline-2 focus-visible:outline-accent active:cursor-grabbing"
+        className="flex h-11 w-11 shrink-0 touch-none items-center justify-center rounded-control text-ink-faint hover:text-ink focus-visible:outline-2 focus-visible:outline-accent active:cursor-grabbing"
       >
         <GripVertical aria-hidden className="size-4" />
       </button>

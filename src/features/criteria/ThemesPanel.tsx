@@ -10,7 +10,14 @@ import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { themeInputSchema } from '@/domain/schemas'
 import type { Id } from '@/domain/types'
-import { useDeleteTheme, useReorderThemes, useSaveTheme, useThemes, type Theme } from './api'
+import {
+  nextPosition,
+  useDeleteTheme,
+  useReorderThemes,
+  useSaveTheme,
+  useThemes,
+  type Theme,
+} from './api'
 
 /** A single theme's name, saved on blur. Renaming never needs the recalculation
  * confirmation — themes carry no weight (Ruling R6). */
@@ -135,7 +142,7 @@ export function ThemesPanel({ eventId }: { eventId: Id }) {
           />
         )}
 
-        <AddThemeForm eventId={eventId} nextPosition={(themes?.length ?? 0) + 1} />
+        <AddThemeForm eventId={eventId} nextPosition={nextPosition(themes ?? [])} />
       </CardBody>
     </Card>
   )

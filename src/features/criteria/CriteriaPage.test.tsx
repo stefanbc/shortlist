@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -71,7 +71,10 @@ function renderPage(event: EventRow, criteria: Criterion[] = CRITERIA) {
     [{ path: '/admin/events/:eventId/criteria', element: <CriteriaPage /> }],
     { initialEntries: [`/admin/events/${event.id}/criteria`] },
   )
-  render(<RouterProvider router={router} />)
+  const { rerender } = render(<RouterProvider router={router} />)
+  // Re-renders the same tree so a test can simulate a query refetch (new mocked hook
+  // data) landing on an already-mounted page, without remounting it.
+  return { rerender: () => rerender(<RouterProvider router={router} />) }
 }
 
 afterEach(() => {
@@ -137,6 +140,86 @@ describe('CriteriaPage', () => {
     expect(weightInput.value).toBe('90')
   })
 
+  it('confirming a weight edit when open saves the new value, keeps it displayed, and stays correct after a refetch', async () => {
+    const user = userEvent.setup()
+    const saveCriterion = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useSaveCriterion).mockReturnValue({
+      mutateAsync: saveCriterion,
+      isPending: false,
+    } as never)
+    vi.mocked(useDeleteCriterion).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    } as never)
+
+    const { rerender: rerenderPage } = renderPage(OPEN_EVENT)
+
+    const weightInput = await screen.findByLabelText<HTMLInputElement>(
+      'Weight: Originalitate și Utilitate',
+    )
+    fireEvent.change(weightInput, { target: { value: '95' } })
+    fireEvent.blur(weightInput)
+
+    await screen.findByRole('alertdialog')
+    await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+    await waitFor(() =>
+      expect(saveCriterion).toHaveBeenCalledWith({
+        id: 'c1',
+        eventId: 'ev-1',
+        name: 'Originalitate și Utilitate',
+        weight: 95,
+        position: 1,
+      }),
+    )
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    // The field must show the confirmed value, not snap back to the pre-edit one.
+    expect(weightInput.value).toBe('95')
+
+    // Simulate the refetch that follows the mutation's query invalidation: the server
+    // now reports weight 95 too. The field must stay correct, not just "not reverted".
+    vi.mocked(useCriteria).mockReturnValue({
+      data: [{ ...CRITERIA[0], weight: 95 }, CRITERIA[1]],
+      isLoading: false,
+    } as never)
+    rerenderPage()
+
+    expect(weightInput.value).toBe('95')
+  })
+
+  it('adds a new criterion at a unique, last position after a middle one was deleted', async () => {
+    const user = userEvent.setup()
+    const saveCriterion = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useSaveCriterion).mockReturnValue({
+      mutateAsync: saveCriterion,
+      isPending: false,
+    } as never)
+    vi.mocked(useDeleteCriterion).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    } as never)
+
+    // Simulates the list after its middle item (originally position 2) was deleted:
+    // positions 1 and 3 remain, with a gap at 2.
+    const criteriaAfterDelete: Criterion[] = [
+      { id: 'c1', name: 'Originalitate și Utilitate', weight: 90, position: 1 },
+      { id: 'c3', name: 'Calitatea soluției propuse', weight: 300, position: 3 },
+    ]
+    renderPage(SETUP_EVENT, criteriaAfterDelete)
+
+    const nameInputs = await screen.findAllByLabelText('Name')
+    await user.type(nameInputs[nameInputs.length - 1], 'New criterion')
+    await user.type(screen.getByLabelText('Weight'), '50')
+    await user.click(screen.getByRole('button', { name: 'Add criterion' }))
+
+    expect(saveCriterion).toHaveBeenCalledWith({
+      eventId: 'ev-1',
+      name: 'New criterion',
+      weight: 50,
+      position: 4,
+    })
+  })
+
   it('weight 0 shows an error and does not save', async () => {
     const saveCriterion = vi.fn()
     vi.mocked(useSaveCriterion).mockReturnValue({
@@ -169,5 +252,22 @@ describe('CriteriaPage', () => {
     renderPage(SETUP_EVENT)
 
     expect(await screen.findByText('17%')).toBeInTheDocument()
+  })
+
+  it('shows the share-of-total bar on phones, not only from a desktop breakpoint up', async () => {
+    vi.mocked(useSaveCriterion).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+    vi.mocked(useDeleteCriterion).mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+    } as never)
+
+    renderPage(SETUP_EVENT)
+
+    const percent = await screen.findByText('17%')
+    const bar = percent.closest('div')
+    expect(bar).not.toBeNull()
+    // A bare `hidden` utility (without a responsive variant switching it back on)
+    // hides the element on every breakpoint, phones included.
+    expect(bar?.className ?? '').not.toMatch(/\bhidden\b/)
   })
 })

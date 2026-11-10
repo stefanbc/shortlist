@@ -1,5 +1,5 @@
 import { ArrowLeft, ListChecks, Plus, Trash2 } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -17,6 +17,7 @@ import type { Criterion, Id } from '@/domain/types'
 import { eventPhase } from '@/domain/eventPhase'
 import { useEvent } from '@/features/events/api'
 import {
+  nextPosition,
   shareOfTotal,
   useCriteria,
   useDeleteCriterion,
@@ -49,6 +50,16 @@ function CriterionRow({
   const [name, setName] = useState(criterion.name)
   const [weightText, setWeightText] = useState(String(criterion.weight))
   const [weightError, setWeightError] = useState<string>()
+  const [lastSyncedWeight, setLastSyncedWeight] = useState(criterion.weight)
+
+  // Adjusts the field during render when the server's value changes under us (a
+  // refetch after this or another admin's edit) -- React's documented pattern for
+  // resetting state from a prop change, which avoids the extra render a useEffect
+  // would cost (and that pattern is a lint error here: react-hooks/set-state-in-effect).
+  if (criterion.weight !== lastSyncedWeight) {
+    setLastSyncedWeight(criterion.weight)
+    setWeightText(String(criterion.weight))
+  }
 
   function commitName() {
     const trimmed = name.trim()
@@ -96,12 +107,6 @@ function CriterionRow({
           aria-invalid={Boolean(weightError)}
           className="h-10 w-20 shrink-0 text-right"
         />
-        <div className="hidden w-32 shrink-0 items-center gap-2 sm:flex">
-          <div className="h-2 flex-1 overflow-hidden rounded-full bg-raised" aria-hidden>
-            <div className="h-full rounded-full bg-accent" style={{ width: `${percent}%` }} />
-          </div>
-          <span className="w-9 shrink-0 text-right text-sm text-ink-faint">{percent}%</span>
-        </div>
         <Button
           type="button"
           variant="ghost"
@@ -111,6 +116,14 @@ function CriterionRow({
         >
           <Trash2 aria-hidden />
         </Button>
+      </div>
+      {/* Its own line, not a sibling squeezed into the row above, so the share-of-total
+          bar stays visible on phones instead of only appearing from a desktop breakpoint. */}
+      <div className="flex items-center gap-2 pl-1">
+        <div className="h-2 flex-1 overflow-hidden rounded-full bg-raised" aria-hidden>
+          <div className="h-full rounded-full bg-accent" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="w-9 shrink-0 text-right text-sm text-ink-faint">{percent}%</span>
       </div>
       {weightError && <p className="text-sm text-danger">{weightError}</p>}
     </div>
@@ -190,6 +203,12 @@ function CriteriaSection({ eventId, requiresConfirm }: { eventId: Id; requiresCo
   const deleteCriterion = useDeleteCriterion()
   const reorderCriteria = useReorderCriteria(eventId)
   const [pending, setPending] = useState<PendingAction | null>(null)
+  // ConfirmDialog closes itself (calls onOpenChange(false)) both after a successful
+  // confirm and on cancel. A ref -- not a stale render's `pending` state -- is what
+  // distinguishes them: it's set synchronously right before that close happens, so
+  // handleDialogOpenChange always reads the current value regardless of which render's
+  // closure invoked it.
+  const skipRevertRef = useRef(false)
 
   const totalWeight = (criteria ?? []).reduce((sum, c) => sum + c.weight, 0)
 
@@ -266,6 +285,8 @@ function CriteriaSection({ eventId, requiresConfirm }: { eventId: Id; requiresCo
           weight: pending.weight,
           position: pending.position,
         })
+        // Saved: the dialog's own close-on-success must not trigger a revert.
+        skipRevertRef.current = true
       } catch (error) {
         pending.revert()
         toast.error(t('criteria.saveError'))
@@ -295,7 +316,8 @@ function CriteriaSection({ eventId, requiresConfirm }: { eventId: Id; requiresCo
 
   function handleDialogOpenChange(open: boolean) {
     if (open) return
-    if (pending?.kind === 'weight') pending.revert()
+    if (pending?.kind === 'weight' && !skipRevertRef.current) pending.revert()
+    skipRevertRef.current = false
     setPending(null)
   }
 
@@ -329,7 +351,7 @@ function CriteriaSection({ eventId, requiresConfirm }: { eventId: Id; requiresCo
           />
         )}
 
-        <AddCriterionForm nextPosition={(criteria?.length ?? 0) + 1} onRequestAdd={requestAdd} />
+        <AddCriterionForm nextPosition={nextPosition(criteria ?? [])} onRequestAdd={requestAdd} />
       </CardBody>
 
       <ConfirmDialog

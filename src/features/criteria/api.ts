@@ -185,3 +185,10 @@ export function useReorderThemes(eventId: Id) {
 export function shareOfTotal(weight: number, totalWeight: number): number {
   return totalWeight > 0 ? Math.round((weight / totalWeight) * 100) : 0
 }
+
+/** The position to give a newly created row: one past the highest existing position,
+ * not the count of rows. A list with a gap (e.g. after deleting a middle row) must not
+ * reuse a position that's still taken by a later row. 1 for an empty list. */
+export function nextPosition(items: { position: number }[]): number {
+  return items.length === 0 ? 1 : Math.max(...items.map((item) => item.position)) + 1
+}
