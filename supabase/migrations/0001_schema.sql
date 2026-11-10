@@ -39,21 +39,28 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
--- Creates the profile from the new auth user's metadata (`display_name`, `role`).
--- Users are created by an admin through the service role; public sign-up is disabled.
+-- Creates the profile for a new auth user. display_name comes from user metadata; the
+-- role comes from app metadata, which only the service role can set (user metadata is
+-- writable by the user at sign-up). Unknown or missing roles fall back to 'juror'.
 create function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
 as $$
+declare
+  v_role text := new.raw_app_meta_data ->> 'role';
 begin
+  if v_role is null or not exists (select 1 from public.roles where key = v_role) then
+    v_role := 'juror';
+  end if;
+
   insert into public.profiles (id, display_name, email, role)
   values (
     new.id,
     coalesce(nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''), new.email, 'Unnamed'),
     new.email,
-    coalesce(nullif(new.raw_user_meta_data ->> 'role', ''), 'juror')
+    v_role
   );
   return new;
 end;
@@ -170,7 +177,7 @@ create table public.late_score_attempts (
   team_id uuid not null references public.teams (id) on delete cascade,
   criterion_id uuid not null references public.criteria (id) on delete cascade,
   juror_id uuid not null references public.profiles (id) on delete cascade,
-  value numeric,
+  value numeric check (value between 1 and 5 and value * 2 = floor(value * 2)),
   tapped_at timestamptz not null,
   received_at timestamptz not null default now()
 );
@@ -217,6 +224,27 @@ as $$
     else e.ends_at
   end;
 $$;
+
+-- Locking (by any path: RPC, direct update, insert) stamps locked_at, which becomes the
+-- closing time; re-locking after an unlock gets a fresh stamp. An insert may supply its own.
+create function public.stamp_event_locked_at()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.status_override = 'locked'
+     and (tg_op = 'INSERT' and new.locked_at is null
+          or tg_op = 'UPDATE' and old.status_override is distinct from 'locked') then
+    new.locked_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+create trigger events_stamp_locked_at
+  before insert or update of status_override on public.events
+  for each row execute function public.stamp_event_locked_at();
 
 -- ---------------------------------------------------------------------------
 -- Audit log (weight overrides and lock/unlock)

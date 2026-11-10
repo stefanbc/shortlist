@@ -8,12 +8,13 @@ select plan(16);
 -- Test helpers (rolled back with the transaction).
 create schema tests;
 grant usage on schema tests to authenticated, anon;
+-- The role goes in app metadata (service-role only), as the admin-users function does.
 create function tests.create_user(p_id uuid, p_name text, p_role text) returns uuid
 language sql as $$
   insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data, created_at, updated_at)
   values (p_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           lower(replace(p_name, ' ', '.')) || '@test.invalid',
-          jsonb_build_object('display_name', p_name, 'role', p_role), '{}'::jsonb, now(), now())
+          jsonb_build_object('display_name', p_name), jsonb_build_object('role', p_role), now(), now())
   returning id;
 $$;
 -- Switches the session to an authenticated user (call `reset role` to return to postgres).

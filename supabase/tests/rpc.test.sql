@@ -4,17 +4,18 @@ begin;
 set local client_min_messages = warning;
 create extension if not exists pgtap with schema extensions;
 
-select plan(33);
+select plan(41);
 
 -- Test helpers (rolled back with the transaction).
 create schema tests;
 grant usage on schema tests to authenticated, anon;
+-- The role goes in app metadata (service-role only), as the admin-users function does.
 create function tests.create_user(p_id uuid, p_name text, p_role text) returns uuid
 language sql as $$
   insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data, created_at, updated_at)
   values (p_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           lower(replace(p_name, ' ', '.')) || '@test.invalid',
-          jsonb_build_object('display_name', p_name, 'role', p_role), '{}'::jsonb, now(), now())
+          jsonb_build_object('display_name', p_name), jsonb_build_object('role', p_role), now(), now())
   returning id;
 $$;
 -- Switches the session to an authenticated user (call `reset role` to return to postgres).
@@ -107,6 +108,19 @@ select is(
 select is(
   (select count(*)::int from scores where team_id = '30000000-0000-0000-0000-000000000001'),
   0, 'null value deletes the score');
+
+-- Ruling R8: an older tap never overwrites a newer one (saves and clears alike).
+select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 4, now());
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', 3, now() - interval '1 minute'),
+  'saved', 'older tap is reported as saved');
+select is(
+  (select value from scores where team_id = '30000000-0000-0000-0000-000000000001'),
+  4::numeric, 'older tap does not overwrite the newer stored value');
+select upsert_score('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', null, now() - interval '2 minute');
+select is(
+  (select value from scores where team_id = '30000000-0000-0000-0000-000000000001'),
+  4::numeric, 'older clear does not delete the newer stored value');
 
 select is(
   upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', null, now() - interval '25 minute'),
@@ -255,6 +269,57 @@ select results_eq(
 select is(
   (select count(*)::int from event_jurors where event_id = (select id from imported)),
   2, 'import_event assigns every listed juror to the event');
+
+-- ---------------------------------------------------------------- lock by direct update
+-- Event 7 is open by dates; an admin locks it with a plain UPDATE (not set_event_status).
+insert into events (id, name, starts_at, ends_at) values
+  ('10000000-0000-0000-0000-000000000007', 'Direct', now() - interval '1 hour', now() + interval '1 hour');
+insert into criteria (id, event_id, name, weight, position) values
+  ('20000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'C7', 10, 1);
+insert into teams (id, event_id, name, pitch_order) values
+  ('30000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'T7', 1);
+insert into event_jurors (event_id, juror_id) values
+  ('10000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-0000000000b1');
+
+select tests.authenticate_as('00000000-0000-0000-0000-0000000000a1');
+update events set status_override = 'locked' where id = '10000000-0000-0000-0000-000000000007';
+reset role;
+select is(
+  (select locked_at from events where id = '10000000-0000-0000-0000-000000000007'),
+  now(), 'lock by direct update stamps locked_at');
+
+-- Simulate 20 minutes passing by shifting all of the event's instants back.
+update events
+set starts_at = starts_at - interval '20 minute',
+    ends_at = ends_at - interval '20 minute',
+    locked_at = locked_at - interval '20 minute'
+where id = '10000000-0000-0000-0000-000000000007';
+
+select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000007', 4, now()),
+  'locked', 'after a direct lock, a tap once grace has passed returns locked (ends_at still in the future)');
+reset role;
+
+-- Unlock, then re-lock directly: locked_at is refreshed (it was 20 minutes old).
+update events set status_override = 'open' where id = '10000000-0000-0000-0000-000000000007';
+update events set status_override = 'locked' where id = '10000000-0000-0000-0000-000000000007';
+select is(
+  (select locked_at from events where id = '10000000-0000-0000-0000-000000000007'),
+  now(), 're-locking after an unlock refreshes locked_at');
+
+-- ---------------------------------------------------------------- grace edge cases
+select tests.authenticate_as('00000000-0000-0000-0000-0000000000b1');
+
+select throws_ok(
+  $$ select upsert_score('30000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000004', 999, now() - interval '25 minute') $$,
+  '23514', null, 'locked-out tap with an out-of-range value raises instead of being logged');
+
+-- Event 5 closed 5 min ago (within grace) and started 2 hours ago.
+select is(
+  upsert_score('30000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000005', 3, now() - interval '3 hour'),
+  'locked', 'grace does not accept a tap made before starts_at');
+reset role;
 
 select * from finish();
 rollback;

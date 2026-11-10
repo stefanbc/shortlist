@@ -3,18 +3,16 @@ begin;
 set local client_min_messages = warning;
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(20);
 
 -- Test helpers (rolled back with the transaction).
 create schema tests;
-create function tests.create_user(p_id uuid, p_name text, p_role text) returns uuid
+-- Creates an auth user with the given user and app metadata (the profile trigger fires).
+create function tests.create_user(p_id uuid, p_email text, p_user_meta jsonb, p_app_meta jsonb) returns uuid
 language sql as $$
   insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, raw_app_meta_data, created_at, updated_at)
   values (p_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-          lower(replace(p_name, ' ', '.')) || '@test.invalid',
-          case when p_role is null then jsonb_build_object('display_name', p_name)
-               else jsonb_build_object('display_name', p_name, 'role', p_role) end,
-          '{}'::jsonb, now(), now())
+          p_email, p_user_meta, p_app_meta, now(), now())
   returning id;
 $$;
 
@@ -26,8 +24,14 @@ returns events language sql as $$
     'status_override', p_override, 'locked_at', p_locked));
 $$;
 
-select tests.create_user('00000000-0000-0000-0000-0000000000a1', 'Ada Admin', 'admin');
-select tests.create_user('00000000-0000-0000-0000-0000000000b1', 'Jo Juror', null);
+select tests.create_user('00000000-0000-0000-0000-0000000000a1', 'ada@test.invalid',
+  '{"display_name": "Ada Admin"}', '{"role": "admin"}');
+select tests.create_user('00000000-0000-0000-0000-0000000000b1', 'jo@test.invalid',
+  '{"display_name": "Jo Juror"}', '{}');
+select tests.create_user('00000000-0000-0000-0000-0000000000c1', 'mallory@test.invalid',
+  '{"display_name": "Mallory", "role": "admin"}', '{}');
+select tests.create_user('00000000-0000-0000-0000-0000000000c2', 'nobody@test.invalid',
+  '{}', '{"role": "superuser"}');
 
 insert into events (id, name, starts_at, ends_at)
 values ('10000000-0000-0000-0000-000000000001', 'Hack', now() - interval '1 hour', now() + interval '1 hour');
@@ -65,7 +69,15 @@ select throws_ok(
 -- profile trigger
 select is(
   (select role from profiles where id = '00000000-0000-0000-0000-0000000000a1'),
-  'admin', 'profile created with role from metadata');
+  'admin', 'app metadata role admin gives an admin profile');
+
+select is(
+  (select role from profiles where id = '00000000-0000-0000-0000-0000000000c1'),
+  'juror', 'user metadata role admin (self-set at sign-up) gives a juror profile');
+
+select is(
+  (select role || '/' || display_name from profiles where id = '00000000-0000-0000-0000-0000000000c2'),
+  'juror/nobody@test.invalid', 'unknown app role falls back to juror; display_name falls back to email');
 
 select is(
   (select display_name || '/' || role from profiles where id = '00000000-0000-0000-0000-0000000000b1'),
@@ -108,6 +120,20 @@ select is(
 select is(
   event_closed_at(tests.ev(now() - interval '2 hour', now() + interval '1 hour', 'auto', now() - interval '5 minute')),
   now() + interval '1 hour', 'closed_at is ends_at otherwise');
+
+-- locked_at stamping on insert
+insert into events (id, name, starts_at, ends_at, status_override)
+values ('10000000-0000-0000-0000-000000000002', 'Born locked', now() - interval '2 hour', now() - interval '1 hour', 'locked');
+select is(
+  (select locked_at from events where id = '10000000-0000-0000-0000-000000000002'),
+  now(), 'inserting a locked event stamps locked_at');
+
+-- late_score_attempts value check
+select throws_ok(
+  $$ insert into late_score_attempts (event_id, team_id, criterion_id, juror_id, value, tapped_at)
+     values ('10000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001',
+             '20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000b1', 999, now()) $$,
+  '23514', null, 'late_score_attempts rejects an out-of-range value');
 
 -- audit trigger on status change
 update events set status_override = 'locked', locked_at = now()

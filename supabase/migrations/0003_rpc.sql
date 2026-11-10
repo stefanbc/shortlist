@@ -4,7 +4,9 @@
 -- upsert_score: the only way a juror writes a score.
 -- Returns 'saved' | 'not_open' | 'locked' | 'not_assigned' (client contract).
 -- p_value null clears the caller's score for the cell. p_tapped_at is the client tap
--- time, clamped to now(); a tap at or before closing is accepted for 15 minutes after.
+-- time, clamped to now(); a tap at or before closing (and, for date-driven events, not
+-- before starts_at) is accepted for 15 minutes after. A tap older than the stored one
+-- is ignored but still reported as 'saved' (the newer value already stands).
 -- ---------------------------------------------------------------------------
 create function public.upsert_score(
   p_team uuid,
@@ -58,7 +60,9 @@ begin
 
   if v_phase = 'locked' then
     v_closed := public.event_closed_at(v_event);
-    if not (v_tapped <= v_closed and now() <= v_closed + interval '15 minutes') then
+    if not (v_tapped <= v_closed
+            and now() <= v_closed + interval '15 minutes'
+            and (v_event.status_override <> 'auto' or v_tapped >= v_event.starts_at)) then
       insert into public.late_score_attempts (event_id, team_id, criterion_id, juror_id, value, tapped_at)
       values (v_team.event_id, p_team, p_criterion, v_juror, p_value, v_tapped);
       return 'locked';
@@ -67,14 +71,16 @@ begin
 
   if p_value is null then
     delete from public.scores
-    where team_id = p_team and criterion_id = p_criterion and juror_id = v_juror;
+    where team_id = p_team and criterion_id = p_criterion and juror_id = v_juror
+      and tapped_at <= v_tapped;
   else
-    insert into public.scores (event_id, team_id, criterion_id, juror_id, value, tapped_at)
+    insert into public.scores as s (event_id, team_id, criterion_id, juror_id, value, tapped_at)
     values (v_team.event_id, p_team, p_criterion, v_juror, p_value, v_tapped)
     on conflict (team_id, criterion_id, juror_id) do update
       set value = excluded.value,
           tapped_at = excluded.tapped_at,
-          updated_at = now();
+          updated_at = now()
+      where s.tapped_at <= excluded.tapped_at;
   end if;
 
   return 'saved';
@@ -98,7 +104,7 @@ begin
 end;
 $$;
 
--- Manual open/lock/auto. Locking stamps locked_at, which becomes the closing time.
+-- Manual open/lock/auto. Locking stamps locked_at via the events_stamp_locked_at trigger.
 create function public.set_event_status(p_event uuid, p_override text)
 returns void
 language plpgsql
@@ -109,8 +115,7 @@ begin
   perform public.require_permission('events.manage');
 
   update public.events
-  set status_override = p_override,
-      locked_at = case when p_override = 'locked' then now() else locked_at end
+  set status_override = p_override
   where id = p_event;
 
   if not found then

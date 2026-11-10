@@ -57,6 +57,7 @@ alter default privileges in schema public revoke execute on functions from publi
 revoke execute on function public.handle_new_user() from authenticated;
 revoke execute on function public.audit_criteria_weight() from authenticated;
 revoke execute on function public.audit_event_status() from authenticated;
+revoke execute on function public.stamp_event_locked_at() from authenticated;
 grant execute on function public.has_permission(text) to authenticated;
 grant execute on function public.is_event_juror(uuid) to authenticated;
 grant execute on function public.event_phase(public.events) to authenticated;
