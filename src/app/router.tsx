@@ -5,6 +5,7 @@ import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
 import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
+import { TeamsPage } from '@/features/teams/TeamsPage'
 import { RequireRole } from './guards'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
@@ -44,7 +45,7 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <Navigate to="settings" replace /> },
               { path: 'settings', element: <EventSettingsPage /> },
-              { path: 'teams', element: <PlaceholderPage title="events.teams" /> },
+              { path: 'teams', element: <TeamsPage /> },
               { path: 'criteria', element: <CriteriaPage /> },
               { path: 'jurors', element: <PlaceholderPage title="events.jurors" /> },
               {
