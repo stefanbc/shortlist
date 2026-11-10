@@ -1,8 +1,15 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { routes } from './router'
+
+// Route gating is RequireRole's own concern (see guards.test.tsx); here we only
+// care that each route renders in the right shell, so the guard is a passthrough.
+vi.mock('./guards', () => ({
+  RequireRole: ({ children }: { children: ReactNode }) => children,
+}))
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })

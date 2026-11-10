@@ -46,7 +46,26 @@
   },
   "auth": {
     "signIn": "Autentificare",
-    "redeemLink": "Se deschide linkul de jurat"
+    "signInHint": "Pentru organizatori. Jurații se autentifică prin linkul personal primit de la organizator.",
+    "tabPassword": "Parolă",
+    "tabMagicLink": "Link pe email",
+    "emailLabel": "Email",
+    "passwordLabel": "Parolă",
+    "submitPassword": "Autentificare",
+    "submitMagicLink": "Trimite-mi un link",
+    "magicLinkHint": "Îți trimitem un link valabil o singură dată — fără parolă.",
+    "magicLinkSent": "Verifică-ți emailul pentru linkul de autentificare.",
+    "invalidCredentials": "Email sau parolă incorecte.",
+    "genericError": "Ceva nu a funcționat. Încearcă din nou.",
+    "deactivated": "Contul tău a fost dezactivat. Contactează organizatorul evenimentului.",
+    "redeemLink": "Se deschide linkul de jurat",
+    "redeemLoadingBody": "O clipă, te autentificăm.",
+    "redeemInvalidTitle": "Acest link nu mai funcționează",
+    "redeemInvalidBody": "Este posibil să fi fost înlocuit cu unul nou. Cere-i organizatorului linkul tău actual.",
+    "redeemInactiveTitle": "Acest link este suspendat",
+    "redeemInactiveBody": "Contul tău de jurat nu este activ momentan. Cere-i organizatorului să-l reactiveze.",
+    "redeemErrorTitle": "Linkul nu a putut fi deschis",
+    "redeemErrorBody": "Ceva nu a funcționat. Cere-i organizatorului să-ți retrimită linkul."
   },
   "dashboard": {
     "title": "Eveniment live"

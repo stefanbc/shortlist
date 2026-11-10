@@ -46,7 +46,26 @@
   },
   "auth": {
     "signIn": "Sign in",
-    "redeemLink": "Opening your jury link"
+    "signInHint": "For organizers. Jurors sign in with the personal link their organizer sent them.",
+    "tabPassword": "Password",
+    "tabMagicLink": "Email link",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submitPassword": "Sign in",
+    "submitMagicLink": "Send me a link",
+    "magicLinkHint": "We'll email you a one-time link — no password needed.",
+    "magicLinkSent": "Check your email for a sign-in link.",
+    "invalidCredentials": "Incorrect email or password.",
+    "genericError": "Something went wrong. Try again.",
+    "deactivated": "Your account was deactivated. Contact the event organizer.",
+    "redeemLink": "Opening your jury link",
+    "redeemLoadingBody": "Hold on, we're signing you in.",
+    "redeemInvalidTitle": "This link no longer works",
+    "redeemInvalidBody": "It may have been replaced by a newer one. Ask the organizer for your current link.",
+    "redeemInactiveTitle": "This link is paused",
+    "redeemInactiveBody": "Your juror account isn't active right now. Ask the organizer to reactivate it.",
+    "redeemErrorTitle": "Couldn't open your link",
+    "redeemErrorBody": "Something went wrong. Ask the organizer to resend your link."
   },
   "dashboard": {
     "title": "Live event"

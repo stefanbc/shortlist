@@ -1,20 +1,26 @@
 import { Navigate, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
+import { LoginPage } from '@/features/auth/LoginPage'
+import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
+import { RequireRole } from './guards'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
 
 // Placeholder pages are replaced feature by feature in later tasks.
-// Auth guards arrive with the session store (Task 8).
 export const routes: RouteObject[] = [
   {
     errorElement: <RouteErrorPage />,
     children: [
       { path: '/', element: <Navigate to="/login" replace /> },
-      { path: '/login', element: <PlaceholderPage title="auth.signIn" standalone /> },
-      { path: '/j/:token', element: <PlaceholderPage title="auth.redeemLink" standalone /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/j/:token', element: <RedeemJurorLinkPage /> },
       {
         path: '/score',
-        element: <AppShell section="juror" />,
+        element: (
+          <RequireRole role="juror">
+            <AppShell section="juror" />
+          </RequireRole>
+        ),
         children: [
           { index: true, element: <PlaceholderPage title="scoring.title" /> },
           { path: ':eventId/:teamId', element: <PlaceholderPage title="scoring.scoreTeam" /> },
@@ -22,7 +28,11 @@ export const routes: RouteObject[] = [
       },
       {
         path: '/admin',
-        element: <AppShell section="admin" />,
+        element: (
+          <RequireRole role="admin">
+            <AppShell section="admin" />
+          </RequireRole>
+        ),
         children: [
           { index: true, element: <PlaceholderPage title="dashboard.title" /> },
           { path: 'events', element: <PlaceholderPage title="events.title" /> },
