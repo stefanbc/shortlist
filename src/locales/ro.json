@@ -1,0 +1,78 @@
+{
+  "common": {
+    "appName": "Shortlist",
+    "tagline": "Jurizare privată",
+    "cancel": "Anulează",
+    "confirm": "Confirmă",
+    "close": "Închide",
+    "save": "Salvează",
+    "saving": "Se salvează…",
+    "delete": "Șterge",
+    "edit": "Editează",
+    "add": "Adaugă",
+    "back": "Înapoi",
+    "loading": "Se încarcă…",
+    "retry": "Încearcă din nou",
+    "optional": "opțional",
+    "skipToContent": "Sari la conținut",
+    "placeholderTitle": "În lucru",
+    "placeholderBody": "Acest ecran va fi construit într-un pas următor.",
+    "notFoundTitle": "Pagina nu există",
+    "notFoundBody": "Această adresă nu duce la nicio pagină din Shortlist. Verifică linkul sau întoarce-te la început.",
+    "goHome": "Mergi la început",
+    "errorTitle": "Ceva nu a funcționat pe această pagină",
+    "errorBody": "Reîncarcă pagina. Dacă problema persistă, notele introduse rămân salvate pe acest dispozitiv."
+  },
+  "nav": {
+    "main": "Navigare principală",
+    "dashboard": "Live",
+    "events": "Evenimente",
+    "users": "Persoane",
+    "import": "Import",
+    "scoring": "Jurizare",
+    "eventSettings": "Setări eveniment",
+    "teams": "Echipe",
+    "criteria": "Criterii",
+    "jurors": "Jurați",
+    "reports": "Rapoarte"
+  },
+  "prefs": {
+    "open": "Preferințe",
+    "theme": "Aspect",
+    "light": "Luminos",
+    "dark": "Întunecat",
+    "system": "Automat",
+    "language": "Limbă"
+  },
+  "auth": {
+    "signIn": "Autentificare",
+    "redeemLink": "Se deschide linkul de jurat"
+  },
+  "dashboard": {
+    "title": "Eveniment live"
+  },
+  "events": {
+    "title": "Evenimente",
+    "settings": "Setări eveniment",
+    "teams": "Echipe și proiecte",
+    "criteria": "Criterii și teme",
+    "jurors": "Jurați"
+  },
+  "scoring": {
+    "title": "Echipele tale",
+    "scoreTeam": "Notează echipa"
+  },
+  "reports": {
+    "podium": "Podium",
+    "ranking": "Clasament complet",
+    "criteria": "Analiza criteriilor",
+    "jurors": "Analiza juraților",
+    "team": "Detalii echipă"
+  },
+  "users": {
+    "title": "Persoane și roluri"
+  },
+  "import": {
+    "title": "Import din foaia de calcul"
+  }
+}

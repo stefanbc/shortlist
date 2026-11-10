@@ -3,8 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f5fb" />
+    <meta name="color-scheme" content="light dark" />
     <title>Shortlist</title>
+    <script>
+      // Apply the saved theme before first paint to avoid a light flash in dark mode.
+      // Mirrors usePreferencesEffect in src/stores/preferences.ts.
+      try {
+        var prefs = JSON.parse(localStorage.getItem('shortlist.prefs') || '{}').state || {}
+        var dark =
+          prefs.theme === 'dark' ||
+          (prefs.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.documentElement.classList.add('dark')
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,78 @@
+{
+  "common": {
+    "appName": "Shortlist",
+    "tagline": "Private jury scoring",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving…",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "optional": "optional",
+    "skipToContent": "Skip to content",
+    "placeholderTitle": "Being built",
+    "placeholderBody": "This screen arrives in a later step of the build.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This address doesn't lead to any page in Shortlist. Check the link or go back to the start.",
+    "goHome": "Go to start",
+    "errorTitle": "Something broke on this page",
+    "errorBody": "Reload the page. If it keeps happening, your entered scores are still saved on this device."
+  },
+  "nav": {
+    "main": "Main navigation",
+    "dashboard": "Live",
+    "events": "Events",
+    "users": "People",
+    "import": "Import",
+    "scoring": "Scoring",
+    "eventSettings": "Event settings",
+    "teams": "Teams",
+    "criteria": "Criteria",
+    "jurors": "Jurors",
+    "reports": "Reports"
+  },
+  "prefs": {
+    "open": "Preferences",
+    "theme": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Auto",
+    "language": "Language"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "redeemLink": "Opening your jury link"
+  },
+  "dashboard": {
+    "title": "Live event"
+  },
+  "events": {
+    "title": "Events",
+    "settings": "Event settings",
+    "teams": "Teams and projects",
+    "criteria": "Criteria and themes",
+    "jurors": "Jurors"
+  },
+  "scoring": {
+    "title": "Your teams",
+    "scoreTeam": "Score team"
+  },
+  "reports": {
+    "podium": "Podium",
+    "ranking": "Full ranking",
+    "criteria": "Criteria analysis",
+    "jurors": "Juror analysis",
+    "team": "Team breakdown"
+  },
+  "users": {
+    "title": "People and roles"
+  },
+  "import": {
+    "title": "Import from spreadsheet"
+  }
+}
