@@ -6,6 +6,8 @@ import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
 import { TeamsPage } from '@/features/teams/TeamsPage'
+import { EventJurorsPage } from '@/features/users/EventJurorsPage'
+import { UsersPage } from '@/features/users/UsersPage'
 import { RequireRole } from './guards'
 import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
@@ -47,7 +49,7 @@ export const routes: RouteObject[] = [
               { path: 'settings', element: <EventSettingsPage /> },
               { path: 'teams', element: <TeamsPage /> },
               { path: 'criteria', element: <CriteriaPage /> },
-              { path: 'jurors', element: <PlaceholderPage title="events.jurors" /> },
+              { path: 'jurors', element: <EventJurorsPage /> },
               {
                 path: 'reports',
                 children: [
@@ -61,7 +63,7 @@ export const routes: RouteObject[] = [
               },
             ],
           },
-          { path: 'users', element: <PlaceholderPage title="users.title" /> },
+          { path: 'users', element: <UsersPage /> },
           { path: 'import', element: <PlaceholderPage title="import.title" /> },
         ],
       },
