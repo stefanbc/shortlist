@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   SCORE_QUEUE_STORAGE_KEY,
   ScoreRejectedError,
+  UNKNOWN_JUROR,
   useScoreQueue,
   type QueuedScore,
   type SaveResult,
@@ -11,9 +12,18 @@ import {
 const T0 = new Date('2026-11-10T10:00:00.000Z')
 const T1 = new Date('2026-11-10T10:00:05.000Z')
 
+const A = 'juror-a'
+const B = 'juror-b'
+
 const cell = (
-  overrides: Partial<{ eventId: string; teamId: string; criterionId: string }> = {},
+  overrides: Partial<{
+    eventId: string
+    teamId: string
+    criterionId: string
+    jurorId: string
+  }> = {},
 ) => ({
+  jurorId: A,
   eventId: 'ev-1',
   teamId: 'team-1',
   criterionId: 'crit-1',
@@ -32,9 +42,12 @@ function deferred<T>() {
 }
 
 const items = () => useScoreQueue.getState().items
+/** The queued item for a cell, owned by `jurorId` (A unless given). */
+const item = (key: string, jurorId = A) =>
+  Object.values(items()).find((i) => i.key === key && i.jurorId === jurorId)
 const enqueue = (...args: Parameters<ReturnType<typeof useScoreQueue.getState>['enqueue']>) =>
   useScoreQueue.getState().enqueue(...args)
-const flush = (send: SendScore) => useScoreQueue.getState().flush(send)
+const flush = (send: SendScore, jurorId = A) => useScoreQueue.getState().flush(send, jurorId)
 
 beforeEach(() => {
   localStorage.clear()
@@ -50,9 +63,10 @@ describe('scoreQueue', () => {
     enqueue({ ...cell(), value: 3 }, T0)
     enqueue({ ...cell(), value: 4.5 }, T1)
 
-    expect(items()).toEqual({
-      'team-1:crit-1': {
+    expect(Object.values(items())).toEqual([
+      {
         key: 'team-1:crit-1',
+        jurorId: A,
         eventId: 'ev-1',
         teamId: 'team-1',
         criterionId: 'crit-1',
@@ -60,15 +74,15 @@ describe('scoreQueue', () => {
         tappedAt: T1.toISOString(),
         status: 'pending',
       },
-    })
+    ])
   })
 
   it('enqueue keeps tappedAt strictly increasing per key, even within one millisecond', () => {
     enqueue({ ...cell(), value: 3 }, T0)
     enqueue({ ...cell(), value: 4 }, T0)
 
-    expect(items()['team-1:crit-1'].value).toBe(4)
-    expect(items()['team-1:crit-1'].tappedAt > T0.toISOString()).toBe(true)
+    expect(item('team-1:crit-1')!.value).toBe(4)
+    expect(item('team-1:crit-1')!.tappedAt > T0.toISOString()).toBe(true)
   })
 
   it('saved removes item', async () => {
@@ -105,7 +119,7 @@ describe('scoreQueue', () => {
     first.resolve('saved')
     await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(2))
 
-    expect(items()['team-1:crit-1']).toMatchObject({
+    expect(item('team-1:crit-1')!).toMatchObject({
       value: 4,
       status: 'pending',
       tappedAt: T1.toISOString(),
@@ -125,8 +139,8 @@ describe('scoreQueue', () => {
     await flush(send)
 
     expect(send).toHaveBeenCalledTimes(1)
-    expect(items()['team-1:crit-1']).toMatchObject({ value: 3, status: 'pending' })
-    expect(items()['team-1:crit-2']).toMatchObject({ value: 2, status: 'pending' })
+    expect(item('team-1:crit-1')!).toMatchObject({ value: 3, status: 'pending' })
+    expect(item('team-1:crit-2')!).toMatchObject({ value: 2, status: 'pending' })
   })
 
   it('locked marks rejected with reason', async () => {
@@ -139,12 +153,12 @@ describe('scoreQueue', () => {
 
     await flush(send)
 
-    expect(items()['team-1:crit-1']).toMatchObject({
+    expect(item('team-1:crit-1')!).toMatchObject({
       value: 3,
       status: 'rejected',
       reason: 'locked',
     })
-    expect(items()['team-1:crit-2']).toMatchObject({
+    expect(item('team-1:crit-2')!).toMatchObject({
       value: 2,
       status: 'rejected',
       reason: 'not_open',
@@ -162,9 +176,9 @@ describe('scoreQueue', () => {
     await flush(send)
 
     expect(send).toHaveBeenCalledTimes(2)
-    expect(items()).toEqual({
-      'team-1:crit-1': expect.objectContaining({ status: 'rejected', reason: 'invalid' }),
-    })
+    expect(Object.values(items())).toEqual([
+      expect.objectContaining({ key: 'team-1:crit-1', status: 'rejected', reason: 'invalid' }),
+    ])
   })
 
   it('retryRejected only affects that event', async () => {
@@ -172,11 +186,11 @@ describe('scoreQueue', () => {
     enqueue({ ...cell({ eventId: 'ev-2', teamId: 'team-9' }), value: 2 }, T0)
     await flush(vi.fn<SendScore>().mockResolvedValue('locked'))
 
-    useScoreQueue.getState().retryRejected('ev-1')
+    useScoreQueue.getState().retryRejected('ev-1', A)
 
-    expect(items()['team-1:crit-1'].status).toBe('pending')
-    expect(items()['team-1:crit-1'].reason).toBeUndefined()
-    expect(items()['team-9:crit-1']).toMatchObject({ status: 'rejected', reason: 'locked' })
+    expect(item('team-1:crit-1')!.status).toBe('pending')
+    expect(item('team-1:crit-1')!.reason).toBeUndefined()
+    expect(item('team-9:crit-1')!).toMatchObject({ status: 'rejected', reason: 'locked' })
   })
 
   it('concurrent flush calls share one run (no double send)', async () => {
@@ -197,13 +211,13 @@ describe('scoreQueue', () => {
     enqueue({ ...cell(), value: 3.5 }, T0)
     expect(
       JSON.parse(localStorage.getItem(SCORE_QUEUE_STORAGE_KEY) ?? '{}').state.items,
-    ).toHaveProperty('team-1:crit-1')
+    ).toHaveProperty(['juror-a/team-1:crit-1'])
 
     // Simulate a reload: a fresh module instance reads only what localStorage holds.
     vi.resetModules()
     const fresh = await import('./scoreQueue')
 
-    expect(fresh.useScoreQueue.getState().items['team-1:crit-1']).toMatchObject({
+    expect(Object.values(fresh.useScoreQueue.getState().items)[0]).toMatchObject({
       value: 3.5,
       status: 'pending',
       tappedAt: T0.toISOString(),
@@ -219,9 +233,90 @@ describe('scoreQueue', () => {
     })
 
     expect(() => enqueue({ ...cell(), value: 3 }, T0)).not.toThrow()
-    expect(items()['team-1:crit-1'].value).toBe(3)
+    expect(item('team-1:crit-1')!.value).toBe(3)
 
     await flush(vi.fn<SendScore>().mockResolvedValue('saved'))
     expect(items()).toEqual({})
+  })
+
+  it("a juror's taps are never sent under another juror's session, and survive until the owner returns", async () => {
+    enqueue({ ...cell({ jurorId: A }), value: 3 }, T0)
+    const send = vi.fn<SendScore>().mockResolvedValue('saved')
+
+    await flush(send, B)
+
+    expect(send).not.toHaveBeenCalled()
+    expect(item('team-1:crit-1', A)).toMatchObject({ value: 3, status: 'pending' })
+
+    await flush(send, A)
+
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ jurorId: A, value: 3 }))
+    expect(items()).toEqual({})
+  })
+
+  it('keeps the same cell separately for two jurors', () => {
+    enqueue({ ...cell({ jurorId: A }), value: 3 }, T0)
+    enqueue({ ...cell({ jurorId: B }), value: 5 }, T1)
+
+    expect(item('team-1:crit-1', A)!.value).toBe(3)
+    expect(item('team-1:crit-1', B)!.value).toBe(5)
+  })
+
+  it('retryRejected can be limited to the given reasons and to one juror', async () => {
+    enqueue({ ...cell(), value: 3 }, T0)
+    enqueue({ ...cell({ criterionId: 'crit-2' }), value: 2 }, T0)
+    enqueue({ ...cell({ jurorId: B }), value: 4 }, T0)
+    await flush(
+      vi.fn<SendScore>().mockResolvedValueOnce('not_open').mockResolvedValueOnce('locked'),
+    )
+    await flush(vi.fn<SendScore>().mockResolvedValue('not_open'), B)
+
+    useScoreQueue.getState().retryRejected('ev-1', A, ['not_open', 'not_assigned'])
+
+    expect(item('team-1:crit-1')!.status).toBe('pending')
+    expect(item('team-1:crit-2')).toMatchObject({ status: 'rejected', reason: 'locked' })
+    expect(item('team-1:crit-1', B)).toMatchObject({ status: 'rejected', reason: 'not_open' })
+  })
+
+  it('migrates a v1 queue: legacy items without an owner are kept but quarantined, never sent', async () => {
+    localStorage.setItem(
+      SCORE_QUEUE_STORAGE_KEY,
+      JSON.stringify({
+        version: 1,
+        state: {
+          items: {
+            'team-1:crit-1': {
+              key: 'team-1:crit-1',
+              eventId: 'ev-1',
+              teamId: 'team-1',
+              criterionId: 'crit-1',
+              value: 3.5,
+              tappedAt: T0.toISOString(),
+              status: 'pending',
+            },
+          },
+        },
+      }),
+    )
+
+    vi.resetModules()
+    const fresh = await import('./scoreQueue')
+    const migrated = Object.values(fresh.useScoreQueue.getState().items)
+
+    expect(migrated).toEqual([
+      expect.objectContaining({
+        key: 'team-1:crit-1',
+        value: 3.5,
+        tappedAt: T0.toISOString(),
+        jurorId: UNKNOWN_JUROR,
+        status: 'rejected',
+        reason: 'invalid',
+      }),
+    ])
+    const send = vi.fn<SendScore>().mockResolvedValue('saved')
+    fresh.useScoreQueue.getState().retryRejected('ev-1', A)
+    await fresh.useScoreQueue.getState().flush(send, A)
+    expect(send).not.toHaveBeenCalled()
+    expect(Object.values(fresh.useScoreQueue.getState().items)).toHaveLength(1)
   })
 })
