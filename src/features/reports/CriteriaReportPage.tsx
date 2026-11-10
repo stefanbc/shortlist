@@ -1,0 +1,149 @@
+import { ChartNoAxesColumn } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { useParams } from 'react-router'
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Page, PageHeader } from '@/components/layout/Page'
+import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
+import type { CriterionStat } from '@/domain/analytics'
+import type { Criterion, Id } from '@/domain/types'
+import { ReportNav } from './ReportNav'
+import { useScoreFormat } from './reportUtils'
+import { useEventResults } from './useEventResults'
+
+export interface CriteriaReportViewProps {
+  criteria: Criterion[]
+  stats: CriterionStat[]
+}
+
+/** Which criteria separated teams: a mean + spread table (sorted most-discriminating
+ * first by `criterionStats`) and a bar chart of field-wide averages. Pure/presentational,
+ * like the other report views, for fixture/synthetic testing. */
+export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps) {
+  const { t } = useTranslation()
+  const format = useScoreFormat()
+  const criteriaById = new Map(criteria.map((criterion) => [criterion.id, criterion]))
+
+  if (stats.length === 0) {
+    return (
+      <EmptyState
+        icon={ChartNoAxesColumn}
+        title={t('reports.criteriaPage.emptyTitle')}
+        description={t('reports.criteriaPage.emptyBody')}
+      />
+    )
+  }
+
+  const chartData = stats
+    .filter((stat): stat is CriterionStat & { mean: number } => stat.mean !== null)
+    .map((stat) => ({
+      name: criteriaById.get(stat.criterionId)?.name ?? stat.criterionId,
+      mean: stat.mean,
+    }))
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card>
+        <div className="-mx-5 overflow-x-auto px-5 py-5">
+          <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+            <caption className="sr-only">{t('reports.criteriaPage.tableCaption')}</caption>
+            <thead>
+              <tr className="text-left text-ink-muted">
+                <th scope="col" className="px-3 py-2 font-medium">
+                  {t('criteria.nameLabel')}
+                </th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">
+                  {t('criteria.weightLabel')}
+                </th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">
+                  {t('reports.criteriaPage.meanHeader')}
+                </th>
+                <th scope="col" className="px-3 py-2 text-right font-medium">
+                  {t('reports.criteriaPage.spreadHeader')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.map((stat) => {
+                const criterion = criteriaById.get(stat.criterionId)
+                return (
+                  <tr key={stat.criterionId} className="border-t border-line">
+                    <th scope="row" className="px-3 py-2 text-left font-medium">
+                      {criterion?.name ?? stat.criterionId}
+                    </th>
+                    <td className="numeral px-3 py-2 text-right text-ink-muted">
+                      {criterion?.weight ?? '—'}
+                    </td>
+                    <td className="numeral px-3 py-2 text-right">{format(stat.mean)}</td>
+                    <td className="numeral px-3 py-2 text-right">{format(stat.spread)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('reports.criteriaPage.chartTitle')}</CardTitle>
+        </CardHeader>
+        <CardBody>
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ left: 0, right: 12, top: 8, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={{ stroke: 'var(--line)' }}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis
+                  domain={[0, 5]}
+                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={{ stroke: 'var(--line)' }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 10,
+                    color: 'var(--ink)',
+                  }}
+                  formatter={(value) => format(typeof value === 'number' ? value : null)}
+                />
+                <Bar dataKey="mean" fill="var(--accent)" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardBody>
+      </Card>
+    </div>
+  )
+}
+
+export function CriteriaReportPage() {
+  const { eventId } = useParams<{ eventId: string }>()
+  const { t } = useTranslation()
+  const id = eventId as Id
+  const results = useEventResults(id)
+
+  return (
+    <Page>
+      <PageHeader title={t('reports.criteria')} />
+      <ReportNav eventId={id} />
+      {results.isLoading ? (
+        <Skeleton className="h-72 w-full" />
+      ) : (
+        <CriteriaReportView criteria={results.criteria} stats={results.criterionStats} />
+      )}
+    </Page>
+  )
+}

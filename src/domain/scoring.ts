@@ -143,10 +143,15 @@ function compareRanked(a: ComparableResult, b: ComparableResult, sortedCriteria:
     }
   }
 
+  // A team with no manual order sorts after any team in the same tie that has one --
+  // otherwise a partial assignment (only some of the tied teams given an order) would
+  // compare as equal to an unordered team and leave the overall sort inconsistent.
   const aTiebreak = a.team.manualTiebreak
   const bTiebreak = b.team.manualTiebreak
-  if (aTiebreak !== null && bTiebreak !== null && aTiebreak !== bTiebreak) {
-    return aTiebreak - bTiebreak // lower manual tiebreak wins
+  if (aTiebreak !== null || bTiebreak !== null) {
+    if (aTiebreak === null) return 1
+    if (bTiebreak === null) return -1
+    if (aTiebreak !== bTiebreak) return aTiebreak - bTiebreak // lower manual tiebreak wins
   }
 
   return 0

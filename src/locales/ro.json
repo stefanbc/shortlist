@@ -319,7 +319,70 @@
     "ranking": "Clasament complet",
     "criteria": "Analiza criteriilor",
     "jurors": "Analiza juraților",
-    "team": "Detalii echipă"
+    "team": "Detalii echipă",
+    "formerJuror": "Jurat anterior",
+    "tieBreak": {
+      "resolve": "Rezolvă egalitatea",
+      "title": "Stabilește ordinea pentru această egalitate",
+      "description": "Trage echipele în ordinea în care vrei să le anunți. Asta stabilește un rezultat pentru toate cele {{count}} echipe deodată — nu schimbă notele nimănui.",
+      "saved": "Ordine salvată.",
+      "saveError": "Ordinea nu a putut fi salvată. Încearcă din nou."
+    },
+    "podiumPage": {
+      "emptyTitle": "Încă nu sunt destule note",
+      "emptyBody": "Podiumul apare după ce cel puțin o echipă are un scor final.",
+      "replay": "Reia dezvăluirea",
+      "tieWarning": "{{count}} echipe sunt la egalitate pe locul {{rank}}. Stabilește ordinea înainte să-l anunți."
+    },
+    "rankingPage": {
+      "tableCaption": "Scorul final și locul fiecărei echipe, în ordine.",
+      "rankHeader": "Loc",
+      "teamHeader": "Echipă",
+      "projectHeader": "Proiect",
+      "themeHeader": "Temă",
+      "finalHeader": "Final"
+    },
+    "teamPage": {
+      "finalLabel": "Scor final",
+      "rankBadge": "Locul {{rank}}",
+      "noShowTitle": "Această echipă nu s-a prezentat",
+      "noShowBody": "Echipele care nu se prezintă primesc automat 1,00 și nu sunt notate de jurați, așa că nu există detalii de afișat.",
+      "tableCaption": "Notele echipei {{team}}, pe criterii și jurați",
+      "averageLabel": "Medie",
+      "weightedLabel": "Ponderat",
+      "jurorAverageRow": "Media juratului",
+      "chartTitle": "Media pe criteriu",
+      "chartEmpty": "Niciun criteriu nu are încă o notă.",
+      "backToRanking": "Înapoi la clasament",
+      "notFoundTitle": "Echipa nu a fost găsită",
+      "notFoundBody": "Această echipă nu mai face parte din eveniment."
+    },
+    "criteriaPage": {
+      "tableCaption": "Media și dispersia fiecărui criteriu, pe toate echipele.",
+      "meanHeader": "Medie",
+      "spreadHeader": "Dispersie",
+      "chartTitle": "Media pe criteriu",
+      "emptyTitle": "Încă nu sunt note",
+      "emptyBody": "Analiza criteriilor apare după ce jurații încep să noteze echipele."
+    },
+    "jurorsPage": {
+      "tableCaption": "Numărul de note, media, dispersia și tendința fiecărui jurat.",
+      "jurorHeader": "Jurat",
+      "countHeader": "Note date",
+      "meanHeader": "Medie",
+      "spreadHeader": "Dispersie",
+      "tendencyHeader": "Tendință",
+      "tendency": {
+        "lenient": "Indulgent",
+        "harsh": "Sever",
+        "neutral": "Neutru"
+      },
+      "outliersHeading": "Valori atipice",
+      "outliersEmpty": "Niciun jurat nu iese încă în evidență față de ceilalți.",
+      "outlierRow": "{{juror}} a notat echipa {{team}} la „{{criterion}}”: {{value}} (ceilalți au dat în medie {{othersMean}})",
+      "emptyTitle": "Încă nu sunt note",
+      "emptyBody": "Analiza juraților apare după ce jurații încep să noteze echipele."
+    }
   },
   "users": {
     "title": "Persoane și roluri",

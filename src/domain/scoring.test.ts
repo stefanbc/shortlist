@@ -255,6 +255,26 @@ describe('rankTeams', () => {
     }
   })
 
+  it('sorts a team without manualTiebreak after ones that have it, within a full tie', () => {
+    // Deferred issue from Task 2's review: a mixed state (only some tied teams have a
+    // manual order) must still produce a total order, with "no order set" sorting last.
+    const criteria = [criterion('c1', 10, 1)]
+    const teams = [
+      makeTeam({ id: 'A', manualTiebreak: 1 }),
+      makeTeam({ id: 'B', manualTiebreak: null }),
+      makeTeam({ id: 'C', manualTiebreak: 3 }),
+    ]
+    const scores: Score[] = [
+      { teamId: 'A', criterionId: 'c1', jurorId: 'j1', value: 3 },
+      { teamId: 'B', criterionId: 'c1', jurorId: 'j1', value: 3 },
+      { teamId: 'C', criterionId: 'c1', jurorId: 'j1', value: 3 },
+    ]
+
+    const ranked = rankTeams(teams, criteria, scores)
+
+    expect(ranked.map((r) => r.teamId)).toEqual(['A', 'C', 'B'])
+  })
+
   it('shares the rank for a full tie outside the top 3 without flagging it', () => {
     const criteria = [criterion('c1', 10, 1)]
     const teams = [

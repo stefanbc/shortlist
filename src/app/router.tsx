@@ -6,6 +6,11 @@ import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
+import { CriteriaReportPage } from '@/features/reports/CriteriaReportPage'
+import { JurorReportPage } from '@/features/reports/JurorReportPage'
+import { PodiumPage } from '@/features/reports/PodiumPage'
+import { RankingPage } from '@/features/reports/RankingPage'
+import { TeamBreakdownPage } from '@/features/reports/TeamBreakdownPage'
 import { JurorHomePage } from '@/features/scoring/JurorHomePage'
 import { ScoringPage } from '@/features/scoring/ScoringPage'
 import { TeamsPage } from '@/features/teams/TeamsPage'
@@ -57,11 +62,11 @@ export const routes: RouteObject[] = [
                 path: 'reports',
                 children: [
                   { index: true, element: <Navigate to="podium" replace /> },
-                  { path: 'podium', element: <PlaceholderPage title="reports.podium" /> },
-                  { path: 'ranking', element: <PlaceholderPage title="reports.ranking" /> },
-                  { path: 'criteria', element: <PlaceholderPage title="reports.criteria" /> },
-                  { path: 'jurors', element: <PlaceholderPage title="reports.jurors" /> },
-                  { path: 'teams/:teamId', element: <PlaceholderPage title="reports.team" /> },
+                  { path: 'podium', element: <PodiumPage /> },
+                  { path: 'ranking', element: <RankingPage /> },
+                  { path: 'criteria', element: <CriteriaReportPage /> },
+                  { path: 'jurors', element: <JurorReportPage /> },
+                  { path: 'teams/:teamId', element: <TeamBreakdownPage /> },
                 ],
               },
             ],

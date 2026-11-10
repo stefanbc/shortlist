@@ -319,7 +319,70 @@
     "ranking": "Full ranking",
     "criteria": "Criteria analysis",
     "jurors": "Juror analysis",
-    "team": "Team breakdown"
+    "team": "Team breakdown",
+    "formerJuror": "Former juror",
+    "tieBreak": {
+      "resolve": "Resolve tie",
+      "title": "Set the order for this tie",
+      "description": "Drag teams into the order you want to announce. This sets a result for all {{count}} teams at once — it doesn't change anyone's scores.",
+      "saved": "Order saved.",
+      "saveError": "Couldn't save the order. Try again."
+    },
+    "podiumPage": {
+      "emptyTitle": "Not enough scores yet",
+      "emptyBody": "The podium appears once at least one team has a final score.",
+      "replay": "Replay reveal",
+      "tieWarning": "{{count}} teams are tied for place {{rank}}. Set the order before you announce it."
+    },
+    "rankingPage": {
+      "tableCaption": "Every team's final score and rank, in order.",
+      "rankHeader": "Rank",
+      "teamHeader": "Team",
+      "projectHeader": "Project",
+      "themeHeader": "Theme",
+      "finalHeader": "Final"
+    },
+    "teamPage": {
+      "finalLabel": "Final score",
+      "rankBadge": "Rank {{rank}}",
+      "noShowTitle": "This team was a no-show",
+      "noShowBody": "No-show teams are scored 1.00 by default and aren't scored by jurors, so there's no breakdown to show.",
+      "tableCaption": "{{team}}'s scores by criterion and juror",
+      "averageLabel": "Average",
+      "weightedLabel": "Weighted",
+      "jurorAverageRow": "Juror average",
+      "chartTitle": "Average score by criterion",
+      "chartEmpty": "No criterion has a score yet.",
+      "backToRanking": "Back to ranking",
+      "notFoundTitle": "Team not found",
+      "notFoundBody": "This team isn't part of the event anymore."
+    },
+    "criteriaPage": {
+      "tableCaption": "Each criterion's field-wide average and spread across teams.",
+      "meanHeader": "Mean",
+      "spreadHeader": "Spread",
+      "chartTitle": "Average score by criterion",
+      "emptyTitle": "No scores yet",
+      "emptyBody": "Criteria analysis appears once jurors start scoring teams."
+    },
+    "jurorsPage": {
+      "tableCaption": "Each juror's scoring count, mean, spread and tendency.",
+      "jurorHeader": "Juror",
+      "countHeader": "Scores",
+      "meanHeader": "Mean",
+      "spreadHeader": "Spread",
+      "tendencyHeader": "Tendency",
+      "tendency": {
+        "lenient": "Lenient",
+        "harsh": "Harsh",
+        "neutral": "Neutral"
+      },
+      "outliersHeading": "Outliers",
+      "outliersEmpty": "No juror stands out from the others yet.",
+      "outlierRow": "{{juror}} scored {{team}} on \"{{criterion}}\": {{value}} (others averaged {{othersMean}})",
+      "emptyTitle": "No scores yet",
+      "emptyBody": "Juror analysis appears once jurors start scoring teams."
+    }
   },
   "users": {
     "title": "People and roles",

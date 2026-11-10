@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
-import { toTeam, useReorderTeams } from './api'
+import { toTeam, useReorderTeams, useSetTiebreakOrder } from './api'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: { from: vi.fn() },
@@ -91,6 +91,39 @@ describe('useReorderTeams', () => {
       { id: 't3', pitch_order: 1 },
       { id: 't1', pitch_order: 2 },
       { id: 't2', pitch_order: 3 },
+    ])
+  })
+})
+
+describe('useSetTiebreakOrder', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('writes manual_tiebreak 1..k to every team in the given order, all at once', async () => {
+    const calls: { id: string; manual_tiebreak: number }[] = []
+    vi.mocked(supabase.from).mockImplementation(
+      () =>
+        ({
+          update: (payload: { manual_tiebreak: number }) => ({
+            eq: (_col: string, id: string) => {
+              calls.push({ id, manual_tiebreak: payload.manual_tiebreak })
+              return Promise.resolve({ error: null })
+            },
+          }),
+        }) as never,
+    )
+
+    const { result } = renderHook(() => useSetTiebreakOrder('ev-1'), { wrapper })
+
+    await act(async () => {
+      await result.current.mutateAsync(['b', 'a', 'c'])
+    })
+
+    expect(calls).toEqual([
+      { id: 'b', manual_tiebreak: 1 },
+      { id: 'a', manual_tiebreak: 2 },
+      { id: 'c', manual_tiebreak: 3 },
     ])
   })
 })

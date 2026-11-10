@@ -20,3 +20,13 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
       dispatchEvent: () => false,
     }) as MediaQueryList
 }
+
+// jsdom doesn't implement ResizeObserver; recharts' ResponsiveContainer needs one to exist
+// (it reports a 0x0 box in jsdom either way, since jsdom does no layout).
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}

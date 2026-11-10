@@ -152,6 +152,28 @@ export function useReorderTeams(eventId: Id) {
   })
 }
 
+/** Persists the organizer's manual order for a tied group, writing 1..k to every team in
+ * `orderedIds` at once -- never one team at a time -- so a partial state (only some of the
+ * tied teams given an order) can't arise from this UI (see `rankTeams`' comparator, which
+ * sorts a team with no manual order after one that has it within the same tie). */
+export function useSetTiebreakOrder(eventId: Id) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (orderedIds: Id[]) => {
+      for (const [index, id] of orderedIds.entries()) {
+        const { error } = await supabase
+          .from('teams')
+          .update({ manual_tiebreak: index + 1 })
+          .eq('id', id)
+        if (error) throw error
+      }
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['teams', eventId] })
+    },
+  })
+}
+
 /** Toggles a team's no-show flag. Invalidates every event's teams list (no `eventId` is
  * threaded through the call site) rather than one specific key. */
 export function useSetNoShow() {
