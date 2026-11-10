@@ -1,1 +1,3 @@
 .superpowers/
+.worktrees/
+fixtures/*.xlsx
