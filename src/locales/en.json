@@ -113,6 +113,7 @@
   },
   "events": {
     "title": "Events",
+    "subNavLabel": "Event navigation",
     "settings": "Event settings",
     "teams": "Teams and projects",
     "criteria": "Criteria and themes",

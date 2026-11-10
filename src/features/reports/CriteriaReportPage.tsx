@@ -2,14 +2,12 @@ import { ChartNoAxesColumn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Page, PageHeader } from '@/components/layout/Page'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
 import type { CriterionStat } from '@/domain/analytics'
 import type { Criterion, Id } from '@/domain/types'
-import { ReportNav } from './ReportNav'
 import { useScoreFormat } from './reportUtils'
+import { ReportPage } from './ReportPage'
 import { useEventResults } from './useEventResults'
 
 export interface CriteriaReportViewProps {
@@ -25,7 +23,11 @@ export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps)
   const format = useScoreFormat()
   const criteriaById = new Map(criteria.map((criterion) => [criterion.id, criterion]))
 
-  if (stats.length === 0) {
+  // `criterionStats` always returns one entry per criterion -- it's never actually []
+  // once criteria exist, even before anyone has scored (each entry's mean is just null
+  // until then). So the empty state has to key off "nothing has a score yet", not
+  // "there are no stat rows" (which only happens when there are no criteria at all).
+  if (stats.every((stat) => stat.mean === null)) {
     return (
       <EmptyState
         icon={ChartNoAxesColumn}
@@ -136,14 +138,8 @@ export function CriteriaReportPage() {
   const results = useEventResults(id)
 
   return (
-    <Page>
-      <PageHeader title={t('reports.criteria')} />
-      <ReportNav eventId={id} />
-      {results.isLoading ? (
-        <Skeleton className="h-72 w-full" />
-      ) : (
-        <CriteriaReportView criteria={results.criteria} stats={results.criterionStats} />
-      )}
-    </Page>
+    <ReportPage eventId={id} title={t('reports.criteria')} loading={results.isLoading}>
+      <CriteriaReportView criteria={results.criteria} stats={results.criterionStats} />
+    </ReportPage>
   )
 }

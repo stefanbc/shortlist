@@ -1,21 +1,20 @@
 import { Trophy } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
-import { Page, PageHeader } from '@/components/layout/Page'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
 import type { RankedTeam } from '@/domain/scoring'
 import type { Id } from '@/domain/types'
 import { useThemes } from '@/features/criteria/api'
 import type { TeamWithProject } from '@/features/teams/api'
-import { ReportNav } from './ReportNav'
-import { unresolvedTieGroups, useScoreFormat } from './reportUtils'
+import { resolveTeams, useScoreFormat } from './reportUtils'
+import { ReportPage } from './ReportPage'
 import { TieBreakDialog } from './TieBreakDialog'
+import { TieWarning } from './TieWarning'
 import { useEventResults } from './useEventResults'
+import { useTieBreak } from './useTieBreak'
 
 export interface RankingViewProps {
   eventId: Id
@@ -31,9 +30,7 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
   const { t } = useTranslation()
   const format = useScoreFormat()
   const teamsById = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams])
-  const [tieGroupRank, setTieGroupRank] = useState<number | null>(null)
-  const tieGroups = useMemo(() => unresolvedTieGroups(ranked), [ranked])
-  const activeTieGroup = tieGroups.find((group) => group.rank === tieGroupRank) ?? null
+  const { tieGroups, activeTieGroup, openTieBreak, closeTieBreak } = useTieBreak(ranked)
 
   if (ranked.length === 0) {
     return (
@@ -47,19 +44,7 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
 
   return (
     <div className="flex flex-col gap-4">
-      {tieGroups.map((group) => (
-        <div
-          key={group.rank}
-          className="flex flex-col gap-3 rounded-card bg-warning-soft p-4 ring-1 ring-warning/25 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <p className="text-sm text-warning">
-            {t('reports.podiumPage.tieWarning', { count: group.teamIds.length, rank: group.rank })}
-          </p>
-          <Button variant="secondary" size="sm" onClick={() => setTieGroupRank(group.rank)}>
-            {t('reports.tieBreak.resolve')}
-          </Button>
-        </div>
-      ))}
+      <TieWarning tieGroups={tieGroups} onResolve={openTieBreak} />
 
       <Card>
         <div className="-mx-5 overflow-x-auto px-5 py-5">
@@ -124,11 +109,8 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
         <TieBreakDialog
           eventId={eventId}
           open
-          onOpenChange={(open) => !open && setTieGroupRank(null)}
-          teams={activeTieGroup.teamIds.flatMap((id) => {
-            const team = teamsById.get(id)
-            return team ? [team] : []
-          })}
+          onOpenChange={(open) => !open && closeTieBreak()}
+          teams={resolveTeams(activeTieGroup.teamIds, teamsById)}
         />
       )}
     </div>
@@ -147,14 +129,8 @@ export function RankingPage() {
   )
 
   return (
-    <Page>
-      <PageHeader title={t('reports.ranking')} />
-      <ReportNav eventId={id} />
-      {results.isLoading ? (
-        <Skeleton className="h-72 w-full" />
-      ) : (
-        <RankingView eventId={id} ranked={results.ranked} teams={results.teams} themeNames={themeNames} />
-      )}
-    </Page>
+    <ReportPage eventId={id} title={t('reports.ranking')} loading={results.isLoading}>
+      <RankingView eventId={id} ranked={results.ranked} teams={results.teams} themeNames={themeNames} />
+    </ReportPage>
   )
 }

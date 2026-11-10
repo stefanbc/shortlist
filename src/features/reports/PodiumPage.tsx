@@ -3,19 +3,19 @@ import { motion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
-import { Page, PageHeader } from '@/components/layout/Page'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
 import type { RankedTeam } from '@/domain/scoring'
 import type { Id } from '@/domain/types'
 import type { TeamWithProject } from '@/features/teams/api'
-import { ReportNav } from './ReportNav'
-import { unresolvedTieGroups, useScoreFormat } from './reportUtils'
+import { resolveTeams, useScoreFormat } from './reportUtils'
+import { ReportPage } from './ReportPage'
 import { TieBreakDialog } from './TieBreakDialog'
+import { TieWarning } from './TieWarning'
 import { useEventResults } from './useEventResults'
+import { useTieBreak } from './useTieBreak'
 
 /** Visual left-to-right order (classic podium shape): 2nd, 1st, 3rd. */
 const PLACE_ORDER = [2, 1, 3] as const
@@ -51,12 +51,10 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
   const format = useScoreFormat()
   const teamsById = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams])
   const [replayKey, setReplayKey] = useState(0)
-  const [tieGroupRank, setTieGroupRank] = useState<number | null>(null)
+  const { tieGroups, activeTieGroup, openTieBreak, closeTieBreak } = useTieBreak(ranked)
 
   const slots = useMemo(() => podiumSlots(ranked), [ranked])
   const slotsByRank = useMemo(() => new Map(slots.map((slot) => [slot.rank, slot])), [slots])
-  const tieGroups = useMemo(() => unresolvedTieGroups(ranked), [ranked])
-  const activeTieGroup = tieGroups.find((group) => group.rank === tieGroupRank) ?? null
 
   if (slots.length === 0) {
     return (
@@ -70,19 +68,7 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {tieGroups.map((group) => (
-        <div
-          key={group.rank}
-          className="flex flex-col gap-3 rounded-card bg-warning-soft p-4 ring-1 ring-warning/25 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <p className="text-sm text-warning">
-            {t('reports.podiumPage.tieWarning', { count: group.teamIds.length, rank: group.rank })}
-          </p>
-          <Button variant="secondary" size="sm" onClick={() => setTieGroupRank(group.rank)}>
-            {t('reports.tieBreak.resolve')}
-          </Button>
-        </div>
-      ))}
+      <TieWarning tieGroups={tieGroups} onResolve={openTieBreak} />
 
       <div className="flex justify-end">
         <Button variant="ghost" size="sm" onClick={() => setReplayKey((key) => key + 1)}>
@@ -133,11 +119,8 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
         <TieBreakDialog
           eventId={eventId}
           open
-          onOpenChange={(open) => !open && setTieGroupRank(null)}
-          teams={activeTieGroup.teamIds.flatMap((id) => {
-            const team = teamsById.get(id)
-            return team ? [team] : []
-          })}
+          onOpenChange={(open) => !open && closeTieBreak()}
+          teams={resolveTeams(activeTieGroup.teamIds, teamsById)}
         />
       )}
     </div>
@@ -151,14 +134,8 @@ export function PodiumPage() {
   const results = useEventResults(id)
 
   return (
-    <Page>
-      <PageHeader title={t('reports.podium')} />
-      <ReportNav eventId={id} />
-      {results.isLoading ? (
-        <Skeleton className="h-72 w-full" />
-      ) : (
-        <PodiumView eventId={id} ranked={results.ranked} teams={results.teams} />
-      )}
-    </Page>
+    <ReportPage eventId={id} title={t('reports.podium')} loading={results.isLoading}>
+      <PodiumView eventId={id} ranked={results.ranked} teams={results.teams} />
+    </ReportPage>
   )
 }

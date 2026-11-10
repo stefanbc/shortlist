@@ -113,6 +113,7 @@
   },
   "events": {
     "title": "Evenimente",
+    "subNavLabel": "Navigare eveniment",
     "settings": "Setări eveniment",
     "teams": "Echipe și proiecte",
     "criteria": "Criterii și teme",

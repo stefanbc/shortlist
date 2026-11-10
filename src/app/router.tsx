@@ -4,6 +4,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
 import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { EventShell } from '@/features/events/EventShell'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
 import { CriteriaReportPage } from '@/features/reports/CriteriaReportPage'
@@ -52,6 +53,7 @@ export const routes: RouteObject[] = [
           { path: 'events', element: <EventsPage /> },
           {
             path: 'events/:eventId',
+            element: <EventShell />,
             children: [
               { index: true, element: <Navigate to="settings" replace /> },
               { path: 'settings', element: <EventSettingsPage /> },

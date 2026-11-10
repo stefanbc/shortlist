@@ -292,6 +292,18 @@ describe('CriteriaReportView (synthetic)', () => {
     render(<CriteriaReportView criteria={[criterion('c1', 10, 1)]} stats={[]} />)
     expect(screen.getByText(/no scores yet/i)).toBeInTheDocument()
   })
+
+  it('shows an empty state when criteria are configured but nobody has scored yet', () => {
+    // criterionStats() always returns one entry per criterion (mean/spread null until
+    // scored) -- it's never actually [] once criteria exist, so the empty state must key
+    // off "every stat has a null mean", not "stats.length === 0".
+    const criteria = [criterion('c1', 10, 1), criterion('c2', 10, 2)]
+    const stats = criterionStats(criteria, [])
+
+    render(<CriteriaReportView criteria={criteria} stats={stats} />)
+
+    expect(screen.getByText(/no scores yet/i)).toBeInTheDocument()
+  })
 })
 
 describe('JurorReportView (synthetic)', () => {

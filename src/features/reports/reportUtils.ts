@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RankedTeam } from '@/domain/scoring'
 import type { Id } from '@/domain/types'
+import type { TeamWithProject } from '@/features/teams/api'
 import type { Profile } from '@/stores/session'
 
 /** Looks up a juror's display name: currently-assigned jurors first (the common case),
@@ -51,4 +52,14 @@ export function unresolvedTieGroups(ranked: RankedTeam[]): TieGroup[] {
     })
   }
   return groups.sort((a, b) => a.rank - b.rank)
+}
+
+/** Resolves a tie group's team ids to the actual teams (in that order), for the manual
+ * tie-break dialog's `teams` prop. Skips any id not found in `teamsById` rather than
+ * throwing -- it shouldn't happen, but a dropped row is safer than a crash. */
+export function resolveTeams(ids: Id[], teamsById: Map<Id, TeamWithProject>): TeamWithProject[] {
+  return ids.flatMap((id) => {
+    const team = teamsById.get(id)
+    return team ? [team] : []
+  })
 }

@@ -2,18 +2,16 @@ import { Users } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
-import { Page, PageHeader } from '@/components/layout/Page'
 import { Badge, type BadgeTone } from '@/components/ui/Badge'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
 import type { JurorStat } from '@/domain/analytics'
 import type { Criterion, Id } from '@/domain/types'
 import type { TeamWithProject } from '@/features/teams/api'
 import { useProfiles } from '@/features/users/api'
 import type { Profile } from '@/stores/session'
-import { ReportNav } from './ReportNav'
 import { jurorDisplayName, useScoreFormat } from './reportUtils'
+import { ReportPage } from './ReportPage'
 import { useEventResults } from './useEventResults'
 
 const TENDENCY_TONE: Record<JurorStat['tendency'], BadgeTone> = {
@@ -146,20 +144,14 @@ export function JurorReportPage() {
   const { data: allProfiles } = useProfiles()
 
   return (
-    <Page>
-      <PageHeader title={t('reports.jurors')} />
-      <ReportNav eventId={id} />
-      {results.isLoading ? (
-        <Skeleton className="h-72 w-full" />
-      ) : (
-        <JurorReportView
-          stats={results.jurorStats}
-          assignedJurors={results.jurors}
-          allProfiles={allProfiles ?? []}
-          teams={results.teams}
-          criteria={results.criteria}
-        />
-      )}
-    </Page>
+    <ReportPage eventId={id} title={t('reports.jurors')} loading={results.isLoading}>
+      <JurorReportView
+        stats={results.jurorStats}
+        assignedJurors={results.jurors}
+        allProfiles={allProfiles ?? []}
+        teams={results.teams}
+        criteria={results.criteria}
+      />
+    </ReportPage>
   )
 }
