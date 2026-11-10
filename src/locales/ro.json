@@ -15,6 +15,7 @@
     "retry": "Încearcă din nou",
     "optional": "opțional",
     "skipToContent": "Sari la conținut",
+    "dragHandle": "Trage pentru a reordona",
     "placeholderTitle": "În lucru",
     "placeholderBody": "Acest ecran va fi construit într-un pas următor.",
     "notFoundTitle": "Pagina nu există",
@@ -120,6 +121,30 @@
       "open": "Deschis",
       "locked": "Blocat"
     }
+  },
+  "criteria": {
+    "themesHeading": "Teme",
+    "themesDescription": "Teme din care echipele aleg.",
+    "themesEmpty": "Nicio temă încă.",
+    "addTheme": "Adaugă temă",
+    "themeNameLabel": "Numele temei",
+    "deleteTheme": "Șterge tema",
+    "themeSaveError": "Tema nu a putut fi salvată. Încearcă din nou.",
+    "themeDeleteError": "Tema nu a putut fi ștearsă. Încearcă din nou.",
+    "criteriaHeading": "Criterii",
+    "criteriaDescription": "Criteriile ponderate după care jurații notează fiecare echipă.",
+    "criteriaEmpty": "Niciun criteriu încă.",
+    "nameLabel": "Nume",
+    "weightLabel": "Pondere",
+    "shareOfTotalLabel": "Pondere din total",
+    "addCriterion": "Adaugă criteriu",
+    "deleteCriterion": "Șterge criteriul",
+    "nameRequired": "Introdu un nume.",
+    "weightRequired": "Ponderea trebuie să fie mai mare decât 0.",
+    "saveError": "Criteriul nu a putut fi salvat. Încearcă din nou.",
+    "deleteError": "Criteriul nu a putut fi șters. Încearcă din nou.",
+    "confirmTitle": "Recalculezi scorurile?",
+    "confirmBody": "Scorurile vor fi recalculate."
   },
   "scoring": {
     "title": "Echipele tale",

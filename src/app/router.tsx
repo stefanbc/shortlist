@@ -2,6 +2,7 @@ import { Navigate, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
+import { CriteriaPage } from '@/features/criteria/CriteriaPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
 import { RequireRole } from './guards'
@@ -44,7 +45,7 @@ export const routes: RouteObject[] = [
               { index: true, element: <Navigate to="settings" replace /> },
               { path: 'settings', element: <EventSettingsPage /> },
               { path: 'teams', element: <PlaceholderPage title="events.teams" /> },
-              { path: 'criteria', element: <PlaceholderPage title="events.criteria" /> },
+              { path: 'criteria', element: <CriteriaPage /> },
               { path: 'jurors', element: <PlaceholderPage title="events.jurors" /> },
               {
                 path: 'reports',

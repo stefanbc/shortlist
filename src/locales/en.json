@@ -15,6 +15,7 @@
     "retry": "Try again",
     "optional": "optional",
     "skipToContent": "Skip to content",
+    "dragHandle": "Drag to reorder",
     "placeholderTitle": "Being built",
     "placeholderBody": "This screen arrives in a later step of the build.",
     "notFoundTitle": "Page not found",
@@ -120,6 +121,30 @@
       "open": "Open",
       "locked": "Locked"
     }
+  },
+  "criteria": {
+    "themesHeading": "Themes",
+    "themesDescription": "Pitch themes teams can choose from.",
+    "themesEmpty": "No themes yet.",
+    "addTheme": "Add theme",
+    "themeNameLabel": "Theme name",
+    "deleteTheme": "Delete theme",
+    "themeSaveError": "Couldn't save the theme. Try again.",
+    "themeDeleteError": "Couldn't delete the theme. Try again.",
+    "criteriaHeading": "Criteria",
+    "criteriaDescription": "Weighted criteria jurors score every team against.",
+    "criteriaEmpty": "No criteria yet.",
+    "nameLabel": "Name",
+    "weightLabel": "Weight",
+    "shareOfTotalLabel": "Share of total",
+    "addCriterion": "Add criterion",
+    "deleteCriterion": "Delete criterion",
+    "nameRequired": "Enter a name.",
+    "weightRequired": "Weight must be greater than 0.",
+    "saveError": "Couldn't save the criterion. Try again.",
+    "deleteError": "Couldn't delete the criterion. Try again.",
+    "confirmTitle": "Recalculate scores?",
+    "confirmBody": "Scores will be recalculated."
   },
   "scoring": {
     "title": "Your teams",
