@@ -3,6 +3,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
 import { CriteriaPage } from '@/features/criteria/CriteriaPage'
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
 import { JurorHomePage } from '@/features/scoring/JurorHomePage'
@@ -42,7 +43,7 @@ export const routes: RouteObject[] = [
           </RequireRole>
         ),
         children: [
-          { index: true, element: <PlaceholderPage title="dashboard.title" /> },
+          { index: true, element: <DashboardPage /> },
           { path: 'events', element: <EventsPage /> },
           {
             path: 'events/:eventId',

@@ -24,6 +24,10 @@ vi.mock('@/features/events/api', async (importOriginal) => {
     ...actual,
     useEvents: () => ({ data: [], isLoading: false }),
     useEvent: () => ({ data: undefined, isLoading: true }),
+    // useActiveEvent calls the module's own useEvents internally, which a named-export
+    // mock doesn't intercept (it's not a call through the mocked binding) -- so it needs
+    // its own override to match the "no events" scenario above.
+    useActiveEvent: () => null,
     useSaveEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useSetEventStatus: () => ({ mutateAsync: vi.fn(), isPending: false }),
     useCopyEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
@@ -39,6 +43,26 @@ vi.mock('@/features/teams/api', async (importOriginal) => {
 vi.mock('@/features/criteria/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/criteria/api')>()
   return { ...actual, useCriteria: () => ({ data: undefined, isLoading: true }) }
+})
+
+// DashboardPage's own composed data (see its own tests); mocked here purely so the admin
+// index route doesn't need a QueryClientProvider in this shell-routing test.
+vi.mock('@/features/reports/useEventResults', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/reports/useEventResults')>()
+  return {
+    ...actual,
+    useEventResults: () => ({
+      ranked: [],
+      criteria: [],
+      teams: [],
+      jurors: [],
+      scores: [],
+      criterionStats: [],
+      jurorStats: [],
+      isLoading: false,
+    }),
+    useLateAttempts: () => ({ data: [], isLoading: false }),
+  }
 })
 
 function renderAt(path: string) {

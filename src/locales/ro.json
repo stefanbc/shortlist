@@ -69,7 +69,47 @@
     "redeemErrorBody": "Ceva nu a funcționat. Cere-i organizatorului să-ți retrimită linkul."
   },
   "dashboard": {
-    "title": "Eveniment live"
+    "title": "Eveniment live",
+    "emptyTitle": "Niciun eveniment încă",
+    "emptyBody": "Creează un eveniment ca să vezi aici tabloul lui live, odată pornit.",
+    "emptyAction": "Mergi la evenimente",
+    "nowPitching": {
+      "heading": "Prezintă acum",
+      "none": "Nicio echipă pe scenă",
+      "selectLabel": "Echipa pe scenă",
+      "placeholder": "Alege o echipă",
+      "noShowOption": "{{name}} (absentă)",
+      "next": "Echipa următoare",
+      "clear": "Golește",
+      "error": "Nu am putut actualiza cine prezintă. Încearcă din nou."
+    },
+    "progress": {
+      "heading": "Progres jurizare",
+      "jurorHeader": "Jurat",
+      "tableCaption": "Câte criterii a notat fiecare jurat, pentru fiecare echipă.",
+      "cell": "{{done}}/{{total}}",
+      "cellLabel": "{{juror}} a notat {{team}}: {{done}} din {{total}} criterii",
+      "emptyTitle": "Încă nimic de notat",
+      "emptyBody": "Adaugă echipe, criterii și jurați la acest eveniment ca să vezi aici progresul jurizării.",
+      "formerJurorsNote": "{{count}} jurat(ți) care nu mai fac parte din acest juriu au notat și ei — notele lor contează în continuare în clasament, dar nu apar ca rânduri mai sus."
+    },
+    "ranking": {
+      "heading": "Clasament live",
+      "emptyTitle": "Încă nicio notă",
+      "emptyBody": "Clasamentul apare de îndată ce jurații încep să noteze echipele.",
+      "notScoredBadge": "Nenotată",
+      "tieBadge": "Egalitate"
+    },
+    "lateScores": {
+      "heading": "Note întârziate în așteptare",
+      "row": "{{juror}} a încercat să noteze {{team}} după închiderea jurizării",
+      "unknownJuror": "Fost jurat",
+      "unlock": "Deblochează jurizarea",
+      "confirmTitle": "Deblochezi jurizarea pentru a accepta aceste note?",
+      "confirmBody": "Asta redeschide jurizarea pentru toată lumea la acest eveniment, nu doar pentru încercările întârziate de mai sus. Blocheaz-o din nou după ce notele sunt reintroduse.",
+      "unlocked": "Jurizare deblocată.",
+      "unlockError": "Nu am putut debloca jurizarea. Încearcă din nou."
+    }
   },
   "events": {
     "title": "Evenimente",
