@@ -15,16 +15,20 @@ vi.mock('./guards', () => ({
 }))
 
 // EventsPage/EventSettingsPage own their data-fetching behaviour (see their own tests);
-// here we only need them to render without a QueryClientProvider or a live backend.
-vi.mock('@/features/events/api', () => ({
-  useEvents: () => ({ data: [], isLoading: false }),
-  useEvent: () => ({ data: undefined, isLoading: true }),
-  useSaveEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useSetEventStatus: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useCopyEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  toDateTimeLocal: (value: string) => value,
-  fromDateTimeLocal: (value: string) => value,
-}))
+// here we only need the hooks replaced so these pages render without a QueryClientProvider
+// or a live backend. Everything else (validation, formatting, error-message lookup) is real,
+// so the pages' own unconditionally-evaluated render logic (e.g. error lookups) still works.
+vi.mock('@/features/events/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/events/api')>()
+  return {
+    ...actual,
+    useEvents: () => ({ data: [], isLoading: false }),
+    useEvent: () => ({ data: undefined, isLoading: true }),
+    useSaveEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+    useSetEventStatus: () => ({ mutateAsync: vi.fn(), isPending: false }),
+    useCopyEvent: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  }
+})
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })

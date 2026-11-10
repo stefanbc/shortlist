@@ -9,24 +9,19 @@ import { Button } from '@/components/ui/Button'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { DateTimeField } from '@/components/ui/DateTimeField'
-import { Field } from '@/components/ui/Field'
-import { describedBy } from '@/components/ui/fieldStyles'
-import { Input } from '@/components/ui/Input'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { StatusOverride } from '@/domain/eventPhase'
 import type { Id } from '@/domain/types'
 import {
-  EVENT_FORM_ERROR_KEYS,
   toEventFormState,
   useEvent,
   useSaveEvent,
   useSetEventStatus,
   validateEventForm,
-  type EventFormErrorCode,
   type EventFormErrors,
   type EventRow,
 } from './api'
+import { EventFormFields } from './EventFormFields'
 import { EventPhaseBadge } from './EventPhaseBadge'
 
 type StatusDialogContent = { title: string; body: string; tone: 'default' | 'danger' }
@@ -55,10 +50,6 @@ function EventDetailsForm({ event }: { event: EventRow }) {
   const [form, setForm] = useState(() => toEventFormState(event))
   const [errors, setErrors] = useState<EventFormErrors>({})
 
-  function fieldError(code: EventFormErrorCode | undefined) {
-    return code ? t(EVENT_FORM_ERROR_KEYS[code]) : undefined
-  }
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const result = validateEventForm(form)
@@ -83,54 +74,7 @@ function EventDetailsForm({ event }: { event: EventRow }) {
       </CardHeader>
       <CardBody>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Field id="event-name" label={t('events.nameLabel')} error={fieldError(errors.name)}>
-            <Input
-              id="event-name"
-              value={form.name}
-              aria-describedby={describedBy('event-name', { error: errors.name })}
-              aria-invalid={Boolean(errors.name)}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="event-starts" label={t('events.startsAtLabel')} error={fieldError(errors.startsAt)}>
-              <DateTimeField
-                id="event-starts"
-                value={form.startsAt}
-                aria-describedby={describedBy('event-starts', { error: errors.startsAt })}
-                aria-invalid={Boolean(errors.startsAt)}
-                onChange={(value) => setForm({ ...form, startsAt: value })}
-              />
-            </Field>
-            <Field id="event-ends" label={t('events.endsAtLabel')} error={fieldError(errors.endsAt)}>
-              <DateTimeField
-                id="event-ends"
-                value={form.endsAt}
-                aria-describedby={describedBy('event-ends', { error: errors.endsAt })}
-                aria-invalid={Boolean(errors.endsAt)}
-                onChange={(value) => setForm({ ...form, endsAt: value })}
-              />
-            </Field>
-          </div>
-
-          <Field
-            id="event-pitch-minutes"
-            label={t('events.pitchMinutesLabel')}
-            error={fieldError(errors.pitchMinutes)}
-            className="max-w-xs"
-          >
-            <Input
-              id="event-pitch-minutes"
-              type="number"
-              min={1}
-              max={60}
-              value={form.pitchMinutes}
-              aria-describedby={describedBy('event-pitch-minutes', { error: errors.pitchMinutes })}
-              aria-invalid={Boolean(errors.pitchMinutes)}
-              onChange={(e) => setForm({ ...form, pitchMinutes: e.target.value })}
-            />
-          </Field>
+          <EventFormFields idPrefix="event" form={form} errors={errors} setForm={setForm} />
 
           <div>
             <Button type="submit" loading={saveEvent.isPending}>

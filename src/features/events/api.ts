@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
-import type { ParseKeys } from 'i18next'
+import type { ParseKeys, TFunction } from 'i18next'
 import { eventPhase, type EventTiming, type StatusOverride } from '@/domain/eventPhase'
 import { eventInputSchema, type EventInput } from '@/domain/schemas'
 import type { Id } from '@/domain/types'
@@ -28,7 +28,8 @@ type EventDbRow = {
   now_pitching_since: string | null
 }
 
-function toEventRow(row: EventDbRow): EventRow {
+/** Exported for its own unit test; also the only place that knows the DB's snake_case shape. */
+export function toEventRow(row: EventDbRow): EventRow {
   return {
     id: row.id,
     name: row.name,
@@ -216,6 +217,15 @@ export const EVENT_FORM_ERROR_KEYS: Record<EventFormErrorCode, ParseKeys> = {
   endsBeforeStart: 'events.errorEndsBeforeStart',
   pitchMinutesRange: 'events.errorPitchMinutesRange',
   noSource: 'events.errorNoSource',
+}
+
+/** Translates a field's error code, or returns undefined for no error. The one shared
+ * lookup behind every form's per-field `error={...}` prop. */
+export function eventFieldErrorMessage(
+  t: TFunction,
+  code: EventFormErrorCode | undefined,
+): string | undefined {
+  return code ? t(EVENT_FORM_ERROR_KEYS[code]) : undefined
 }
 
 export function toEventFormState(event: {

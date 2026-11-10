@@ -70,4 +70,22 @@ describe('EventsPage', () => {
     expect(await screen.findByText('Event settings')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/admin/events/ev-new/settings')
   })
+
+  it('clears a validation error from the create dialog when it is closed and reopened', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useEvents).mockReturnValue({ data: [PREVIOUS_EVENT], isLoading: false } as never)
+    vi.mocked(useSaveEvent).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+    vi.mocked(useCopyEvent).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'New event' }))
+    await user.click(screen.getByRole('button', { name: 'Create event' }))
+    expect(await screen.findByText('Enter a name.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    await user.click(screen.getByRole('button', { name: 'New event' }))
+
+    expect(screen.queryByText('Enter a name.')).not.toBeInTheDocument()
+  })
 })

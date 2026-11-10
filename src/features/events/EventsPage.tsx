@@ -11,13 +11,10 @@ import { DialogContent, DialogFooter, Dialog as DialogRoot } from '@/components/
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Field } from '@/components/ui/Field'
 import { describedBy } from '@/components/ui/fieldStyles'
-import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
-import { DateTimeField } from '@/components/ui/DateTimeField'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { EventPhaseBadge } from './EventPhaseBadge'
 import {
-  EVENT_FORM_ERROR_KEYS,
+  eventFieldErrorMessage,
   fromDateTimeLocal,
   useCopyEvent,
   useEvents,
@@ -25,11 +22,12 @@ import {
   validateCopyEventForm,
   validateEventForm,
   type CopyEventFormErrors,
-  type EventFormErrorCode,
   type EventFormErrors,
   type EventFormState,
   type EventRow,
 } from './api'
+import { EventFormFields } from './EventFormFields'
+import { EventPhaseBadge } from './EventPhaseBadge'
 
 const BLANK_FORM: EventFormState = { name: '', startsAt: '', endsAt: '', pitchMinutes: '7' }
 
@@ -40,8 +38,12 @@ function CreateEventDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   const [form, setForm] = useState<EventFormState>(BLANK_FORM)
   const [errors, setErrors] = useState<EventFormErrors>({})
 
-  function fieldError(code: EventFormErrorCode | undefined) {
-    return code ? t(EVENT_FORM_ERROR_KEYS[code]) : undefined
+  // Dialog is portalled and its own form fields only exist while open, but its errors
+  // live in this component's state across opens — clear them so a stale error from a
+  // previous attempt doesn't flash when the dialog is reopened.
+  function handleOpenChange(next: boolean) {
+    if (!next) setErrors({})
+    onOpenChange(next)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -56,7 +58,7 @@ function CreateEventDialog({ open, onOpenChange }: { open: boolean; onOpenChange
       const event = await saveEvent.mutateAsync(result.data)
       toast.success(t('events.created'))
       setForm(BLANK_FORM)
-      onOpenChange(false)
+      handleOpenChange(false)
       navigate(`/admin/events/${event.id}/settings`)
     } catch {
       toast.error(t('events.saveError'))
@@ -64,59 +66,10 @@ function CreateEventDialog({ open, onOpenChange }: { open: boolean; onOpenChange
   }
 
   return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
+    <DialogRoot open={open} onOpenChange={handleOpenChange}>
       <DialogContent title={t('events.createBlankTitle')} description={t('events.createBlankDescription')}>
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
-          <Field id="new-event-name" label={t('events.nameLabel')} error={fieldError(errors.name)}>
-            <Input
-              id="new-event-name"
-              value={form.name}
-              aria-describedby={describedBy('new-event-name', { error: errors.name })}
-              aria-invalid={Boolean(errors.name)}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              id="new-event-starts"
-              label={t('events.startsAtLabel')}
-              error={fieldError(errors.startsAt)}
-            >
-              <DateTimeField
-                id="new-event-starts"
-                value={form.startsAt}
-                aria-describedby={describedBy('new-event-starts', { error: errors.startsAt })}
-                aria-invalid={Boolean(errors.startsAt)}
-                onChange={(value) => setForm({ ...form, startsAt: value })}
-              />
-            </Field>
-            <Field id="new-event-ends" label={t('events.endsAtLabel')} error={fieldError(errors.endsAt)}>
-              <DateTimeField
-                id="new-event-ends"
-                value={form.endsAt}
-                aria-describedby={describedBy('new-event-ends', { error: errors.endsAt })}
-                aria-invalid={Boolean(errors.endsAt)}
-                onChange={(value) => setForm({ ...form, endsAt: value })}
-              />
-            </Field>
-          </div>
-          <Field
-            id="new-event-pitch-minutes"
-            label={t('events.pitchMinutesLabel')}
-            error={fieldError(errors.pitchMinutes)}
-            className="max-w-xs"
-          >
-            <Input
-              id="new-event-pitch-minutes"
-              type="number"
-              min={1}
-              max={60}
-              value={form.pitchMinutes}
-              aria-describedby={describedBy('new-event-pitch-minutes', { error: errors.pitchMinutes })}
-              aria-invalid={Boolean(errors.pitchMinutes)}
-              onChange={(e) => setForm({ ...form, pitchMinutes: e.target.value })}
-            />
-          </Field>
+          <EventFormFields idPrefix="new-event" form={form} errors={errors} setForm={setForm} />
           <DialogFooter>
             <Button type="submit" loading={saveEvent.isPending}>
               {t('events.create')}
@@ -147,8 +100,9 @@ function CopyEventDialog({
   const [form, setForm] = useState<CopyFormState>(COPY_FORM)
   const [errors, setErrors] = useState<CopyEventFormErrors>({})
 
-  function fieldError(code: EventFormErrorCode | undefined) {
-    return code ? t(EVENT_FORM_ERROR_KEYS[code]) : undefined
+  function handleOpenChange(next: boolean) {
+    if (!next) setErrors({})
+    onOpenChange(next)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -168,7 +122,7 @@ function CopyEventDialog({
       })
       toast.success(t('events.created'))
       setForm(COPY_FORM)
-      onOpenChange(false)
+      handleOpenChange(false)
       navigate(`/admin/events/${newEventId}/settings`)
     } catch {
       toast.error(t('events.saveError'))
@@ -176,13 +130,13 @@ function CopyEventDialog({
   }
 
   return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
+    <DialogRoot open={open} onOpenChange={handleOpenChange}>
       <DialogContent title={t('events.copyTitle')} description={t('events.copyDescription')}>
         <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
           <Field
             id="copy-event-source"
             label={t('events.copySourceLabel')}
-            error={fieldError(errors.sourceId)}
+            error={eventFieldErrorMessage(t, errors.sourceId)}
           >
             <Select
               id="copy-event-source"
@@ -199,39 +153,13 @@ function CopyEventDialog({
               ))}
             </Select>
           </Field>
-          <Field id="copy-event-name" label={t('events.nameLabel')} error={fieldError(errors.name)}>
-            <Input
-              id="copy-event-name"
-              value={form.name}
-              aria-describedby={describedBy('copy-event-name', { error: errors.name })}
-              aria-invalid={Boolean(errors.name)}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field
-              id="copy-event-starts"
-              label={t('events.startsAtLabel')}
-              error={fieldError(errors.startsAt)}
-            >
-              <DateTimeField
-                id="copy-event-starts"
-                value={form.startsAt}
-                aria-describedby={describedBy('copy-event-starts', { error: errors.startsAt })}
-                aria-invalid={Boolean(errors.startsAt)}
-                onChange={(value) => setForm({ ...form, startsAt: value })}
-              />
-            </Field>
-            <Field id="copy-event-ends" label={t('events.endsAtLabel')} error={fieldError(errors.endsAt)}>
-              <DateTimeField
-                id="copy-event-ends"
-                value={form.endsAt}
-                aria-describedby={describedBy('copy-event-ends', { error: errors.endsAt })}
-                aria-invalid={Boolean(errors.endsAt)}
-                onChange={(value) => setForm({ ...form, endsAt: value })}
-              />
-            </Field>
-          </div>
+          <EventFormFields
+            idPrefix="copy-event"
+            form={form}
+            errors={errors}
+            setForm={setForm}
+            showPitchMinutes={false}
+          />
           <DialogFooter>
             <Button type="submit" loading={copyEvent.isPending}>
               {t('events.create')}
