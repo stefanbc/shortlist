@@ -1,4 +1,3 @@
-import { FunctionsHttpError } from '@supabase/supabase-js'
 import type { ParseKeys } from 'i18next'
 import { KeyRound, Link2Off, UserX } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -7,24 +6,12 @@ import { useNavigate, useParams } from 'react-router'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { PreferencesMenu } from '@/components/layout/PreferencesMenu'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { readFunctionsErrorCode } from '@/lib/functionsError'
 import { supabase } from '@/lib/supabase'
 
-type RedeemReason = 'invalid_token' | 'inactive' | 'unknown'
+const REDEEM_ERROR_CODES = ['invalid_token', 'inactive'] as const
+type RedeemReason = (typeof REDEEM_ERROR_CODES)[number] | 'unknown'
 type RedeemState = { kind: 'loading' } | { kind: 'error'; reason: RedeemReason }
-
-/** Non-2xx responses from the edge function arrive as a FunctionsHttpError whose
- * body carries the machine-readable reason; anything else collapses to 'unknown'. */
-async function resolveReason(error: unknown): Promise<RedeemReason> {
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = (await error.context.json()) as { error?: string }
-      if (body.error === 'invalid_token' || body.error === 'inactive') return body.error
-    } catch {
-      // Body wasn't JSON — fall through to the generic reason.
-    }
-  }
-  return 'unknown'
-}
 
 const REASON_CONTENT: Record<
   RedeemReason,
@@ -71,7 +58,7 @@ export function RedeemJurorLinkPage() {
       )
       if (cancelled) return
       if (error) {
-        setState({ kind: 'error', reason: await resolveReason(error) })
+        setState({ kind: 'error', reason: await readFunctionsErrorCode(error, REDEEM_ERROR_CODES) })
         return
       }
       if (!data?.tokenHash) {

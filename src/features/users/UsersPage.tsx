@@ -67,7 +67,7 @@ function CreateUserDialog({
       toast.success(t('users.created'))
       handleOpenChange(false)
     } catch (error) {
-      toast.error(userActionErrorMessage(t, userActionErrorCode(error)))
+      toast.error(userActionErrorMessage(t, await userActionErrorCode(error)))
     }
   }
 
@@ -168,7 +168,7 @@ function EmailDialog({
       toast.success(t('users.emailSaved'))
       handleOpenChange(false)
     } catch (err) {
-      toast.error(userActionErrorMessage(t, userActionErrorCode(err)))
+      toast.error(userActionErrorMessage(t, await userActionErrorCode(err)))
     }
   }
 
@@ -292,7 +292,9 @@ function UserRow({
   )
 }
 
-type PendingAction = { kind: 'active'; user: Profile; next: boolean }
+type PendingAction =
+  | { kind: 'active'; user: Profile; next: boolean }
+  | { kind: 'role'; user: Profile; role: 'admin' | 'juror' }
 
 export function UsersPage() {
   const { t } = useTranslation()
@@ -320,37 +322,45 @@ export function UsersPage() {
 
   function handleChangeRole(user: Profile, role: 'admin' | 'juror') {
     if (role === user.role) return
-    setUserRole.mutate(
-      { userId: user.id, role },
-      {
-        onError: () => toast.error(t('users.actionError')),
-      },
-    )
+    setPending({ kind: 'role', user, role })
   }
 
   async function confirmPending() {
     if (!pending) return
     try {
-      await setUserActive.mutateAsync({ userId: pending.user.id, active: pending.next })
+      if (pending.kind === 'active') {
+        await setUserActive.mutateAsync({ userId: pending.user.id, active: pending.next })
+      } else {
+        await setUserRole.mutateAsync({ userId: pending.user.id, role: pending.role })
+      }
     } catch (error) {
-      toast.error(userActionErrorMessage(t, userActionErrorCode(error)))
+      toast.error(userActionErrorMessage(t, await userActionErrorCode(error)))
       throw error
     }
   }
 
-  const dialogContent = pending
-    ? pending.next
-      ? {
-          title: t('users.confirmActivateTitle'),
-          description: t('users.confirmActivateBody', { name: pending.user.displayName }),
-          tone: 'default' as const,
-        }
-      : {
-          title: t('users.confirmDeactivateTitle'),
-          description: t('users.confirmDeactivateBody', { name: pending.user.displayName }),
-          tone: 'danger' as const,
-        }
-    : null
+  const dialogContent =
+    pending?.kind === 'active'
+      ? pending.next
+        ? {
+            title: t('users.confirmActivateTitle'),
+            description: t('users.confirmActivateBody', { name: pending.user.displayName }),
+            tone: 'default' as const,
+          }
+        : {
+            title: t('users.confirmDeactivateTitle'),
+            description: t('users.confirmDeactivateBody', { name: pending.user.displayName }),
+            tone: 'danger' as const,
+          }
+      : pending?.kind === 'role'
+        ? {
+            title: t('users.confirmRoleChangeTitle', {
+              role: t(pending.role === 'admin' ? 'users.roleAdmin' : 'users.roleJuror'),
+            }),
+            description: t('users.confirmRoleChangeBody', { name: pending.user.displayName }),
+            tone: 'danger' as const,
+          }
+        : null
 
   return (
     <Page>

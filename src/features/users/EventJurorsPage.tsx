@@ -1,5 +1,5 @@
 import { ArrowLeft, Gavel, Trash2, UserPlus } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -39,7 +39,8 @@ function AssignJurorDialog({
     onOpenChange(next)
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
     if (!jurorId) return
     try {
       await assignJuror.mutateAsync({ eventId, jurorId: jurorId as Id })
@@ -56,7 +57,7 @@ function AssignJurorDialog({
         title={t('eventJurors.addDialogTitle')}
         description={t('eventJurors.addDialogDescription')}
       >
-        <div className="mt-5 flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
           {candidates.length === 0 ? (
             <p className="text-sm text-ink-muted">{t('eventJurors.pickerEmpty')}</p>
           ) : (
@@ -77,16 +78,11 @@ function AssignJurorDialog({
             </Field>
           )}
           <DialogFooter>
-            <Button
-              type="button"
-              disabled={!jurorId}
-              loading={assignJuror.isPending}
-              onClick={handleSubmit}
-            >
+            <Button type="submit" disabled={!jurorId} loading={assignJuror.isPending}>
               {t('eventJurors.addJuror')}
             </Button>
           </DialogFooter>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

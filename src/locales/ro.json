@@ -238,6 +238,8 @@
     "confirmActivateBody": "{{name}} va putea să se autentifice din nou.",
     "confirmDeactivateTitle": "Dezactivezi acest cont?",
     "confirmDeactivateBody": "{{name}} nu se va mai putea autentifica până reactivezi contul.",
+    "confirmRoleChangeTitle": "Schimbi rolul în {{role}}?",
+    "confirmRoleChangeBody": "Aceasta revocă imediat orice link de autentificare are {{name}}. Va avea nevoie de unul nou după această schimbare.",
     "you": "Tu",
     "eventsJudgedLabel": "Evenimente notate",
     "eventsJudgedNone": "Niciunul încă",

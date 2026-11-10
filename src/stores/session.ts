@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { PROFILE_COLUMNS, toProfile } from '@/domain/profiles'
 import type { Id } from '@/domain/types'
 import i18n from '@/lib/i18n'
 import { supabase } from '@/lib/supabase'
@@ -29,25 +30,6 @@ export const useSession = create<SessionState>((set) => ({
   },
 }))
 
-type ProfileRow = {
-  id: string
-  display_name: string
-  email: string | null
-  role: string
-  active: boolean
-}
-
-function toProfile(row: ProfileRow): Profile | null {
-  if (row.role !== 'admin' && row.role !== 'juror') return null
-  return {
-    id: row.id,
-    displayName: row.display_name,
-    email: row.email,
-    role: row.role,
-    active: row.active,
-  }
-}
-
 /** Loads the profile for the signed-in user and settles the store on every outcome:
  * no user, no/invalid profile row, or an inactive profile all resolve to 'signedOut'. */
 async function syncProfile(userId: string | undefined): Promise<void> {
@@ -58,7 +40,7 @@ async function syncProfile(userId: string | undefined): Promise<void> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, display_name, email, role, active')
+    .select(PROFILE_COLUMNS)
     .eq('id', userId)
     .maybeSingle()
 

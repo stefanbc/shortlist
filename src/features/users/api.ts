@@ -1,8 +1,9 @@
-import { FunctionsHttpError } from '@supabase/supabase-js'
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import type { ParseKeys, TFunction } from 'i18next'
+import { PROFILE_COLUMNS, toProfile, type ProfileDbRow } from '@/domain/profiles'
 import { userInputSchema, type UserInput } from '@/domain/schemas'
 import type { Id } from '@/domain/types'
+import { readFunctionsErrorCode } from '@/lib/functionsError'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/stores/session'
 
@@ -12,30 +13,6 @@ const PLACEHOLDER_EMAIL_SUFFIX = '@jurors.shortlist.invalid'
  * `placeholderEmail()`). Never shown as-is -- the UI reads it as "no email". */
 export function isPlaceholderEmail(email: string | null): boolean {
   return email !== null && email.endsWith(PLACEHOLDER_EMAIL_SUFFIX)
-}
-
-const PROFILE_COLUMNS = 'id, display_name, email, role, active'
-
-type ProfileDbRow = {
-  id: string
-  display_name: string
-  email: string | null
-  role: string
-  active: boolean
-}
-
-/** Exported for its own unit test; also the only place in this feature that knows the
- * DB's snake_case shape. Rows with an unrecognized role (shouldn't happen -- `role`
- * references the `roles` table) are dropped rather than shown half-mapped. */
-export function toProfile(row: ProfileDbRow): Profile | null {
-  if (row.role !== 'admin' && row.role !== 'juror') return null
-  return {
-    id: row.id,
-    displayName: row.display_name,
-    email: row.email,
-    role: row.role,
-    active: row.active,
-  }
 }
 
 /** Every user in the system, for the organizer's people list. */
@@ -131,33 +108,8 @@ export function useUnassignJuror() {
 }
 
 /** Machine-readable reasons `admin-users` can refuse a create/set_active/set_email call. */
-export type UserActionErrorCode =
-  | 'email_exists'
-  | 'cannot_deactivate_self'
-  | 'not_found'
-  | 'unknown'
-
-/** Non-2xx responses from the edge function arrive as a FunctionsHttpError whose body
- * carries the machine-readable reason; anything else (network failure, bad JSON)
- * collapses to 'unknown'. */
-async function toUserActionError(error: unknown): Promise<Error & { code: UserActionErrorCode }> {
-  let code: UserActionErrorCode = 'unknown'
-  if (error instanceof FunctionsHttpError) {
-    try {
-      const body = (await error.context.json()) as { error?: string }
-      if (
-        body.error === 'email_exists' ||
-        body.error === 'cannot_deactivate_self' ||
-        body.error === 'not_found'
-      ) {
-        code = body.error
-      }
-    } catch {
-      // Body wasn't JSON -- fall through to the generic reason.
-    }
-  }
-  return Object.assign(new Error(code), { code })
-}
+const USER_ACTION_ERROR_CODES = ['email_exists', 'cannot_deactivate_self', 'not_found'] as const
+export type UserActionErrorCode = (typeof USER_ACTION_ERROR_CODES)[number] | 'unknown'
 
 export const USER_ACTION_ERROR_KEYS: Record<UserActionErrorCode, ParseKeys> = {
   email_exists: 'users.emailExists',
@@ -172,17 +124,11 @@ export function userActionErrorMessage(t: TFunction, code: UserActionErrorCode):
   return t(USER_ACTION_ERROR_KEYS[code])
 }
 
-/** Reads the `code` a caught useCreateUser/useSetUserActive/useSetUserEmail rejection
+/** Reads the code a caught useCreateUser/useSetUserActive/useSetUserEmail rejection
  * carries, for callers that just want to show `userActionErrorMessage(t, ...)` for
- * whatever went wrong (including errors with no `code`, e.g. a network failure). */
-export function userActionErrorCode(error: unknown): UserActionErrorCode {
-  if (error && typeof error === 'object' && 'code' in error) {
-    const { code } = error as { code: unknown }
-    if (code === 'email_exists' || code === 'cannot_deactivate_self' || code === 'not_found') {
-      return code
-    }
-  }
-  return 'unknown'
+ * whatever went wrong. */
+export function userActionErrorCode(error: unknown): Promise<UserActionErrorCode> {
+  return readFunctionsErrorCode(error, USER_ACTION_ERROR_CODES)
 }
 
 /** Creates a user via the `admin-users` edge function (service role only -- it's the
@@ -194,7 +140,7 @@ export function useCreateUser() {
       const { data, error } = await supabase.functions.invoke<{ id: string }>('admin-users', {
         body: { action: 'create', displayName: input.displayName, email: input.email, role: input.role },
       })
-      if (error) throw await toUserActionError(error)
+      if (error) throw error
       return data!.id
     },
     onSuccess: () => {
@@ -228,7 +174,7 @@ export function useSetUserActive() {
       const { error } = await supabase.functions.invoke('admin-users', {
         body: { action: 'set_active', userId, active },
       })
-      if (error) throw await toUserActionError(error)
+      if (error) throw error
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['profiles'] })
@@ -245,7 +191,7 @@ export function useSetUserEmail() {
       const { error } = await supabase.functions.invoke('admin-users', {
         body: { action: 'set_email', userId, email },
       })
-      if (error) throw await toUserActionError(error)
+      if (error) throw error
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['profiles'] })

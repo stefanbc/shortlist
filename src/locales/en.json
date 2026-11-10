@@ -238,6 +238,8 @@
     "confirmActivateBody": "{{name}} will be able to sign in again.",
     "confirmDeactivateTitle": "Deactivate this account?",
     "confirmDeactivateBody": "{{name}} won't be able to sign in until you reactivate them.",
+    "confirmRoleChangeTitle": "Change role to {{role}}?",
+    "confirmRoleChangeBody": "This immediately revokes any login link {{name}} has. They'll need a new one after this change.",
     "you": "You",
     "eventsJudgedLabel": "Events judged",
     "eventsJudgedNone": "None yet",

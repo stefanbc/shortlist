@@ -70,7 +70,7 @@ afterEach(() => {
 describe('UsersPage', () => {
   it('shows each user with role, status and events judged', async () => {
     vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
-    vi.mocked(useSetUserRole).mockReturnValue({ mutate: vi.fn() } as never)
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: vi.fn() } as never)
     vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
 
     renderPage()
@@ -85,7 +85,7 @@ describe('UsersPage', () => {
   it('deactivating a user requires confirmation', async () => {
     const user = userEvent.setup()
     vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
-    vi.mocked(useSetUserRole).mockReturnValue({ mutate: vi.fn() } as never)
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: vi.fn() } as never)
     const setActive = vi.fn().mockResolvedValue(undefined)
     vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: setActive, isPending: false } as never)
 
@@ -108,7 +108,7 @@ describe('UsersPage', () => {
   it('cancelling the deactivate confirmation does not change the account', async () => {
     const user = userEvent.setup()
     vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
-    vi.mocked(useSetUserRole).mockReturnValue({ mutate: vi.fn() } as never)
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: vi.fn() } as never)
     const setActive = vi.fn()
     vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: setActive, isPending: false } as never)
 
@@ -124,7 +124,7 @@ describe('UsersPage', () => {
 
   it("disables changing or deactivating the signed-in admin's own row", async () => {
     vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
-    vi.mocked(useSetUserRole).mockReturnValue({ mutate: vi.fn() } as never)
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: vi.fn() } as never)
     vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
 
     renderPage()
@@ -133,21 +133,42 @@ describe('UsersPage', () => {
     expect(screen.getByRole('combobox', { name: 'Role: You' })).toBeDisabled()
   })
 
-  it('changing a role calls useSetUserRole directly, without a confirmation dialog', async () => {
+  it('changing a role asks for confirmation, warning that login links will be revoked', async () => {
     const user = userEvent.setup()
     vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
-    const mutate = vi.fn()
-    vi.mocked(useSetUserRole).mockReturnValue({ mutate } as never)
+    const setRole = vi.fn().mockResolvedValue(undefined)
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: setRole } as never)
     vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
 
     renderPage()
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Mirela Pop' }), 'admin')
 
-    expect(mutate).toHaveBeenCalledWith(
-      { userId: 'j-1', role: 'admin' },
-      expect.objectContaining({ onError: expect.any(Function) }),
-    )
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent(/login link/i)
+    expect(setRole).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+    await waitFor(() => expect(setRole).toHaveBeenCalledWith({ userId: 'j-1', role: 'admin' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('cancelling the role change confirmation does not change the role', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useCreateUser).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+    const setRole = vi.fn()
+    vi.mocked(useSetUserRole).mockReturnValue({ mutateAsync: setRole } as never)
+    vi.mocked(useSetUserActive).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+
+    renderPage()
+
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Mirela Pop' }), 'admin')
+    await screen.findByRole('alertdialog')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(setRole).not.toHaveBeenCalled()
+    expect(screen.getByRole('combobox', { name: 'Role: Mirela Pop' })).toHaveValue('juror')
   })
 })

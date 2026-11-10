@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
 import {
   isPlaceholderEmail,
-  toProfile,
   useAssignJuror,
   useCreateUser,
   useIssueJurorLink,
@@ -26,32 +25,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 afterEach(() => {
   vi.clearAllMocks()
-})
-
-describe('toProfile', () => {
-  it('maps the snake_case DB row to a camelCase Profile', () => {
-    expect(
-      toProfile({
-        id: 'u1',
-        display_name: 'Mirela Pop',
-        email: 'mirela@example.com',
-        role: 'juror',
-        active: true,
-      }),
-    ).toEqual({
-      id: 'u1',
-      displayName: 'Mirela Pop',
-      email: 'mirela@example.com',
-      role: 'juror',
-      active: true,
-    })
-  })
-
-  it('drops a row with an unrecognized role', () => {
-    expect(
-      toProfile({ id: 'u2', display_name: 'Ghost', email: null, role: 'superadmin', active: true }),
-    ).toBeNull()
-  })
 })
 
 describe('isPlaceholderEmail', () => {
@@ -98,18 +71,18 @@ describe('validateEmailForm', () => {
 })
 
 describe('userActionErrorCode', () => {
-  it('reads a known code off the error', () => {
-    expect(userActionErrorCode(Object.assign(new Error('email_exists'), { code: 'email_exists' }))).toBe(
-      'email_exists',
-    )
+  it('reads a known code from a FunctionsHttpError body', async () => {
+    const error = new FunctionsHttpError({ json: () => Promise.resolve({ error: 'email_exists' }) })
+    expect(await userActionErrorCode(error)).toBe('email_exists')
   })
 
-  it('falls back to unknown for an unrecognized code', () => {
-    expect(userActionErrorCode(Object.assign(new Error('x'), { code: 'something_else' }))).toBe('unknown')
+  it('falls back to unknown for an unrecognized code', async () => {
+    const error = new FunctionsHttpError({ json: () => Promise.resolve({ error: 'teapot' }) })
+    expect(await userActionErrorCode(error)).toBe('unknown')
   })
 
-  it('falls back to unknown for a plain error with no code', () => {
-    expect(userActionErrorCode(new Error('network down'))).toBe('unknown')
+  it('falls back to unknown for a plain error', async () => {
+    expect(await userActionErrorCode(new Error('network down'))).toBe('unknown')
   })
 })
 
@@ -192,10 +165,13 @@ describe('useCreateUser', () => {
     })
   })
 
-  it('surfaces the email_exists code from a non-2xx response', async () => {
+  it('rejects with the edge function error on a non-2xx response', async () => {
+    const httpError = new FunctionsHttpError({
+      json: () => Promise.resolve({ error: 'email_exists' }),
+    })
     vi.mocked(supabase.functions.invoke).mockResolvedValue({
       data: null,
-      error: new FunctionsHttpError({ json: () => Promise.resolve({ error: 'email_exists' }) }),
+      error: httpError,
     } as never)
 
     const { result } = renderHook(() => useCreateUser(), { wrapper })
@@ -207,6 +183,7 @@ describe('useCreateUser', () => {
     })
 
     await waitFor(() => expect(result.current.isError).toBe(true))
-    expect((result.current.error as { code?: string })?.code).toBe('email_exists')
+    expect(result.current.error).toBe(httpError)
+    expect(await userActionErrorCode(result.current.error)).toBe('email_exists')
   })
 })
