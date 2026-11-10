@@ -241,7 +241,6 @@ function UserRow({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-8"
               aria-label={`${placeholderEmail ? t('users.addEmail') : t('users.editEmail')}: ${user.displayName}`}
               onClick={() => onEditEmail(user)}
             >

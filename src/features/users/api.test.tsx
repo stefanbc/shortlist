@@ -9,6 +9,7 @@ import {
   toProfile,
   useAssignJuror,
   useCreateUser,
+  useIssueJurorLink,
   userActionErrorCode,
   validateEmailForm,
   validateUserForm,
@@ -109,6 +110,49 @@ describe('userActionErrorCode', () => {
 
   it('falls back to unknown for a plain error with no code', () => {
     expect(userActionErrorCode(new Error('network down'))).toBe('unknown')
+  })
+})
+
+describe('useIssueJurorLink', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('builds the link URL from VITE_APP_URL', async () => {
+    vi.stubEnv('VITE_APP_URL', 'https://shortlist.example/')
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { token: 'tok123' },
+      error: null,
+    } as never)
+
+    const { result } = renderHook(() => useIssueJurorLink('j-1'), { wrapper })
+
+    let url: string | undefined
+    await act(async () => {
+      ;({ url } = await result.current.mutateAsync())
+    })
+
+    expect(url).toBe('https://shortlist.example/j/tok123')
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('juror-link', {
+      body: { action: 'issue', jurorId: 'j-1' },
+    })
+  })
+
+  it('falls back to the current origin when VITE_APP_URL is unset', async () => {
+    vi.stubEnv('VITE_APP_URL', '')
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { token: 'tok456' },
+      error: null,
+    } as never)
+
+    const { result } = renderHook(() => useIssueJurorLink('j-2'), { wrapper })
+
+    let url: string | undefined
+    await act(async () => {
+      ;({ url } = await result.current.mutateAsync())
+    })
+
+    expect(url).toBe(`${window.location.origin}/j/tok456`)
   })
 })
 
