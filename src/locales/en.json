@@ -462,5 +462,12 @@
   },
   "import": {
     "title": "Import from spreadsheet"
+  },
+  "export": {
+    "open": "Export",
+    "csv": "CSV (raw scores)",
+    "excel": "Excel workbook",
+    "pdf": "PDF report",
+    "error": "Couldn't build that export. Try again."
   }
 }

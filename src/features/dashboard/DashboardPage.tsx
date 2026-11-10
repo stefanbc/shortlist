@@ -20,6 +20,7 @@ import {
   type EventRow,
 } from '@/features/events/api'
 import { EventPhaseBadge } from '@/features/events/EventPhaseBadge'
+import { ExportMenu } from '@/features/export/ExportMenu'
 import { useEventResults } from '@/features/reports/useEventResults'
 import type { TeamWithProject } from '@/features/teams/api'
 import { useNow } from '@/lib/useNow'
@@ -147,7 +148,11 @@ export function DashboardPage() {
 
   return (
     <Page>
-      <PageHeader title={event.name} description={<EventSummary event={event} now={now} />} />
+      <PageHeader
+        title={event.name}
+        description={<EventSummary event={event} now={now} />}
+        actions={<ExportMenu eventId={event.id} />}
+      />
 
       <div className="flex flex-col gap-6">
         <NowPitchingCard event={event} teams={results.teams} />

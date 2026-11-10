@@ -8,6 +8,8 @@ export interface ReportPageProps {
   eventId: Id
   title: ReactNode
   loading: boolean
+  /** Page-level actions shown next to the title (e.g. the ranking page's `ExportMenu`). */
+  actions?: ReactNode
   children: ReactNode
 }
 
@@ -18,10 +20,10 @@ export interface ReportPageProps {
  * breakdown route isn't one of these four -- it has its own back-link/not-found states
  * and no `ReportNav` -- so it keeps its own wrapper rather than being forced into this
  * shape. */
-export function ReportPage({ eventId, title, loading, children }: ReportPageProps) {
+export function ReportPage({ eventId, title, loading, actions, children }: ReportPageProps) {
   return (
     <Page>
-      <PageHeader title={title} />
+      <PageHeader title={title} actions={actions} />
       <ReportNav eventId={eventId} />
       {loading ? <Skeleton className="h-72 w-full" /> : children}
     </Page>

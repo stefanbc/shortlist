@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { RankedTeam } from '@/domain/scoring'
 import type { Id } from '@/domain/types'
 import { useThemes } from '@/features/criteria/api'
+import { ExportMenu } from '@/features/export/ExportMenu'
 import type { TeamWithProject } from '@/features/teams/api'
 import { resolveTeams, useScoreFormat } from './reportUtils'
 import { ReportPage } from './ReportPage'
@@ -129,7 +130,12 @@ export function RankingPage() {
   )
 
   return (
-    <ReportPage eventId={id} title={t('reports.ranking')} loading={results.isLoading}>
+    <ReportPage
+      eventId={id}
+      title={t('reports.ranking')}
+      loading={results.isLoading}
+      actions={<ExportMenu eventId={id} />}
+    >
       <RankingView eventId={id} ranked={results.ranked} teams={results.teams} themeNames={themeNames} />
     </ReportPage>
   )

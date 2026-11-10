@@ -462,5 +462,12 @@
   },
   "import": {
     "title": "Import din foaia de calcul"
+  },
+  "export": {
+    "open": "Exportă",
+    "csv": "CSV (note brute)",
+    "excel": "Registru Excel",
+    "pdf": "Raport PDF",
+    "error": "Exportul nu a putut fi generat. Încearcă din nou."
   }
 }
