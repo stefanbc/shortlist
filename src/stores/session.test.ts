@@ -99,4 +99,24 @@ describe('useSession', () => {
 
     await waitFor(() => expect(useSession.getState().status).toBe('signedIn'))
   })
+
+  it('falls back to signedOut if syncProfile rejects unexpectedly', async () => {
+    useSession.setState({ status: 'loading', profile: null })
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          maybeSingle: () => Promise.reject(new Error('network boom')),
+        }),
+      }),
+    })
+
+    emitSession('a1')
+
+    // Without a .catch on the fire-and-forget syncProfile call, an unexpected rejection
+    // (anything other than the handled "no row"/"inactive" outcomes) would leave status
+    // stuck at 'loading' forever -- a guarded route would spin rather than ever reaching
+    // /login.
+    await waitFor(() => expect(useSession.getState().status).toBe('signedOut'))
+    expect(useSession.getState().profile).toBeNull()
+  })
 })

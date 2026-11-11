@@ -73,5 +73,10 @@ supabase.auth.onAuthStateChange((_event, session) => {
   if (newUserId && newUserId !== useSession.getState().profile?.id) {
     useSession.setState({ status: 'loading' })
   }
-  void syncProfile(newUserId)
+  // syncProfile handles every outcome it knows about (no user, no/invalid row, inactive)
+  // itself; this only catches something unexpected (a thrown error, a rejected fetch) so
+  // the store never gets stuck at 'loading' forever instead of settling one way or another.
+  void syncProfile(newUserId).catch(() => {
+    useSession.setState({ status: 'signedOut', profile: null })
+  })
 })
