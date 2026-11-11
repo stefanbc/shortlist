@@ -1,11 +1,10 @@
-import { ArrowLeft, Gavel, Trash2, UserPlus } from 'lucide-react'
+import { Gavel, Trash2, UserPlus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/Dialog'
@@ -162,16 +161,8 @@ export function EventJurorsPage() {
     <Page>
       <PageHeader
         title={t('events.jurors')}
-        description={event.name}
         actions={
           <>
-            <Link
-              to={`/admin/events/${event.id}/settings`}
-              className={buttonClasses({ variant: 'secondary', size: 'sm' })}
-            >
-              <ArrowLeft aria-hidden />
-              {t('common.back')}
-            </Link>
             <Button onClick={() => setAssignOpen(true)}>
               <UserPlus aria-hidden />
               {t('eventJurors.addJuror')}

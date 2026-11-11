@@ -1,17 +1,17 @@
 import type { ParseKeys, TFunction } from 'i18next'
-import { ArrowLeft, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Button } from '@/components/ui/Button'
-import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { StatusOverride } from '@/domain/eventPhase'
 import type { Id } from '@/domain/types'
+import { WrapUpSettings } from '@/features/timer/WrapUpSettings'
 import { cn } from '@/lib/cn'
 import {
   toEventFormState,
@@ -182,19 +182,15 @@ export function EventSettingsPage() {
   return (
     <Page>
       <PageHeader
-        title={event.name}
-        description={t('events.settings')}
-        actions={
-          <Link to="/admin/events" className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-            <ArrowLeft aria-hidden />
-            {t('common.back')}
-          </Link>
-        }
+        title={t('events.settings')}
       />
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <EventDetailsForm key={event.id} event={event} />
-        <ScoringControl event={event} />
+        <div className="flex flex-col gap-6">
+          <ScoringControl event={event} />
+          <WrapUpSettings event={event} />
+        </div>
       </div>
     </Page>
   )

@@ -1,12 +1,10 @@
-import { CalendarRange, Copy, Plus } from 'lucide-react'
+import { CalendarRange, ChevronRight, Copy, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Button } from '@/components/ui/Button'
-import { buttonClasses } from '@/components/ui/buttonStyles'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { DialogContent, DialogFooter, Dialog as DialogRoot } from '@/components/ui/Dialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Field } from '@/components/ui/Field'
@@ -171,33 +169,32 @@ function CopyEventDialog({
   )
 }
 
-function EventCard({ event }: { event: EventRow }) {
+function EventRowLink({ event }: { event: EventRow }) {
   const { t, i18n } = useTranslation()
   const dateFormat = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' })
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{event.name}</CardTitle>
-        <EventPhaseBadge event={event} />
-      </CardHeader>
-      <CardBody className="flex flex-col gap-4">
-        <p className="text-sm text-ink-muted">
+    <Link
+      to={`/admin/events/${event.id}/settings`}
+      className="group flex items-center gap-4 px-5 py-4 -outline-offset-2 transition-colors duration-(--duration-fast) hover:bg-raised"
+    >
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="title text-xl break-words">{event.name}</span>
+          <EventPhaseBadge event={event} />
+        </span>
+        <span className="mt-1 block text-sm text-ink-muted">
           {dateFormat.format(new Date(event.startsAt))} – {dateFormat.format(new Date(event.endsAt))}
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-ink-faint">
-            {event.pitchMinutes} {t('events.pitchMinutesSuffix')}
+          <span className="text-ink-faint">
+            , {event.pitchMinutes} {t('events.pitchMinutesSuffix')}
           </span>
-          <Link
-            to={`/admin/events/${event.id}/settings`}
-            className={buttonClasses({ variant: 'secondary', size: 'sm' })}
-          >
-            {t('events.manage')}
-          </Link>
-        </div>
-      </CardBody>
-    </Card>
+        </span>
+      </span>
+      <span className="hidden text-sm font-semibold text-ink-muted group-hover:text-ink sm:inline">
+        {t('events.manage')}
+      </span>
+      <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-faint" />
+    </Link>
   )
 }
 
@@ -230,9 +227,9 @@ export function EventsPage() {
       />
 
       {isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-col gap-2">
           {Array.from({ length: 3 }, (_, i) => (
-            <Skeleton key={i} className="h-40 w-full" />
+            <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
       )}
@@ -252,11 +249,13 @@ export function EventsPage() {
       )}
 
       {!isLoading && hasEvents && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
           {events!.map((event) => (
-            <EventCard key={event.id} event={event} />
+            <li key={event.id}>
+              <EventRowLink event={event} />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} />

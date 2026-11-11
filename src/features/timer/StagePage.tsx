@@ -13,6 +13,8 @@ import { useTeams } from '@/features/teams/api'
 import { cn } from '@/lib/cn'
 import { TimerControls } from './TimerControls'
 import { useTimerActions } from './useTimerActions'
+import { barWarningClasses, clockWarningClasses } from './timerStyles'
+import { useTimerStatus } from './useTimerStatus'
 import { useTimerView } from './useTimerView'
 
 /** How long the controls and pointer stay visible after the mouse last moved. */
@@ -75,7 +77,8 @@ function Stage({ event }: { event: EventRow }) {
   const { t } = useTranslation()
   const { data: teams } = useTeams(event.id as Id)
   const setNowPitching = useSetNowPitching()
-  const view = useTimerView(event.timer, event.pitchMinutes)
+  const view = useTimerView(event)
+  const status = useTimerStatus(event, view)
   const { run } = useTimerActions(event.id)
   const { fullscreen, toggle: toggleFullscreen } = useFullscreen()
   useWakeLock()
@@ -101,6 +104,7 @@ function Stage({ event }: { event: EventRow }) {
   }, [])
 
   const phase = view.phase
+  const mode = view.mode
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.metaKey || event.ctrlKey || event.altKey) return
@@ -108,23 +112,19 @@ function Stage({ event }: { event: EventRow }) {
       if (event.key === ' ' && target?.closest('button, a, input, select, textarea')) return
       if (event.key === ' ') {
         event.preventDefault()
-        run(phase === 'running' ? 'pause' : 'start')
+        if (mode === 'duration') void run({ action: phase === 'running' ? 'pause' : 'start' })
       } else if (event.key.toLowerCase() === 'f') {
         toggleFullscreen()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [phase, run, toggleFullscreen])
+  }, [phase, mode, run, toggleFullscreen])
 
   const clock = formatClock(view.remainingMs)
-  const state = view.over
-    ? t('timer.over')
-    : phase === 'paused'
-      ? t('timer.paused')
-      : phase === 'ready'
-        ? t('timer.ready')
-        : null
+  const label = event.timer?.label ?? null
+  // Running with time to spare needs no caption; every other state says what it is.
+  const state = phase === 'running' && view.warning === 'none' && view.mode === 'duration' ? null : status
 
   return (
     <main
@@ -132,15 +132,15 @@ function Stage({ event }: { event: EventRow }) {
       onFocus={wake}
       className={cn('flex min-h-svh flex-col', !active && 'cursor-none')}
     >
-      <title>{`${current?.name ?? event.name} | ${t('timer.stageTitle')}`}</title>
+      <title>{`${current?.name ?? label ?? event.name} | ${t('timer.stageTitle')}`}</title>
 
       <header className="flex items-start justify-between gap-6 px-[4vw] pt-[4vh]">
         <div className="min-w-0">
           <p className="text-[clamp(1rem,1.6vw,1.75rem)] text-ink-muted">
-            {current ? t('timer.nowPitching') : event.name}
+            {current ? (label ?? t('timer.nowPitching')) : event.name}
           </p>
           <h1 className="text-[clamp(2rem,5.5vw,6rem)] leading-[1.05] break-words">
-            {current ? current.name : t('timer.noTeam')}
+            {current ? current.name : (label ?? t('timer.noTeam'))}
           </h1>
           {current?.project.name && (
             <p className="mt-[1vh] text-[clamp(1.1rem,2.2vw,2.5rem)] text-ink-muted">{current.project.name}</p>
@@ -155,15 +155,15 @@ function Stage({ event }: { event: EventRow }) {
           aria-label={view.over ? t('timer.clockOver', { time: clock }) : t('timer.clockLeft', { time: clock })}
           className={cn(
             'numeral text-[clamp(7rem,30vw,44vh)] leading-[0.9]',
-            view.over && 'text-danger',
-            view.closing && 'marked px-[3vw]',
-            phase === 'paused' && !view.closing && !view.over && 'text-ink-muted',
+            view.warning !== 'none' && 'px-[3vw]',
+            clockWarningClasses(view.warning),
+            phase === 'paused' && view.warning === 'none' && 'text-ink-muted',
           )}
         >
           {view.over && '+'}
           {clock}
         </p>
-        <p className="mt-[2vh] h-[1.2em] text-[clamp(1.1rem,2.4vw,2.75rem)] font-semibold text-ink-muted">
+        <p className="mt-[3vh] h-[1.2em] text-[clamp(1.1rem,2.4vw,2.75rem)] font-semibold text-ink-muted">
           {state}
         </p>
       </div>
@@ -179,7 +179,7 @@ function Stage({ event }: { event: EventRow }) {
               active ? 'opacity-100' : 'pointer-events-none opacity-0 focus-within:pointer-events-auto',
             )}
           >
-            <TimerControls eventId={event.id} phase={phase} />
+            <TimerControls eventId={event.id} view={view} />
             <Button
               variant="secondary"
               disabled={!next || setNowPitching.isPending}
@@ -210,7 +210,7 @@ function Stage({ event }: { event: EventRow }) {
         </div>
         <div aria-hidden className="h-[1.2vh] min-h-1.5 overflow-hidden rounded-full bg-raised">
           <div
-            className={cn('h-full rounded-full bg-accent', view.closing && 'bg-mark', view.over && 'bg-danger')}
+            className={cn('h-full rounded-full', barWarningClasses(view.warning))}
             style={{ width: `${view.progress * 100}%` }}
           />
         </div>

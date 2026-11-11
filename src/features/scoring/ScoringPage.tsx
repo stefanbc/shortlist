@@ -8,7 +8,6 @@ import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { eventPhase } from '@/domain/eventPhase'
-import { IDLE_TIMER } from '@/domain/pitchTimer'
 import type { Criterion } from '@/domain/types'
 import { useCriteria, useThemes } from '@/features/criteria/api'
 import { useEvent, useEventUpdates, type EventRow } from '@/features/events/api'
@@ -253,10 +252,7 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Progress cells={cells} scored={scored} />
-          <PitchTimer
-            pitchMinutes={event.pitchMinutes}
-            shared={onStage ? (event.timer ?? IDLE_TIMER) : null}
-          />
+          <PitchTimer shared={onStage ? event : null} />
         </div>
       </header>
 

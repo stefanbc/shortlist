@@ -82,7 +82,9 @@
       "noShowOption": "{{name}} (no-show)",
       "next": "Next team",
       "clear": "Clear",
-      "error": "Couldn't update who's pitching. Try again."
+      "error": "Couldn't update who's pitching. Try again.",
+      "upNext": "Up next: {{team}}",
+      "lastTeam": "Last team in the pitch order."
     },
     "progress": {
       "heading": "Scoring progress",
@@ -304,8 +306,6 @@
     "timer": {
       "left": "{{time}} left",
       "over": "{{time}} over",
-      "start": "Start {{minutes}}-min timer",
-      "reset": "Reset timer",
       "onStageLabel": "Pitch time for the team on stage",
       "ready": "{{time}} to pitch",
       "paused": "{{time}} left, paused"
@@ -347,7 +347,8 @@
     "rejectedNothingSaved": "Nothing is saved for this criterion.",
     "discardRejected": "Discard unsaved score",
     "noCriteriaTitle": "No criteria yet",
-    "noCriteriaBody": "The organizer hasn't set up the scoring criteria for this event yet. Check back once they have."
+    "noCriteriaBody": "The organizer hasn't set up the scoring criteria for this event yet. Check back once they have.",
+    "breakHeading": "Break"
   },
   "reports": {
     "podium": "Podium",
@@ -576,6 +577,46 @@
     "clockLeft": "{{time}} left",
     "clockOver": "{{time}} over time",
     "controls": "Timer controls",
-    "stageTitle": "Stage timer"
+    "stageTitle": "Stage timer",
+    "stop": "Stop",
+    "until": "Until {{time}}",
+    "wrapUp": "Wrap up",
+    "stopNow": "Time is nearly up",
+    "setup": {
+      "open": "Set up timer",
+      "title": "Set up the timer",
+      "description": "Count down for a length of time, or until a time of day. The current countdown is replaced.",
+      "modeLegend": "Kind of countdown",
+      "mode": {
+        "duration": "For a duration",
+        "until": "Until a time"
+      },
+      "durationLabel": "Length",
+      "durationHint": "Minutes, or minutes and seconds like 7:30. It starts when you press Start.",
+      "durationError": "Enter a length between 0:10 and 240:00.",
+      "presetPitch": "Pitch, {{minutes}} min",
+      "presetMinutes": "{{minutes}} min",
+      "timeLabel": "Ends at",
+      "timeHint": "The countdown starts as soon as you set it.",
+      "timeHintToday": "Counts down to {{time}} today and starts now.",
+      "timeHintTomorrow": "{{time}} has passed today, so this counts down to {{time}} tomorrow.",
+      "timeError": "Choose the time the countdown ends.",
+      "labelLabel": "Name",
+      "labelHint": "Shown on the projector and to jurors, for example during a break.",
+      "labelPlaceholder": "Lunch break",
+      "submitDuration": "Set timer",
+      "submitUntil": "Start countdown"
+    },
+    "wrapUpSettings": {
+      "title": "Wrap-up times",
+      "description": "The timer changes colour as time runs out, on the projector, the Live page and jurors' screens.",
+      "yellowLabel": "Turns yellow with this much left",
+      "redLabel": "Turns red with this much left",
+      "hint": "Minutes and seconds, like 1:00. Use 0:00 to switch a colour off.",
+      "save": "Save wrap-up times",
+      "saved": "Wrap-up times saved.",
+      "errorFormat": "Enter a time like 1:00, up to 60:00.",
+      "errorOrder": "Red must come at or after yellow, so use a smaller time."
+    }
   }
 }

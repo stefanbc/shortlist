@@ -1,11 +1,10 @@
-import { ArrowLeft, ListChecks, Plus, Trash2 } from 'lucide-react'
+import { ListChecks, Plus, Trash2 } from 'lucide-react'
 import { useRef, useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Button } from '@/components/ui/Button'
-import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -88,13 +87,13 @@ function CriterionRow({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Input
           aria-label={t('criteria.nameLabel')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={commitName}
-          className="h-10 min-w-0 flex-1"
+          className="h-11 min-w-0 basis-full sm:basis-0 sm:flex-1"
         />
         <Input
           aria-label={`${t('criteria.weightLabel')}: ${criterion.name}`}
@@ -105,7 +104,7 @@ function CriterionRow({
           onChange={(e) => setWeightText(e.target.value)}
           onBlur={commitWeight}
           aria-invalid={Boolean(weightError)}
-          className="h-10 w-20 shrink-0 text-right"
+          className="h-11 w-24 shrink-0 text-right"
         />
         <Button
           type="button"
@@ -166,13 +165,13 @@ function AddCriterionForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <Input
           aria-label={t('criteria.nameLabel')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           aria-invalid={Boolean(errors.name)}
-          className="h-10 min-w-0 flex-1"
+          className="h-11 min-w-0 basis-full sm:basis-0 sm:flex-1"
         />
         <Input
           aria-label={t('criteria.weightLabel')}
@@ -182,7 +181,7 @@ function AddCriterionForm({
           value={weightText}
           onChange={(e) => setWeightText(e.target.value)}
           aria-invalid={Boolean(errors.weight)}
-          className="h-10 w-20 shrink-0 text-right"
+          className="h-11 w-24 shrink-0 text-right"
         />
         <Button type="submit" variant="secondary" size="sm">
           <Plus aria-hidden />
@@ -386,16 +385,6 @@ export function CriteriaPage() {
     <Page>
       <PageHeader
         title={t('events.criteria')}
-        description={event.name}
-        actions={
-          <Link
-            to={`/admin/events/${event.id}/settings`}
-            className={buttonClasses({ variant: 'secondary', size: 'sm' })}
-          >
-            <ArrowLeft aria-hidden />
-            {t('common.back')}
-          </Link>
-        }
       />
 
       <div className="flex flex-col gap-6">
