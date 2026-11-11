@@ -83,4 +83,20 @@ describe('useSession', () => {
     expect(mockSignOut).not.toHaveBeenCalled()
     expect(toastError).not.toHaveBeenCalled()
   })
+
+  it('does not leave status at a stale signedOut while a new sign-in is resolving', async () => {
+    // Mirrors a juror opening their link: the store already settled 'signedOut' (the
+    // client's initial, session-less check) by the time the real sign-in event arrives.
+    useSession.setState({ status: 'signedOut', profile: null })
+    mockProfileRow({ id: 'a1', display_name: 'Ann', email: null, role: 'admin', active: true })
+
+    emitSession('a1')
+
+    // A guarded route reading status right here (before the profile fetch settles) must
+    // see 'loading', not the stale 'signedOut' -- otherwise it redirects to /login, and
+    // nothing ever navigates a signed-in user away from there once the fetch does resolve.
+    expect(useSession.getState().status).toBe('loading')
+
+    await waitFor(() => expect(useSession.getState().status).toBe('signedIn'))
+  })
 })

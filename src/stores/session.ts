@@ -62,5 +62,16 @@ async function syncProfile(userId: string | undefined): Promise<void> {
 }
 
 supabase.auth.onAuthStateChange((_event, session) => {
-  void syncProfile(session?.user.id)
+  // A sign-in for a user the store doesn't already hold the profile for must not leave
+  // `status` at whatever it last settled to (e.g. 'signedOut', from the no-session check
+  // every fresh client does on load): a guarded route reading that stale value the instant
+  // a caller navigates there (RedeemJurorLinkPage does, right after verifyOtp resolves)
+  // would bounce to /login and stay there -- nothing navigates a signed-in user away from
+  // it once syncProfile's fetch finishes. Setting 'loading' synchronously here, before that
+  // fetch starts, closes the window.
+  const newUserId = session?.user.id
+  if (newUserId && newUserId !== useSession.getState().profile?.id) {
+    useSession.setState({ status: 'loading' })
+  }
+  void syncProfile(newUserId)
 })
