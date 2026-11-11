@@ -306,7 +306,7 @@ export function ImportPage() {
               </CardHeader>
               <CardBody>
                 <p className="text-sm text-ink-muted">{t('import.previewHint')}</p>
-                <div className="-mx-5 mt-4 overflow-x-auto px-5">
+                <div className="table-scroll mt-4">
                   <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
                     <thead>
                       <tr className="text-left text-ink-muted">

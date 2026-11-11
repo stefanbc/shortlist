@@ -19,7 +19,14 @@ const items: NavItem[] = [
 ]
 
 /** Organizer navigation. `sidebar` = vertical list (desktop), `bar` = bottom tab bar (mobile). */
-export function AdminNav({ variant }: { variant: 'sidebar' | 'bar' }) {
+export function AdminNav({
+  variant,
+  collapsed = false,
+}: {
+  variant: 'sidebar' | 'bar'
+  /** Sidebar only: icons without labels (the label stays available to screen readers). */
+  collapsed?: boolean
+}) {
   const { t } = useTranslation()
   const sidebar = variant === 'sidebar'
 
@@ -30,11 +37,12 @@ export function AdminNav({ variant }: { variant: 'sidebar' | 'bar' }) {
           <NavLink
             to={to}
             end={end}
+            title={sidebar && collapsed ? t(label) : undefined}
             className={({ isActive }) =>
               cn(
                 'relative flex items-center font-medium transition-colors duration-(--duration-fast)',
                 sidebar
-                  ? 'h-11 gap-3 rounded-control px-3 text-[0.95rem]'
+                  ? cn('h-11 gap-3 rounded-control text-[0.95rem]', collapsed ? 'justify-center' : 'px-3')
                   : 'h-16 flex-col justify-center gap-1 text-xs',
                 sidebar
                   ? isActive
@@ -63,7 +71,7 @@ export function AdminNav({ variant }: { variant: 'sidebar' | 'bar' }) {
                   className={cn('relative size-5', isActive && 'text-on-mark')}
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
-                <span className="relative">{t(label)}</span>
+                <span className={cn('relative', sidebar && collapsed && 'sr-only')}>{t(label)}</span>
               </>
             )}
           </NavLink>

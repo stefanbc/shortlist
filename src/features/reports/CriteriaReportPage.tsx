@@ -46,8 +46,8 @@ export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps)
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <div className="-mx-5 overflow-x-auto px-5 py-5">
+      <Card className="overflow-hidden">
+        <div className="table-scroll">
           <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
             <caption className="sr-only">{t('reports.criteriaPage.tableCaption')}</caption>
             <thead>

@@ -7,6 +7,8 @@ import { Page, PageHeader } from '@/components/layout/Page'
 import { Button } from '@/components/ui/Button'
 import { DialogContent, DialogFooter, Dialog as DialogRoot } from '@/components/ui/Dialog'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { LoadMore } from '@/components/ui/LoadMore'
+import { usePaging } from '@/components/ui/usePaging'
 import { Field } from '@/components/ui/Field'
 import { describedBy } from '@/components/ui/fieldStyles'
 import { Select } from '@/components/ui/Select'
@@ -200,11 +202,13 @@ function EventRowLink({ event }: { event: EventRow }) {
 
 export function EventsPage() {
   const { t } = useTranslation()
+  const paging = usePaging()
   const { data: events, isLoading } = useEvents()
   const [createOpen, setCreateOpen] = useState(false)
   const [copyOpen, setCopyOpen] = useState(false)
 
   const hasEvents = Boolean(events && events.length > 0)
+  const paged = paging.of(events ?? [])
 
   return (
     <Page>
@@ -250,13 +254,15 @@ export function EventsPage() {
 
       {!isLoading && hasEvents && (
         <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
-          {events!.map((event) => (
+          {paged.visible.map((event) => (
             <li key={event.id}>
               <EventRowLink event={event} />
             </li>
           ))}
         </ul>
       )}
+
+      <LoadMore remaining={isLoading ? 0 : paged.remaining} onLoadMore={paged.loadMore} />
 
       <CreateEventDialog open={createOpen} onOpenChange={setCreateOpen} />
       <CopyEventDialog open={copyOpen} onOpenChange={setCopyOpen} sources={events ?? []} />

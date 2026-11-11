@@ -48,8 +48,8 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
     <div className="flex flex-col gap-4">
       <TieWarning tieGroups={tieGroups} onResolve={openTieBreak} />
 
-      <Card>
-        <div className="-mx-5 overflow-x-auto px-5 py-5">
+      <Card className="overflow-hidden">
+        <div className="table-scroll">
           <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
             <caption className="sr-only">{t('reports.rankingPage.tableCaption')}</caption>
             <thead>

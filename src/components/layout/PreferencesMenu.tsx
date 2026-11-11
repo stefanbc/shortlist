@@ -57,10 +57,12 @@ function Segmented<T extends string>({
 type PreferencesMenuProps = {
   /** `icon`: compact square trigger (top bars). `row`: full-width labelled trigger (sidebar). */
   variant?: 'icon' | 'row'
+  /** Where the panel opens. Defaults to below an icon trigger, above a row trigger. */
+  side?: 'top' | 'right' | 'bottom' | 'left'
   className?: string
 }
 
-export function PreferencesMenu({ variant = 'icon', className }: PreferencesMenuProps) {
+export function PreferencesMenu({ variant = 'icon', side, className }: PreferencesMenuProps) {
   const { t } = useTranslation()
   const theme = usePreferences((s) => s.theme)
   const lang = usePreferences((s) => s.lang)
@@ -119,7 +121,7 @@ export function PreferencesMenu({ variant = 'icon', className }: PreferencesMenu
       <Popover.Portal>
         <Popover.Content
           align="end"
-          side={variant === 'row' ? 'top' : 'bottom'}
+          side={side ?? (variant === 'row' ? 'top' : 'bottom')}
           sideOffset={8}
           collisionPadding={12}
           className={cn(

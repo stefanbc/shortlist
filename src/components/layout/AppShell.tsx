@@ -1,6 +1,8 @@
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Link, Outlet } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
+import { usePreferences } from '@/stores/preferences'
 import { AdminNav } from './AdminNav'
 import { BrandMark } from './BrandMark'
 import { PreferencesMenu } from './PreferencesMenu'
@@ -17,6 +19,8 @@ export function AppShell({ section }: AppShellProps) {
   const { t } = useTranslation()
   const admin = section === 'admin'
   const home = admin ? '/admin' : '/score'
+  const collapsed = usePreferences((state) => state.sidebarCollapsed)
+  const toggleSidebar = usePreferences((state) => state.toggleSidebar)
 
   return (
     <div className="min-h-svh">
@@ -28,15 +32,44 @@ export function AppShell({ section }: AppShellProps) {
       </a>
 
       {admin && (
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-rail px-3 py-5 text-rail-ink lg:flex">
-          <Link to={home} className="mb-8 rounded-control px-3 py-1 outline-mark">
-            <BrandMark />
-          </Link>
-          <nav aria-label={t('nav.main')} className="flex-1 [&_a]:outline-mark">
-            <AdminNav variant="sidebar" />
+        <aside
+          className={cn(
+            'fixed inset-y-0 left-0 z-30 hidden flex-col bg-rail py-5 text-rail-ink transition-[width] duration-(--duration-base) ease-out-expo lg:flex',
+            collapsed ? 'w-16 px-2' : 'w-60 px-3',
+          )}
+        >
+          <div className={cn('mb-8 flex items-center', collapsed ? 'flex-col gap-3' : 'justify-between gap-2')}>
+            <Link to={home} className={cn('rounded-control py-1 outline-mark', !collapsed && 'px-3')}>
+              <BrandMark showName={!collapsed} />
+            </Link>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              aria-expanded={!collapsed}
+              aria-controls="admin-sidebar-nav"
+              aria-label={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
+              title={collapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')}
+              className="grid size-9 shrink-0 place-items-center rounded-control text-rail-muted outline-mark transition-colors duration-(--duration-fast) hover:bg-white/5 hover:text-rail-ink"
+            >
+              {collapsed ? (
+                <PanelLeftOpen aria-hidden className="size-5" />
+              ) : (
+                <PanelLeftClose aria-hidden className="size-5" />
+              )}
+            </button>
+          </div>
+          <nav id="admin-sidebar-nav" aria-label={t('nav.main')} className="flex-1 [&_a]:outline-mark">
+            <AdminNav variant="sidebar" collapsed={collapsed} />
           </nav>
-          <div className="border-t border-rail-line pt-3">
-            <PreferencesMenu variant="row" />
+          <div className={cn('border-t border-rail-line pt-3', collapsed && 'flex justify-center')}>
+            {collapsed ? (
+              <PreferencesMenu
+                side="right"
+                className="text-rail-muted outline-mark hover:bg-white/5 hover:text-rail-ink"
+              />
+            ) : (
+              <PreferencesMenu variant="row" />
+            )}
           </div>
         </aside>
       )}
@@ -58,7 +91,9 @@ export function AppShell({ section }: AppShellProps) {
         tabIndex={-1}
         className={cn(
           'outline-none',
-          admin && 'pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60',
+          'transition-[padding] duration-(--duration-base) ease-out-expo',
+          admin && 'pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0',
+          admin && (collapsed ? 'lg:pl-16' : 'lg:pl-60'),
         )}
       >
         <Outlet />

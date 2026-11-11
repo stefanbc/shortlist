@@ -80,6 +80,7 @@ describe('preferences', () => {
     expect(JSON.parse(localStorage.getItem('shortlist.prefs') ?? '{}').state).toEqual({
       theme: 'system',
       lang: 'en',
+      sidebarCollapsed: false,
     })
   })
 })
