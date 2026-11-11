@@ -1,0 +1,189 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import type { ReactNode } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { supabase } from '@/lib/supabase'
+import {
+  isPlaceholderEmail,
+  useAssignJuror,
+  useCreateUser,
+  useIssueJurorLink,
+  userActionErrorCode,
+  validateEmailForm,
+  validateUserForm,
+} from './api'
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: { from: vi.fn(), functions: { invoke: vi.fn() } },
+}))
+
+function wrapper({ children }: { children: ReactNode }) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+}
+
+afterEach(() => {
+  vi.clearAllMocks()
+})
+
+describe('isPlaceholderEmail', () => {
+  it('recognizes the juror placeholder domain', () => {
+    expect(isPlaceholderEmail('juror-abc123@jurors.shortlist.invalid')).toBe(true)
+  })
+
+  it('treats a real address as not a placeholder', () => {
+    expect(isPlaceholderEmail('alex@example.com')).toBe(false)
+  })
+
+  it('treats null as not a placeholder', () => {
+    expect(isPlaceholderEmail(null)).toBe(false)
+  })
+})
+
+describe('validateUserForm', () => {
+  it('accepts a valid form with a blank (optional) email', () => {
+    const result = validateUserForm({ displayName: 'Sam Sample', email: '', role: 'juror' })
+    expect(result).toEqual({
+      data: { displayName: 'Sam Sample', email: undefined, role: 'juror' },
+    })
+  })
+
+  it('rejects a blank display name', () => {
+    const result = validateUserForm({ displayName: '  ', email: '', role: 'juror' })
+    expect(result).toEqual({ errors: { displayName: 'displayNameRequired' } })
+  })
+
+  it('rejects an invalid email', () => {
+    const result = validateUserForm({ displayName: 'Sam', email: 'not-an-email', role: 'admin' })
+    expect(result).toEqual({ errors: { email: 'emailInvalid' } })
+  })
+})
+
+describe('validateEmailForm', () => {
+  it('accepts a valid email', () => {
+    expect(validateEmailForm(' alex@example.com ')).toEqual({ data: 'alex@example.com' })
+  })
+
+  it('rejects an invalid email', () => {
+    expect(validateEmailForm('nope')).toEqual({ error: 'emailInvalid' })
+  })
+})
+
+describe('userActionErrorCode', () => {
+  it('reads a known code from a FunctionsHttpError body', async () => {
+    const error = new FunctionsHttpError({ json: () => Promise.resolve({ error: 'email_exists' }) })
+    expect(await userActionErrorCode(error)).toBe('email_exists')
+  })
+
+  it('falls back to unknown for an unrecognized code', async () => {
+    const error = new FunctionsHttpError({ json: () => Promise.resolve({ error: 'teapot' }) })
+    expect(await userActionErrorCode(error)).toBe('unknown')
+  })
+
+  it('falls back to unknown for a plain error', async () => {
+    expect(await userActionErrorCode(new Error('network down'))).toBe('unknown')
+  })
+})
+
+describe('useIssueJurorLink', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('builds the link URL from VITE_APP_URL', async () => {
+    vi.stubEnv('VITE_APP_URL', 'https://shortlist.example/')
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { token: 'tok123' },
+      error: null,
+    } as never)
+
+    const { result } = renderHook(() => useIssueJurorLink('j-1'), { wrapper })
+
+    let url: string | undefined
+    await act(async () => {
+      ;({ url } = await result.current.mutateAsync())
+    })
+
+    expect(url).toBe('https://shortlist.example/j/tok123')
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('juror-link', {
+      body: { action: 'issue', jurorId: 'j-1' },
+    })
+  })
+
+  it('falls back to the current origin when VITE_APP_URL is unset', async () => {
+    vi.stubEnv('VITE_APP_URL', '')
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { token: 'tok456' },
+      error: null,
+    } as never)
+
+    const { result } = renderHook(() => useIssueJurorLink('j-2'), { wrapper })
+
+    let url: string | undefined
+    await act(async () => {
+      ;({ url } = await result.current.mutateAsync())
+    })
+
+    expect(url).toBe(`${window.location.origin}/j/tok456`)
+  })
+})
+
+describe('useAssignJuror', () => {
+  it('inserts the (event_id, juror_id) row', async () => {
+    const insert = vi.fn().mockResolvedValue({ error: null })
+    vi.mocked(supabase.from).mockReturnValue({ insert } as never)
+
+    const { result } = renderHook(() => useAssignJuror(), { wrapper })
+
+    await act(async () => {
+      await result.current.mutateAsync({ eventId: 'ev-1', jurorId: 'j-1' })
+    })
+
+    expect(supabase.from).toHaveBeenCalledWith('event_jurors')
+    expect(insert).toHaveBeenCalledWith({ event_id: 'ev-1', juror_id: 'j-1' })
+  })
+})
+
+describe('useCreateUser', () => {
+  it('calls admin-users with the create action and returns the new id', async () => {
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: { id: 'new-user-1' },
+      error: null,
+    } as never)
+
+    const { result } = renderHook(() => useCreateUser(), { wrapper })
+
+    let id: string | undefined
+    await act(async () => {
+      id = await result.current.mutateAsync({ displayName: 'Sam', email: undefined, role: 'juror' })
+    })
+
+    expect(id).toBe('new-user-1')
+    expect(supabase.functions.invoke).toHaveBeenCalledWith('admin-users', {
+      body: { action: 'create', displayName: 'Sam', email: undefined, role: 'juror' },
+    })
+  })
+
+  it('rejects with the edge function error on a non-2xx response', async () => {
+    const httpError = new FunctionsHttpError({
+      json: () => Promise.resolve({ error: 'email_exists' }),
+    })
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: null,
+      error: httpError,
+    } as never)
+
+    const { result } = renderHook(() => useCreateUser(), { wrapper })
+
+    await act(async () => {
+      await result.current
+        .mutateAsync({ displayName: 'Dup', email: 'dup@example.com', role: 'juror' })
+        .catch(() => {})
+    })
+
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.error).toBe(httpError)
+    expect(await userActionErrorCode(result.current.error)).toBe('email_exists')
+  })
+})

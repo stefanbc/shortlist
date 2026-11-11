@@ -1,0 +1,272 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque/standard.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Shortlist design tokens.
+ *
+ * Palette: an indigo-tinted night (not neutral black) with a violet accent for
+ * interaction, and marigold reserved for "moments" (now pitching, podium).
+ * Light mode is a cool lavender paper, not cream.
+ *
+ * Type: Bricolage Grotesque, one family. Its width axis is the signature: big
+ * numbers (scores, ranks, counts) are set heavy and condensed via `.numeral`.
+ */
+:root {
+  --canvas: #f6f5fb;
+  --surface: #ffffff;
+  --raised: #efedf8;
+  --sunken: #e9e6f5;
+  --line: #dfdbef;
+  --line-strong: #c6c0e0;
+  --ink: #17142e;
+  --ink-muted: #59547a;
+  --ink-faint: #8a85a8;
+
+  --accent: #6a47f5;
+  --accent-hover: #5935e8;
+  --accent-ink: #5233e0;
+  --accent-soft: #ebe5ff;
+  --on-accent: #ffffff;
+
+  --gold: #b97a06;
+  --gold-soft: #fdf1d6;
+  --success: #16865a;
+  --success-soft: #dcf5ea;
+  --warning: #a35f00;
+  --warning-soft: #fdeed6;
+  --danger: #cf2c4a;
+  --danger-hover: #b8203d;
+  --danger-soft: #fde4e9;
+
+  --ring: #6a47f5;
+  --overlay: rgb(23 20 46 / 0.38);
+  --shadow-pop: 0 1px 2px rgb(23 20 46 / 0.06), 0 12px 32px -8px rgb(23 20 46 / 0.18);
+  --glow: 0 0 0 1px rgb(106 71 245 / 0.18), 0 8px 24px -10px rgb(106 71 245 / 0.45);
+
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #100e1f;
+  --surface: #17152b;
+  --raised: #201d39;
+  --sunken: #0b0a17;
+  --line: #2a2647;
+  --line-strong: #3b3663;
+  --ink: #eeebfa;
+  --ink-muted: #a39fc2;
+  --ink-faint: #6f6a92;
+
+  --accent: #6e4dff;
+  --accent-hover: #8165ff;
+  --accent-ink: #a996ff;
+  --accent-soft: #241d4d;
+  --on-accent: #ffffff;
+
+  --gold: #f5b83d;
+  --gold-soft: #33280f;
+  --success: #3ccf8e;
+  --success-soft: #0f2c22;
+  --warning: #f2a33a;
+  --warning-soft: #33230d;
+  --danger: #ff5c7a;
+  --danger-hover: #ff7891;
+  --danger-soft: #3a1420;
+
+  --ring: #a996ff;
+  --overlay: rgb(5 4 12 / 0.66);
+  --shadow-pop: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 16px 40px -12px rgb(0 0 0 / 0.7);
+  --glow: 0 0 0 1px rgb(169 150 255 / 0.25), 0 10px 30px -10px rgb(110 77 255 / 0.65);
+
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+
+  --shadow-pop: var(--shadow-pop);
+  --shadow-glow: var(--glow);
+}
+
+@theme {
+  --font-sans: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale (1.2 minor third, 16px base) */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.3rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.55rem;
+  --text-lg: 1.2rem;
+  --text-lg--line-height: 1.65rem;
+  --text-xl: 1.44rem;
+  --text-xl--line-height: 1.9rem;
+  --text-2xl: 1.728rem;
+  --text-2xl--line-height: 2.15rem;
+  --text-3xl: 2.074rem;
+  --text-3xl--line-height: 2.4rem;
+  --text-display: 4rem;
+  --text-display--line-height: 1;
+
+  /* Radius: hierarchy, not one value everywhere */
+  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 360ms;
+
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-out-expo);
+  --animate-fade-out: fade-out var(--duration-fast) var(--ease-in-quick);
+  --animate-pop-in: pop-in var(--duration-slow) var(--ease-out-expo);
+  --animate-pop-out: pop-out var(--duration-fast) var(--ease-in-quick);
+  --animate-slide-in-right: slide-in-right var(--duration-slow) var(--ease-out-expo);
+  --animate-slide-out-right: slide-out-right var(--duration-base) var(--ease-in-quick);
+  --animate-slide-in-up: slide-in-up var(--duration-slow) var(--ease-out-expo);
+  --animate-slide-out-down: slide-out-down var(--duration-base) var(--ease-in-quick);
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.97);
+    }
+  }
+  @keyframes pop-out {
+    to {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-out-right {
+    to {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-in-up {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes slide-out-down {
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    background: var(--canvas);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    min-height: 100svh;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Heavy, condensed numerals: scores, ranks, counts. The app's signature. */
+  .numeral {
+    font-stretch: 78%;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
