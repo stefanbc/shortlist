@@ -1,12 +1,11 @@
-import { ArrowLeft, ExternalLink, FileUp, Pencil, Plus, Search, Trash2, UserX, Users } from 'lucide-react'
+import { ExternalLink, FileUp, Pencil, Plus, Search, Trash2, UserX, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -246,16 +245,8 @@ export function TeamsPage() {
     <Page>
       <PageHeader
         title={t('events.teams')}
-        description={event.name}
         actions={
           <>
-            <Link
-              to={`/admin/events/${event.id}/settings`}
-              className={buttonClasses({ variant: 'secondary', size: 'sm' })}
-            >
-              <ArrowLeft aria-hidden />
-              {t('common.back')}
-            </Link>
             <Button variant="secondary" onClick={() => setImportOpen(true)}>
               <FileUp aria-hidden />
               {t('teams.registrations.open')}

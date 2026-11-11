@@ -1,9 +1,8 @@
-import { CalendarRange } from 'lucide-react'
+import { CalendarRange, SkipForward } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -21,7 +20,7 @@ import {
 } from '@/features/events/api'
 import { EventPhaseBadge } from '@/features/events/EventPhaseBadge'
 import { ExportMenu } from '@/features/export/ExportMenu'
-import { TimerCard } from '@/features/timer/TimerCard'
+import { TimerPanel } from '@/features/timer/TimerPanel'
 import { useEventResults } from '@/features/reports/useEventResults'
 import type { TeamWithProject } from '@/features/teams/api'
 import { useNow } from '@/lib/useNow'
@@ -63,30 +62,41 @@ export function NowPitchingCard({ event, teams }: { event: EventRow; teams: Team
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t('dashboard.nowPitching.heading')}</CardTitle>
-        {current && (
-          <Badge tone="gold" dot="live">
-            {t('scoring.nowPitching')}
-          </Badge>
-        )}
-      </CardHeader>
-      <CardBody className="flex flex-col gap-4">
-        <p className="title min-w-0 text-2xl break-words">
+    <section aria-labelledby="on-stage-heading" className="flex flex-col gap-4 p-5 sm:p-6">
+      <h2 id="on-stage-heading" className="text-sm font-semibold text-ink-muted">
+        {t('dashboard.nowPitching.heading')}
+      </h2>
+
+      <div className="min-w-0">
+        <p className="title text-3xl break-words sm:text-4xl">
           {current ? (
             <span className="marked-text">{current.name}</span>
           ) : (
             <span className="text-ink-muted">{t('dashboard.nowPitching.none')}</span>
           )}
         </p>
+        {current?.project.name && <p className="mt-2 text-ink-muted">{current.project.name}</p>}
+        <p className="mt-2 text-sm text-ink-muted">
+          {next
+            ? t('dashboard.nowPitching.upNext', { team: next.name })
+            : current
+              ? t('dashboard.nowPitching.lastTeam')
+              : null}
+        </p>
+      </div>
+
+      <div className="mt-auto flex flex-col gap-2 pt-2">
+        <Button size="lg" disabled={!next} onClick={() => next && void set(next.id)} className="self-start">
+          <SkipForward aria-hidden />
+          {t('dashboard.nowPitching.next')}
+        </Button>
         <div className="flex flex-wrap items-center gap-2">
           <Select
             aria-label={t('dashboard.nowPitching.selectLabel')}
             value={current?.id ?? ''}
             disabled={teams.length === 0}
             onChange={(e) => void set(e.target.value || null)}
-            className="w-full sm:w-56"
+            className="w-full sm:w-64"
           >
             <option value="">{t('dashboard.nowPitching.placeholder')}</option>
             {teams.map((team) => (
@@ -95,15 +105,12 @@ export function NowPitchingCard({ event, teams }: { event: EventRow; teams: Team
               </option>
             ))}
           </Select>
-          <Button variant="secondary" disabled={!next} onClick={() => next && void set(next.id)}>
-            {t('dashboard.nowPitching.next')}
-          </Button>
           <Button variant="ghost" disabled={!current} onClick={() => void set(null)}>
             {t('dashboard.nowPitching.clear')}
           </Button>
         </div>
-      </CardBody>
-    </Card>
+      </div>
+    </section>
   )
 }
 
@@ -160,14 +167,15 @@ export function DashboardPage() {
       />
 
       <div className="flex flex-col gap-6">
-        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        {/* One desk: who is on stage and the clock that times them. */}
+        <Card className="grid divide-y divide-line lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           <NowPitchingCard event={event} teams={results.teams} />
-          <TimerCard event={event} />
-        </div>
+          <TimerPanel event={event} />
+        </Card>
 
         <LateScoresNotice eventId={event.id} teams={results.teams} jurors={results.jurors} />
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <Card>
             <CardHeader>
               <CardTitle>{t('dashboard.progress.heading')}</CardTitle>

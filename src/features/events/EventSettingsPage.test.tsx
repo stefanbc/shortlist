@@ -13,6 +13,8 @@ vi.mock('./api', async (importOriginal) => {
     useEvent: vi.fn(),
     useSaveEvent: vi.fn(),
     useSetEventStatus: vi.fn(),
+    // The wrap-up times card sends timer commands; not what these tests are about.
+    useTimerControl: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   }
 })
 

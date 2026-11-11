@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/Badge'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { IDLE_TIMER } from '@/domain/pitchTimer'
 import type { Criterion } from '@/domain/types'
 import { useCriteria, useThemes } from '@/features/criteria/api'
 import { useActiveEvent, useEvent, useEvents, useEventUpdates } from '@/features/events/api'
@@ -127,6 +126,13 @@ function TeamOverview({
 
       <RejectedNotice cells={cellSync} />
 
+      {event && !onStage && (event.timer?.targetAt || event.timer?.label) && (
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3">
+          <p className="font-semibold">{event.timer.label ?? t('scoring.breakHeading')}</p>
+          <SharedTimer source={event} className="h-9" />
+        </section>
+      )}
+
       {onStage && !onStage.noShow && (
         <section className="marked flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -139,13 +145,7 @@ function TeamOverview({
             </p>
             <p className="title mt-1 text-2xl break-words">{onStage.name}</p>
             {onStage.project.name && <p className="opacity-80">{onStage.project.name}</p>}
-            {event && (
-              <SharedTimer
-                pitchMinutes={event.pitchMinutes}
-                timer={event.timer ?? IDLE_TIMER}
-                className="mt-3 h-9 bg-on-mark/10 text-on-mark"
-              />
-            )}
+            {event && <SharedTimer source={event} className="mt-3 h-9 bg-on-mark/10 text-on-mark" />}
           </div>
           <Link
             to={`/score/${eventId}/${onStage.id}`}

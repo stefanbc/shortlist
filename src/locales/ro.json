@@ -82,7 +82,9 @@
       "noShowOption": "{{name}} (absentă)",
       "next": "Echipa următoare",
       "clear": "Golește",
-      "error": "Nu am putut actualiza cine prezintă. Încearcă din nou."
+      "error": "Nu am putut actualiza cine prezintă. Încearcă din nou.",
+      "upNext": "Urmează: {{team}}",
+      "lastTeam": "Ultima echipă din ordinea de prezentare."
     },
     "progress": {
       "heading": "Progres jurizare",
@@ -304,8 +306,6 @@
     "timer": {
       "left": "mai sunt {{time}}",
       "over": "depășit cu {{time}}",
-      "start": "Pornește cronometrul de {{minutes}} min",
-      "reset": "Resetează cronometrul",
       "onStageLabel": "Timpul de prezentare al echipei de pe scenă",
       "ready": "{{time}} pentru pitch",
       "paused": "{{time}} rămase, în pauză"
@@ -347,7 +347,8 @@
     "rejectedNothingSaved": "Nu există nicio notă salvată pentru acest criteriu.",
     "discardRejected": "Renunță la nota nesalvată",
     "noCriteriaTitle": "Niciun criteriu încă",
-    "noCriteriaBody": "Organizatorul nu a stabilit încă criteriile de notare pentru acest eveniment. Revino după ce le adaugă."
+    "noCriteriaBody": "Organizatorul nu a stabilit încă criteriile de notare pentru acest eveniment. Revino după ce le adaugă.",
+    "breakHeading": "Pauză"
   },
   "reports": {
     "podium": "Podium",
@@ -576,6 +577,46 @@
     "clockLeft": "{{time}} rămase",
     "clockOver": "{{time}} peste timp",
     "controls": "Comenzi cronometru",
-    "stageTitle": "Cronometru de scenă"
+    "stageTitle": "Cronometru de scenă",
+    "stop": "Oprește",
+    "until": "Până la {{time}}",
+    "wrapUp": "Încheie",
+    "stopNow": "Timpul e aproape gata",
+    "setup": {
+      "open": "Configurează cronometrul",
+      "title": "Configurează cronometrul",
+      "description": "Numără invers pentru o durată sau până la o anumită oră. Numărătoarea curentă este înlocuită.",
+      "modeLegend": "Tipul numărătorii",
+      "mode": {
+        "duration": "Pentru o durată",
+        "until": "Până la o oră"
+      },
+      "durationLabel": "Durată",
+      "durationHint": "Minute, sau minute și secunde, de exemplu 7:30. Pornește când apeși Pornește.",
+      "durationError": "Introdu o durată între 0:10 și 240:00.",
+      "presetPitch": "Pitch, {{minutes}} min",
+      "presetMinutes": "{{minutes}} min",
+      "timeLabel": "Se termină la",
+      "timeHint": "Numărătoarea pornește imediat ce o setezi.",
+      "timeHintToday": "Numără invers până azi la {{time}} și pornește acum.",
+      "timeHintTomorrow": "Ora {{time}} a trecut azi, așa că numără invers până mâine la {{time}}.",
+      "timeError": "Alege ora la care se termină numărătoarea.",
+      "labelLabel": "Nume",
+      "labelHint": "Apare pe proiector și la jurați, de exemplu în timpul unei pauze.",
+      "labelPlaceholder": "Pauză de masă",
+      "submitDuration": "Setează cronometrul",
+      "submitUntil": "Pornește numărătoarea"
+    },
+    "wrapUpSettings": {
+      "title": "Timpi de încheiere",
+      "description": "Cronometrul își schimbă culoarea când timpul se apropie de final, pe proiector, pe pagina Live și pe ecranele juraților.",
+      "yellowLabel": "Devine galben când mai rămâne",
+      "redLabel": "Devine roșu când mai rămâne",
+      "hint": "Minute și secunde, de exemplu 1:00. Folosește 0:00 pentru a dezactiva o culoare.",
+      "save": "Salvează timpii de încheiere",
+      "saved": "Timpii de încheiere au fost salvați.",
+      "errorFormat": "Introdu un timp de forma 1:00, cel mult 60:00.",
+      "errorOrder": "Roșul trebuie să vină odată cu galbenul sau după el, deci folosește un timp mai mic."
+    }
   }
 }

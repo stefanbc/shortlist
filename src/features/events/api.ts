@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import type { ParseKeys, TFunction } from 'i18next'
 import { eventPhase, type EventTiming, type StatusOverride } from '@/domain/eventPhase'
 import { eventInputSchema, type EventInput } from '@/domain/schemas'
-import type { PitchTimer } from '@/domain/pitchTimer'
+import { DEFAULT_RED_S, DEFAULT_YELLOW_S, type PitchTimer } from '@/domain/pitchTimer'
 import type { Id } from '@/domain/types'
 import { supabase } from '@/lib/supabase'
 
@@ -15,10 +15,15 @@ export interface EventRow extends EventTiming {
   nowPitchingSince: string | null
   /** The shared pitch timer. Always set on rows read from the database. */
   timer?: PitchTimer
+  /** Seconds left at which the timer turns yellow, then red. */
+  timerYellowS?: number
+  timerRedS?: number
 }
 
-const EVENT_COLUMNS =
-  'id, name, starts_at, ends_at, status_override, locked_at, pitch_minutes, now_pitching_team_id, now_pitching_since, timer_duration_s, timer_started_at, timer_elapsed_ms'
+// Every column, rather than a list: a column a later migration adds (as the timer ones
+// were) then can't break event loading on a deployment that reaches the database first.
+// Nothing on the row is hidden from the jurors who may read it.
+const EVENT_COLUMNS = '*'
 
 type EventDbRow = {
   id: string
@@ -33,6 +38,10 @@ type EventDbRow = {
   timer_duration_s?: number | null
   timer_started_at?: string | null
   timer_elapsed_ms?: number | null
+  timer_target_at?: string | null
+  timer_label?: string | null
+  timer_yellow_s?: number | null
+  timer_red_s?: number | null
 }
 
 /** Exported for its own unit test; also the only place that knows the DB's snake_case shape. */
@@ -51,7 +60,11 @@ export function toEventRow(row: EventDbRow): EventRow {
       durationS: row.timer_duration_s ?? null,
       startedAt: row.timer_started_at ?? null,
       elapsedMs: Number(row.timer_elapsed_ms ?? 0),
+      targetAt: row.timer_target_at ?? null,
+      label: row.timer_label ?? null,
     },
+    timerYellowS: row.timer_yellow_s ?? DEFAULT_YELLOW_S,
+    timerRedS: row.timer_red_s ?? DEFAULT_RED_S,
   }
 }
 
@@ -205,19 +218,44 @@ export function useSetNowPitching() {
   })
 }
 
-export type TimerAction = 'start' | 'pause' | 'reset' | 'add'
+export type TimerCommand =
+  | { action: 'start' | 'pause' | 'reset' }
+  | { action: 'add'; seconds: number }
+  /** A stopped countdown; `seconds: null` is the event's pitch length. */
+  | { action: 'duration'; seconds: number | null; label?: string }
+  /** Counts down to a moment, starting at once. */
+  | { action: 'until'; target: Date; label?: string }
+  /** The event's wrap-up times, in seconds left. */
+  | { action: 'wrap_up'; yellow: number; red: number }
 
-/** Runs the shared pitch timer (`pitch_timer` RPC). The database stamps the times, and
- * the new row comes back to every screen over `useEventUpdates`. */
+/** Runs the shared timer (`pitch_timer` RPC). The database stamps the times, and the new
+ * row comes back to every screen over `useEventUpdates`. */
 export function useTimerControl(eventId: Id) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ action, seconds }: { action: TimerAction; seconds?: number }) => {
-      const { error } = await supabase.rpc('pitch_timer', {
-        p_event: eventId,
-        p_action: action,
-        ...(seconds === undefined ? {} : { p_seconds: seconds }),
-      })
+    mutationFn: async (command: TimerCommand) => {
+      const args: {
+        p_event: string
+        p_action: string
+        p_seconds?: number
+        p_target?: string
+        p_label?: string
+        p_red?: number
+      } = { p_event: eventId, p_action: command.action }
+      if (command.action === 'add') args.p_seconds = command.seconds
+      if (command.action === 'duration') {
+        if (command.seconds !== null) args.p_seconds = command.seconds
+        if (command.label) args.p_label = command.label
+      }
+      if (command.action === 'until') {
+        args.p_target = command.target.toISOString()
+        if (command.label) args.p_label = command.label
+      }
+      if (command.action === 'wrap_up') {
+        args.p_seconds = command.yellow
+        args.p_red = command.red
+      }
+      const { error } = await supabase.rpc('pitch_timer', args)
       if (error) throw error
     },
     onSuccess: () => {

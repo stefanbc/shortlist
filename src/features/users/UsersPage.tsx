@@ -255,7 +255,7 @@ function UserRow({
           )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
           <Select
             aria-label={`${t('users.roleLabel')}: ${user.displayName}`}
             value={user.role}

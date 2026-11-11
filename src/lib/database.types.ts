@@ -141,7 +141,11 @@ export type Database = {
           status_override: string
           timer_duration_s: number | null
           timer_elapsed_ms: number
+          timer_label: string | null
+          timer_red_s: number
           timer_started_at: string | null
+          timer_target_at: string | null
+          timer_yellow_s: number
           event_closed_at: string | null
           event_phase: string | null
         }
@@ -159,7 +163,11 @@ export type Database = {
           status_override?: string
           timer_duration_s?: number | null
           timer_elapsed_ms?: number
+          timer_label?: string | null
+          timer_red_s?: number
           timer_started_at?: string | null
+          timer_target_at?: string | null
+          timer_yellow_s?: number
         }
         Update: {
           created_at?: string
@@ -174,7 +182,11 @@ export type Database = {
           status_override?: string
           timer_duration_s?: number | null
           timer_elapsed_ms?: number
+          timer_label?: string | null
+          timer_red_s?: number
           timer_started_at?: string | null
+          timer_target_at?: string | null
+          timer_yellow_s?: number
         }
         Relationships: [
           {
@@ -633,7 +645,14 @@ export type Database = {
       import_event: { Args: { p: Json }; Returns: string }
       is_event_juror: { Args: { event: string }; Returns: boolean }
       pitch_timer: {
-        Args: { p_action: string; p_event: string; p_seconds?: number }
+        Args: {
+          p_action: string
+          p_event: string
+          p_label?: string
+          p_red?: number
+          p_seconds?: number
+          p_target?: string
+        }
         Returns: undefined
       }
       require_permission: { Args: { p: string }; Returns: undefined }
