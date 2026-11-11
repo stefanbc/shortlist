@@ -1,43 +1,61 @@
 import { Document, Font, Page, StyleSheet, Text, View } from '@react-pdf/renderer'
-import interFontUrl from '@/assets/fonts/Inter-Variable.ttf?url'
+import archivoBoldUrl from '@/assets/fonts/Archivo-Bold.ttf?url'
+import archivoRegularUrl from '@/assets/fonts/Archivo-Regular.ttf?url'
 import type { Id } from '@/domain/types'
 import type { Lang } from '@/stores/preferences'
 import type { ExportData } from './types'
 
-// A single variable TTF (the full Google Fonts source file, not the @fontsource webfont
-// split which divides glyphs across a "latin" and a "latin-ext" file -- Romanian needs
-// glyphs from both: â/î from Latin-1 Supplement, ă/ș/ț from Latin Extended). Registering
-// it once here means every PDF this module renders can show Romanian diacritics
-// correctly instead of tofu. This module is only ever reached via a dynamic import (see
-// ExportMenu), so neither @react-pdf/renderer nor this font weighs down the main bundle.
-Font.register({ family: 'Inter', src: interFontUrl })
+// Static TTFs cut from the Archivo variable font (the same family the app uses): regular
+// for text, and a wide bold for titles and ranks. Full files rather than the @fontsource
+// webfont split, which divides glyphs across a "latin" and a "latin-ext" file -- Romanian
+// needs both (â/î from Latin-1 Supplement, ă/ș/ț from Latin Extended), and a PDF font
+// can't fall back between files, so the diacritics would render as tofu. This module is
+// only ever reached via a dynamic import (see ExportMenu), so neither @react-pdf/renderer
+// nor these fonts weigh down the main bundle.
+Font.register({
+  family: 'Archivo',
+  fonts: [
+    { src: archivoRegularUrl, fontWeight: 400 },
+    { src: archivoBoldUrl, fontWeight: 700 },
+  ],
+})
+
+// The app's light palette (see src/index.css): ink on paper, one highlighter.
+const INK = '#11231c'
+const INK_MUTED = '#4a5c53'
+const INK_FAINT = '#6f7f77'
+const LINE = '#d3dad5'
+const MARK = '#ffe44d'
 
 const styles = StyleSheet.create({
-  page: { fontFamily: 'Inter', padding: 36, fontSize: 10, color: '#1a1a1a' },
-  title: { fontSize: 20, marginBottom: 4 },
-  subtitle: { fontSize: 11, color: '#555', marginBottom: 18 },
-  sectionHeading: { fontSize: 14, marginTop: 18, marginBottom: 8 },
+  page: { fontFamily: 'Archivo', padding: 40, fontSize: 10, color: INK },
+  title: { fontSize: 24, fontWeight: 700, marginBottom: 4 },
+  subtitle: { fontSize: 11, color: INK_MUTED, marginBottom: 20 },
+  sectionHeading: { fontSize: 13, fontWeight: 700, marginTop: 20, marginBottom: 8 },
   podiumRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: LINE,
   },
-  podiumRank: { width: 32, fontSize: 16 },
+  // The winner is the highlighted line, as on screen.
+  podiumRowFirst: { backgroundColor: MARK, borderBottomColor: MARK, borderRadius: 3 },
+  podiumRank: { width: 32, fontSize: 18, fontWeight: 700 },
   podiumTeam: { flex: 1 },
-  podiumTeamName: { fontSize: 13 },
-  podiumProjectName: { fontSize: 10, color: '#555' },
-  podiumFinal: { width: 70, textAlign: 'right', fontSize: 13 },
+  podiumTeamName: { fontSize: 13, fontWeight: 700 },
+  podiumProjectName: { fontSize: 10, color: INK_MUTED },
+  podiumFinal: { width: 70, textAlign: 'right', fontSize: 13, fontWeight: 700 },
   table: { marginTop: 4 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 5 },
+  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: LINE, paddingVertical: 6 },
   tableHeaderRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: INK,
     paddingBottom: 5,
     fontSize: 9,
-    color: '#555',
+    color: INK_MUTED,
   },
   colRank: { width: 28 },
   colTeam: { flex: 2 },
@@ -48,10 +66,10 @@ const styles = StyleSheet.create({
   colWeight: { width: 50, textAlign: 'right' },
   colAverage: { width: 60, textAlign: 'right' },
   colWeighted: { width: 60, textAlign: 'right' },
-  teamHeading: { fontSize: 16, marginBottom: 2 },
-  teamMeta: { fontSize: 10, color: '#555', marginBottom: 12 },
-  noShowNote: { fontSize: 11, color: '#777', marginTop: 12 },
-  footer: { position: 'absolute', bottom: 20, left: 36, right: 36, fontSize: 8, color: '#999' },
+  teamHeading: { fontSize: 18, fontWeight: 700, marginBottom: 2 },
+  teamMeta: { fontSize: 10, color: INK_MUTED, marginBottom: 12 },
+  noShowNote: { fontSize: 11, color: INK_MUTED, marginTop: 12 },
+  footer: { position: 'absolute', bottom: 22, left: 40, right: 40, fontSize: 8, color: INK_FAINT },
 })
 
 const STRINGS: Record<
@@ -144,7 +162,10 @@ export function ResultsPdf({ data, lang }: ResultsPdfProps) {
         {podium.map((entry) => {
           const team = teamsById.get(entry.teamId)
           return (
-            <View key={entry.teamId} style={styles.podiumRow}>
+            <View
+              key={entry.teamId}
+              style={entry.rank === 1 ? [styles.podiumRow, styles.podiumRowFirst] : styles.podiumRow}
+            >
               <Text style={styles.podiumRank}>{entry.rank}</Text>
               <View style={styles.podiumTeam}>
                 <Text style={styles.podiumTeamName}>{team?.name ?? entry.teamId}</Text>

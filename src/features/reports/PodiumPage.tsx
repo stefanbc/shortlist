@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { RankedTeam } from '@/domain/scoring'
 import type { Id } from '@/domain/types'
 import type { TeamWithProject } from '@/features/teams/api'
+import { cn } from '@/lib/cn'
 import { resolveTeams, useScoreFormat } from './reportUtils'
 import { ReportPage } from './ReportPage'
 import { TieBreakDialog } from './TieBreakDialog'
@@ -81,7 +82,7 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
         {PLACE_ORDER.map((rank) => {
           const slot = slotsByRank.get(rank)
           if (!slot) return <div key={rank} />
-          const tall = rank === 1 ? 'min-h-56' : rank === 2 ? 'min-h-44' : 'min-h-36'
+          const tall = rank === 1 ? 'min-h-64' : rank === 2 ? 'min-h-48' : 'min-h-40'
           return (
             <motion.div
               key={rank}
@@ -90,23 +91,40 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: REVEAL_DELAY[rank], type: 'spring', stiffness: 260, damping: 24 }}
             >
-              <Card className={`flex flex-col justify-end p-4 sm:p-6 ${tall}`}>
-                {rank === 1 && <Trophy aria-hidden className="mb-2 size-7 text-gold" />}
-                <span className="numeral text-3xl leading-none text-ink-faint sm:text-4xl">{rank}</span>
+              <Card
+                className={cn(
+                  'flex flex-col justify-end p-4 sm:p-6',
+                  tall,
+                  rank === 1 && 'marked border-transparent bg-mark text-on-mark',
+                )}
+              >
+                {rank === 1 && <Trophy aria-hidden className="mb-2 size-7" />}
+                <span
+                  className={cn(
+                    'numeral text-5xl leading-none sm:text-6xl',
+                    rank !== 1 && 'text-ink-faint',
+                  )}
+                >
+                  {rank}
+                </span>
                 <div className="mt-3 flex flex-col gap-1.5">
                   {slot.entries.map((entry) => {
                     const team = teamsById.get(entry.teamId)
                     return (
                       <div key={entry.teamId}>
-                        <p className="truncate text-lg font-bold sm:text-xl">
+                        <p className="title text-lg break-words sm:text-2xl">
                           {team?.name ?? entry.teamId}
                         </p>
-                        <p className="numeral text-sm text-ink-muted">{format(entry.final)}</p>
+                        <p className={cn('numeral text-lg', rank !== 1 && 'text-ink-muted')}>
+                          {format(entry.final)}
+                        </p>
                       </div>
                     )
                   })}
                   {slot.entries.length > 1 && (
-                    <Badge tone="gold">{t('dashboard.ranking.tieBadge')}</Badge>
+                    <Badge tone={rank === 1 ? 'neutral' : 'gold'} className="self-start">
+                      {t('dashboard.ranking.tieBadge')}
+                    </Badge>
                   )}
                 </div>
               </Card>

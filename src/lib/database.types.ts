@@ -137,6 +137,7 @@ export type Database = {
           now_pitching_since: string | null
           now_pitching_team_id: string | null
           pitch_minutes: number
+          stagetimer_url: string | null
           starts_at: string
           status_override: string
           event_closed_at: string | null
@@ -152,6 +153,7 @@ export type Database = {
           now_pitching_since?: string | null
           now_pitching_team_id?: string | null
           pitch_minutes?: number
+          stagetimer_url?: string | null
           starts_at: string
           status_override?: string
         }
@@ -164,6 +166,7 @@ export type Database = {
           now_pitching_since?: string | null
           now_pitching_team_id?: string | null
           pitch_minutes?: number
+          stagetimer_url?: string | null
           starts_at?: string
           status_override?: string
         }

@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router'
@@ -5,11 +6,11 @@ import { roleHome } from '@/domain/profiles'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { PreferencesMenu } from '@/components/layout/PreferencesMenu'
 import { Button } from '@/components/ui/Button'
-import { Card, CardBody } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
 import { Input } from '@/components/ui/Input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { appUrl } from '@/lib/appUrl'
+import { cn } from '@/lib/cn'
 import { supabase } from '@/lib/supabase'
 import { useSession } from '@/stores/session'
 
@@ -20,6 +21,7 @@ export function LoginPage() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [passwordPending, setPasswordPending] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [magicLinkPending, setMagicLinkPending] = useState(false)
@@ -56,15 +58,21 @@ export function LoginPage() {
   if (status === 'signedIn' && profile) return <Navigate to={roleHome(profile.role)} replace />
 
   return (
-    <div className="relative grid min-h-svh place-items-center px-4 py-16">
-      <PreferencesMenu className="absolute top-3 right-3" />
-      <main className="w-full max-w-md">
-        <BrandMark className="mb-8" />
-        <h1 className="mb-1.5 text-2xl font-bold">{t('auth.signIn')}</h1>
-        <p className="mb-6 text-ink-muted">{t('auth.signInHint')}</p>
+    <div className="relative grid min-h-svh lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+      <aside className="hidden flex-col justify-between bg-rail p-10 text-rail-ink lg:flex">
+        <BrandMark />
+        <MarkedList />
+        <p className="max-w-xs text-rail-muted">{t('common.tagline')}</p>
+      </aside>
 
-        <Card>
-          <CardBody>
+      <PreferencesMenu className="absolute top-3 right-3" />
+      <main className="mx-auto flex w-full max-w-md flex-col justify-center px-5 py-16">
+        <BrandMark className="mb-10 lg:hidden" />
+        <h1 className="mb-2 text-3xl">{t('auth.signIn')}</h1>
+        <p className="mb-8 text-ink-muted">{t('auth.signInHint')}</p>
+
+        <div>
+          <div>
             <Tabs defaultValue="password">
               <TabsList>
                 <TabsTrigger value="password">{t('auth.tabPassword')}</TabsTrigger>
@@ -72,7 +80,7 @@ export function LoginPage() {
               </TabsList>
 
               <TabsContent value="password">
-                <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handlePasswordSubmit} className="flex flex-col gap-5">
                   <Field id="login-email" label={t('auth.emailLabel')}>
                     <Input
                       id="login-email"
@@ -84,23 +92,39 @@ export function LoginPage() {
                     />
                   </Field>
                   <Field id="login-password" label={t('auth.passwordLabel')} error={passwordError}>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      autoComplete="current-password"
-                      required
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        required
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        className="pr-12"
+                      />
+                      <button
+                        type="button"
+                        aria-pressed={showPassword}
+                        aria-label={t('auth.showPassword')}
+                        onClick={() => setShowPassword((shown) => !shown)}
+                        className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-control text-ink-muted -outline-offset-4 hover:text-ink"
+                      >
+                        {showPassword ? (
+                          <EyeOff aria-hidden className="size-5" />
+                        ) : (
+                          <Eye aria-hidden className="size-5" />
+                        )}
+                      </button>
+                    </div>
                   </Field>
-                  <Button type="submit" loading={passwordPending}>
+                  <Button type="submit" size="lg" loading={passwordPending}>
                     {t('auth.submitPassword')}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="magicLink">
-                <form onSubmit={handleMagicLinkSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleMagicLinkSubmit} className="flex flex-col gap-5">
                   <Field
                     id="login-email-magic"
                     label={t('auth.emailLabel')}
@@ -120,7 +144,7 @@ export function LoginPage() {
                       {t('auth.magicLinkSent')}
                     </p>
                   ) : (
-                    <Button type="submit" loading={magicLinkPending}>
+                    <Button type="submit" size="lg" loading={magicLinkPending}>
                       {t('auth.submitMagicLink')}
                     </Button>
                   )}
@@ -128,9 +152,44 @@ export function LoginPage() {
                 </form>
               </TabsContent>
             </Tabs>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
+  )
+}
+
+/** Row widths (%) of the decorative list: a ranking sheet with its top three gone over
+ * with the highlighter. Bars stand in for names, so there is nothing to translate. */
+const LIST_ROWS = [72, 58, 66, 44, 61, 38, 52]
+
+function MarkedList() {
+  return (
+    <ol aria-hidden className="flex max-w-sm flex-col gap-2.5">
+      {LIST_ROWS.map((width, index) => {
+        const picked = index < 3
+        return (
+          <li key={index} className="flex items-center gap-4">
+            <span
+              className={cn(
+                'numeral w-6 text-right text-2xl leading-none',
+                !picked && 'text-rail-muted/60',
+              )}
+            >
+              {index + 1}
+            </span>
+            <span
+              className={cn('flex h-10 flex-1 items-center px-3', picked && 'marked')}
+              style={picked ? { rotate: `${[-0.6, 0.4, -0.3][index]}deg` } : undefined}
+            >
+              <span
+                className={cn('h-2.5 rounded-full', picked ? 'bg-on-mark' : 'bg-rail-muted/35')}
+                style={{ width: `${width}%` }}
+              />
+            </span>
+          </li>
+        )
+      })}
+    </ol>
   )
 }

@@ -35,6 +35,7 @@ vi.mock('./api', async (importOriginal) => {
     useDeleteTeam: vi.fn(),
     useReorderTeams: vi.fn(),
     useSetNoShow: vi.fn(),
+    useImportRegistrations: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   }
 })
 

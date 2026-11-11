@@ -32,11 +32,17 @@ export function AdminNav({ variant }: { variant: 'sidebar' | 'bar' }) {
             end={end}
             className={({ isActive }) =>
               cn(
-                'relative flex items-center rounded-control font-medium transition-colors duration-(--duration-fast)',
+                'relative flex items-center font-medium transition-colors duration-(--duration-fast)',
                 sidebar
-                  ? 'h-11 gap-3 px-3 text-[0.95rem]'
-                  : 'h-16 flex-col justify-center gap-1 text-[0.7rem]',
-                isActive ? 'text-ink' : 'text-ink-muted hover:text-ink',
+                  ? 'h-11 gap-3 rounded-control px-3 text-[0.95rem]'
+                  : 'h-16 flex-col justify-center gap-1 text-xs',
+                sidebar
+                  ? isActive
+                    ? 'font-semibold text-on-mark'
+                    : 'text-rail-muted hover:bg-white/5 hover:text-rail-ink'
+                  : isActive
+                    ? 'font-semibold text-ink'
+                    : 'text-ink-muted hover:text-ink',
               )
             }
           >
@@ -47,16 +53,14 @@ export function AdminNav({ variant }: { variant: 'sidebar' | 'bar' }) {
                     layoutId={`admin-nav-${variant}`}
                     transition={{ type: 'spring', stiffness: 520, damping: 42 }}
                     className={cn(
-                      'absolute',
-                      sidebar
-                        ? 'inset-0 rounded-control bg-raised ring-1 ring-line'
-                        : 'top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-accent',
+                      'marked absolute',
+                      sidebar ? 'inset-0' : 'top-[0.5625rem] left-1/2 h-[1.625rem] w-14 -translate-x-1/2',
                     )}
                   />
                 )}
                 <Icon
                   aria-hidden
-                  className={cn('relative size-5', isActive && 'text-accent-ink')}
+                  className={cn('relative size-5', isActive && 'text-on-mark')}
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
                 <span className="relative">{t(label)}</span>

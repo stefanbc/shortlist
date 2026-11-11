@@ -126,17 +126,24 @@ function TeamOverview({
       <RejectedNotice cells={cellSync} />
 
       {onStage && !onStage.noShow && (
-        <section className="flex flex-col gap-4 rounded-panel bg-gold-soft p-5 ring-1 ring-gold/30 sm:flex-row sm:items-center sm:justify-between">
+        <section className="marked flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <Badge tone="gold" dot="live" className="bg-surface/60">
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              <span aria-hidden className="relative flex size-2">
+                <span className="absolute inset-0 animate-ping rounded-full bg-current opacity-60 motion-reduce:hidden" />
+                <span className="relative size-2 rounded-full bg-current" />
+              </span>
               {t('scoring.nowPitching')}
-            </Badge>
-            <p className="mt-2 text-2xl font-bold break-words">{onStage.name}</p>
-            {onStage.project.name && <p className="text-ink-muted">{onStage.project.name}</p>}
+            </p>
+            <p className="title mt-1 text-2xl break-words">{onStage.name}</p>
+            {onStage.project.name && <p className="opacity-80">{onStage.project.name}</p>}
           </div>
           <Link
             to={`/score/${eventId}/${onStage.id}`}
-            className={buttonClasses({ size: 'lg', className: 'w-full sm:w-auto' })}
+            className={buttonClasses({
+              size: 'lg',
+              className: 'w-full bg-on-mark text-white hover:bg-on-mark/90 sm:w-auto',
+            })}
           >
             <Mic aria-hidden />
             {t('scoring.openNowPitching', { team: onStage.name })}
@@ -144,7 +151,10 @@ function TeamOverview({
         </section>
       )}
 
-      <ol aria-label={t('scoring.title')} className="flex flex-col gap-2">
+      <ol
+        aria-label={t('scoring.title')}
+        className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface"
+      >
         {teams.map((team, index) => (
           <li key={team.id}>
             <TeamRow
@@ -206,15 +216,14 @@ function TeamRow({
     <Link
       to={`/score/${eventId}/${team.id}`}
       className={cn(
-        'group flex min-h-18 items-center gap-4 rounded-card bg-surface px-4 py-3 ring-1 ring-line transition-shadow duration-(--duration-fast) hover:ring-line-strong',
-        onStage && 'ring-2 ring-gold hover:ring-gold',
-        team.noShow && 'bg-transparent',
+        'group flex min-h-18 items-center gap-4 px-4 py-3 -outline-offset-2 transition-colors duration-(--duration-fast) hover:bg-raised',
+        team.noShow && 'bg-canvas',
       )}
     >
       <span
         className={cn(
           'numeral w-9 shrink-0 text-right text-3xl leading-none',
-          onStage ? 'text-gold' : 'text-ink-faint',
+          onStage ? 'text-ink' : 'text-ink-faint',
         )}
       >
         {position}

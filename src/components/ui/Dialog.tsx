@@ -10,7 +10,7 @@ export const DialogTrigger = RadixDialog.Trigger
 export const DialogClose = RadixDialog.Close
 
 export const overlayClasses =
-  'fixed inset-0 z-50 bg-overlay backdrop-blur-[2px] data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out'
+  'fixed inset-0 z-50 bg-overlay data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out'
 
 type DialogContentProps = Omit<ComponentProps<typeof RadixDialog.Content>, 'title'> & {
   title: ReactNode

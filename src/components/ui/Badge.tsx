@@ -4,12 +4,12 @@ import { cn } from '@/lib/cn'
 export type BadgeTone = 'neutral' | 'accent' | 'gold' | 'success' | 'warning' | 'danger'
 
 const tones: Record<BadgeTone, string> = {
-  neutral: 'bg-raised text-ink-muted ring-line',
-  accent: 'bg-accent-soft text-accent-ink ring-accent/25',
-  gold: 'bg-gold-soft text-gold ring-gold/30',
-  success: 'bg-success-soft text-success ring-success/25',
-  warning: 'bg-warning-soft text-warning ring-warning/25',
-  danger: 'bg-danger-soft text-danger ring-danger/25',
+  neutral: 'bg-raised text-ink-muted',
+  accent: 'bg-accent-soft text-accent-ink',
+  gold: 'bg-mark text-on-mark',
+  success: 'bg-success-soft text-success',
+  warning: 'bg-warning-soft text-warning',
+  danger: 'bg-danger-soft text-danger',
 }
 
 type BadgeProps = ComponentProps<'span'> & {
@@ -28,7 +28,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap ring-1 ring-inset',
+        'inline-flex h-6 items-center gap-1.5 rounded-[0.3rem] px-2 text-xs font-semibold whitespace-nowrap',
         tones[tone],
         className,
       )}

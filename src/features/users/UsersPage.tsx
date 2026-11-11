@@ -375,7 +375,7 @@ export function UsersPage() {
       />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="sr-only">
           <CardTitle>{t('users.title')}</CardTitle>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -385,7 +385,7 @@ export function UsersPage() {
               placeholder={t('users.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-11 flex-1"
+              className="h-11 shrink-0 sm:flex-1"
             />
             <Select
               aria-label={t('users.roleFilterLabel')}

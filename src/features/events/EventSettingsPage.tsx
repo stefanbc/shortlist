@@ -1,5 +1,5 @@
-import type { TFunction } from 'i18next'
-import { ArrowLeft } from 'lucide-react'
+import type { ParseKeys, TFunction } from 'i18next'
+import { ArrowLeft, Check } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
@@ -12,6 +12,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { StatusOverride } from '@/domain/eventPhase'
 import type { Id } from '@/domain/types'
+import { cn } from '@/lib/cn'
+import { StageTimerSettings } from './StageTimer'
 import {
   toEventFormState,
   useEvent,
@@ -70,10 +72,10 @@ function EventDetailsForm({ event }: { event: EventRow }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('events.nameLabel')}</CardTitle>
+        <CardTitle>{t('events.detailsTitle')}</CardTitle>
       </CardHeader>
       <CardBody>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <EventFormFields idPrefix="event" form={form} errors={errors} setForm={setForm} />
 
           <div>
@@ -86,6 +88,12 @@ function EventDetailsForm({ event }: { event: EventRow }) {
     </Card>
   )
 }
+
+const STATUS_OPTIONS: { value: StatusOverride; label: ParseKeys }[] = [
+  { value: 'auto', label: 'events.statusAuto' },
+  { value: 'open', label: 'events.statusOpen' },
+  { value: 'locked', label: 'events.statusLocked' },
+]
 
 function ScoringControl({ event }: { event: EventRow }) {
   const { t } = useTranslation()
@@ -111,28 +119,32 @@ function ScoringControl({ event }: { event: EventRow }) {
         <EventPhaseBadge event={event} />
       </CardHeader>
       <CardBody className="flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={event.statusOverride === 'auto' ? 'primary' : 'secondary'}
-            disabled={event.statusOverride === 'auto'}
-            onClick={() => setPendingStatus('auto')}
-          >
-            {t('events.statusAuto')}
-          </Button>
-          <Button
-            variant={event.statusOverride === 'open' ? 'primary' : 'secondary'}
-            disabled={event.statusOverride === 'open'}
-            onClick={() => setPendingStatus('open')}
-          >
-            {t('events.statusOpen')}
-          </Button>
-          <Button
-            variant={event.statusOverride === 'locked' ? 'primary' : 'secondary'}
-            disabled={event.statusOverride === 'locked'}
-            onClick={() => setPendingStatus('locked')}
-          >
-            {t('events.statusLocked')}
-          </Button>
+        <div
+          role="group"
+          aria-label={t('events.statusTitle')}
+          className="grid gap-1 rounded-control bg-sunken p-1 sm:grid-cols-3"
+        >
+          {STATUS_OPTIONS.map(({ value, label }) => {
+            const current = event.statusOverride === value
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={current}
+                onClick={() => {
+                  if (!current) setPendingStatus(value)
+                }}
+                className={cn(
+                  'flex h-11 items-center justify-center gap-2 rounded-[0.25rem] px-3 text-[0.95rem] font-medium text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
+                  current &&
+                    'bg-surface font-semibold text-ink ring-1 ring-line-strong dark:bg-raised',
+                )}
+              >
+                {current && <Check aria-hidden className="size-4" />}
+                {t(label)}
+              </button>
+            )
+          })}
         </div>
         <p className="text-sm text-ink-faint">{t('events.statusAutoHint')}</p>
       </CardBody>
@@ -181,9 +193,12 @@ export function EventSettingsPage() {
         }
       />
 
-      <div className="flex flex-col gap-6">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <EventDetailsForm key={event.id} event={event} />
-        <ScoringControl event={event} />
+        <div className="flex flex-col gap-6">
+          <ScoringControl event={event} />
+          <StageTimerSettings eventId={event.id} />
+        </div>
       </div>
     </Page>
   )

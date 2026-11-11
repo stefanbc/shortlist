@@ -8,7 +8,9 @@ import { RedeemJurorLinkPage } from './RedeemJurorLinkPage'
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     functions: { invoke: vi.fn() },
-    auth: { verifyOtp: vi.fn() },
+    // onAuthStateChange: the page's preferences menu reads the session store, which
+    // subscribes to auth changes when it loads.
+    auth: { verifyOtp: vi.fn(), onAuthStateChange: vi.fn() },
   },
 }))
 

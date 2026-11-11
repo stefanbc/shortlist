@@ -41,7 +41,9 @@
     "light": "Luminos",
     "dark": "Întunecat",
     "system": "Automat",
-    "language": "Limbă"
+    "language": "Limbă",
+    "signOut": "Deconectare",
+    "signOutJurorHint": "Pentru a te autentifica din nou vei avea nevoie de linkul tău personal."
   },
   "auth": {
     "signIn": "Autentificare",
@@ -64,7 +66,8 @@
     "redeemInactiveTitle": "Acest link este suspendat",
     "redeemInactiveBody": "Contul tău de jurat nu este activ momentan. Cere-i organizatorului să-l reactiveze.",
     "redeemErrorTitle": "Linkul nu a putut fi deschis",
-    "redeemErrorBody": "Ceva nu a funcționat. Cere-i organizatorului să-ți retrimită linkul."
+    "redeemErrorBody": "Ceva nu a funcționat. Cere-i organizatorului să-ți retrimită linkul.",
+    "showPassword": "Arată parola"
   },
   "dashboard": {
     "title": "Eveniment live",
@@ -159,6 +162,22 @@
       "setup": "Pregătire",
       "open": "Deschis",
       "locked": "Blocat"
+    },
+    "detailsTitle": "Detalii",
+    "stagetimer": {
+      "title": "Cronometru de scenă",
+      "label": "Link de vizualizare stagetimer.io",
+      "hint": "Lipește linkul de vizualizare al camerei, nu pe cel de control. Cronometrul apare apoi pe pagina Live. Îl pornești și îl oprești tot din stagetimer.",
+      "save": "Salvează linkul",
+      "saved": "Linkul cronometrului a fost salvat.",
+      "removed": "Cronometrul a fost eliminat.",
+      "saveError": "Linkul nu a putut fi salvat. Încearcă din nou.",
+      "openInTab": "Deschide într-o filă nouă",
+      "frameTitle": "Cronometru de scenă de la stagetimer.io",
+      "errors": {
+        "notStagetimer": "Introdu un link care începe cu https://stagetimer.io/.",
+        "controllerLink": "Acesta este linkul de control. Lipește linkul de vizualizare, ca nimeni altcineva să nu poată controla cronometrul."
+      }
     }
   },
   "criteria": {
@@ -228,7 +247,37 @@
     "repoUrlInvalid": "Introdu un link valid, care începe cu http:// sau https://.",
     "viewRepo": "Repository",
     "sheetCreateTitle": "Adaugă echipă",
-    "sheetEditTitle": "Editează echipa"
+    "sheetEditTitle": "Editează echipa",
+    "registrations": {
+      "open": "Importă înscrierile",
+      "title": "Importă înscrierile echipelor",
+      "description": "Încarcă foaia cu răspunsurile formularului de înscriere, descărcată din Google Sheets ca .xlsx sau .csv. Fiecare răspuns devine o echipă în acest eveniment.",
+      "chooseFile": "Alege fișierul cu răspunsuri",
+      "chooseAnother": "Alege alt fișier",
+      "fileHint": ".xlsx sau .csv, un răspuns pe rând",
+      "privacy": "Se importă doar numele echipelor, numele membrilor și detaliile proiectului. Numerele de telefon, adresele de e-mail, vârstele și acordurile rămân în fișierul tău.",
+      "unnamed": "Fără nume de echipă",
+      "confirmIdle": "Importă echipele",
+      "importError": "Echipele nu au putut fi importate. Verifică lista de echipe pentru cele deja adăugate, apoi încearcă din nou.",
+      "issues": {
+        "missingName": "Omis: fără nume de echipă",
+        "duplicateInFile": "Omis: echipa a răspuns din nou mai târziu",
+        "alreadyInEvent": "Omis: există deja în eveniment",
+        "badRepoUrl": "Răspunsul pentru repository nu este un link, lăsat gol",
+        "descriptionTrimmed": "Descriere scurtată la 5.000 de caractere"
+      },
+      "errors": {
+        "unreadable": "Fișierul nu a putut fi citit. Descarcă foaia cu răspunsuri ca .xlsx sau .csv și încearcă din nou.",
+        "empty": "Foaia nu are niciun răspuns.",
+        "no_team_column": "Foaia nu are coloana „Numele echipei”, deci nu pare să fie cea cu răspunsurile de înscriere."
+      },
+      "summary": "Echipe gata de import: {{count}}.",
+      "summarySkipped": "Rânduri omise: {{count}}.",
+      "summaryThemes": "Teme folosite: {{count}}. Cele care nu există încă în eveniment sunt adăugate.",
+      "memberCount": "membri: {{count}}",
+      "confirm": "Importă echipele ({{count}})",
+      "imported": "Echipe importate: {{count}}."
+    }
   },
   "scoring": {
     "title": "Echipele tale",
@@ -505,7 +554,8 @@
     "placeholderEmailNote": "Jurații sunt importați cu adrese de email temporare. Adaugă-le pe cele reale ulterior din pagina Persoane.",
     "importButton": "Importă evenimentul",
     "importing": "Se importă…",
-    "success": "{{name}} a fost importat."
+    "success": "{{name}} a fost importat.",
+    "registrationsNote": "Aici se importă un registru de evaluare completat, ca eveniment nou. Pentru a adăuga echipele din formularul de înscriere, deschide fila Echipe a evenimentului și alege Importă înscrierile."
   },
   "export": {
     "open": "Exportă",

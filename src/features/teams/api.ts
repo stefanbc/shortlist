@@ -3,6 +3,7 @@ import type { ParseKeys, TFunction } from 'i18next'
 import { teamInputSchema, type TeamInput } from '@/domain/schemas'
 import type { Id, Team } from '@/domain/types'
 import { supabase } from '@/lib/supabase'
+import { normalizeLabel, type ParsedRegistration } from './parseRegistrations'
 
 /** A team plus its one project (name/description/theme/repo link), the shape the Teams
  * page reads and writes. `project` fields are null until a project has been saved. */
@@ -134,6 +135,78 @@ export function useSaveTeam() {
     },
     onSuccess: (_team, variables) => {
       void queryClient.invalidateQueries({ queryKey: ['teams', variables.eventId] })
+    },
+  })
+}
+
+/**
+ * Adds the teams from a parsed registration sheet to an event, after the ones already
+ * there (so sheet order becomes pitch order). A theme the event doesn't have yet is
+ * created; one it has is reused by name. Rows marked `skip` are left out.
+ */
+export function useImportRegistrations(eventId: Id) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (registrations: ParsedRegistration[]): Promise<number> => {
+      const rows = registrations.filter((entry) => !entry.skip)
+      if (rows.length === 0) return 0
+
+      const [themesResult, teamsResult] = await Promise.all([
+        supabase.from('themes').select('id, name, position').eq('event_id', eventId),
+        supabase.from('teams').select('pitch_order').eq('event_id', eventId),
+      ])
+      if (themesResult.error) throw themesResult.error
+      if (teamsResult.error) throw teamsResult.error
+
+      const themeIds = new Map<string, string>()
+      for (const theme of themesResult.data) themeIds.set(normalizeLabel(theme.name), theme.id)
+      let themePosition = Math.max(0, ...themesResult.data.map((theme) => theme.position))
+      const newThemes: { event_id: Id; name: string; position: number }[] = []
+      for (const { themeName } of rows) {
+        if (!themeName) continue
+        const key = normalizeLabel(themeName)
+        if (themeIds.has(key) || newThemes.some((theme) => normalizeLabel(theme.name) === key)) continue
+        themePosition += 1
+        newThemes.push({ event_id: eventId, name: themeName, position: themePosition })
+      }
+      if (newThemes.length > 0) {
+        const { data, error } = await supabase.from('themes').insert(newThemes).select('id, name')
+        if (error) throw error
+        for (const theme of data) themeIds.set(normalizeLabel(theme.name), theme.id)
+      }
+
+      const firstOrder = Math.max(0, ...teamsResult.data.map((team) => team.pitch_order ?? 0)) + 1
+      const { data: created, error: teamsError } = await supabase
+        .from('teams')
+        .insert(
+          rows.map((entry, index) => ({
+            event_id: eventId,
+            name: entry.name,
+            members: entry.members,
+            pitch_order: firstOrder + index,
+          })),
+        )
+        .select('id, pitch_order')
+      if (teamsError) throw teamsError
+
+      // Match each new team back to its row by pitch order, not by the order rows return in.
+      const teamIdByOrder = new Map(created.map((team) => [team.pitch_order, team.id]))
+      const { error: projectsError } = await supabase.from('projects').upsert(
+        rows.map((entry, index) => ({
+          team_id: teamIdByOrder.get(firstOrder + index) as string,
+          name: entry.projectName,
+          description: entry.description,
+          theme_id: entry.themeName ? (themeIds.get(normalizeLabel(entry.themeName)) ?? null) : null,
+          repo_url: entry.repoUrl,
+        })),
+        { onConflict: 'team_id' },
+      )
+      if (projectsError) throw projectsError
+      return rows.length
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['teams', eventId] })
+      void queryClient.invalidateQueries({ queryKey: ['themes', eventId] })
     },
   })
 }

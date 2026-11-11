@@ -77,7 +77,7 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         'flex items-center gap-1 rounded-control bg-surface ring-1 ring-line',
-        isDragging && 'relative z-10 shadow-pop ring-accent/40',
+        isDragging && 'relative z-10 shadow-pop ring-ink',
       )}
     >
       <button

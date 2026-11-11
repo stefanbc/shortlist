@@ -19,15 +19,15 @@ export function ReportNav({ eventId }: { eventId: Id }) {
 
   return (
     <nav aria-label={t('nav.reports')} className="mb-6 -mx-1 overflow-x-auto px-1">
-      <div className="inline-flex max-w-full gap-1 rounded-card bg-sunken/70 p-1 ring-1 ring-inset ring-line">
+      <div className="inline-flex max-w-full gap-1 rounded-control bg-sunken p-1">
         {TABS.map(({ segment, label }) => (
           <NavLink
             key={segment}
             to={`/admin/events/${eventId}/reports/${segment}`}
             className={({ isActive }) =>
               cn(
-                'flex h-9 shrink-0 items-center rounded-control px-3.5 text-sm font-medium whitespace-nowrap text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
-                isActive && 'bg-surface text-ink shadow-pop dark:bg-line',
+                'flex h-9 shrink-0 items-center rounded-[0.25rem] px-3.5 text-sm font-medium whitespace-nowrap text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
+                isActive && 'bg-surface font-semibold text-ink ring-1 ring-line-strong dark:bg-raised',
               )
             }
           >

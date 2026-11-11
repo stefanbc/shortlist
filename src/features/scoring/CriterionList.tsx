@@ -30,7 +30,7 @@ export function CriterionList({ criteria, cells, currentIndex, onSelect }: Crite
                 aria-label={cellLabel(t, i18n.language, criterion, index + 1, cell)}
                 className={cn(
                   'flex min-h-12 w-full items-center gap-3 rounded-control px-3 py-2 text-left text-sm text-ink-muted transition-colors duration-(--duration-fast) hover:bg-raised hover:text-ink',
-                  current && 'bg-accent-soft text-ink ring-1 ring-accent hover:bg-accent-soft',
+                  current && 'bg-surface font-semibold text-ink ring-1 ring-ink hover:bg-surface',
                   cell.state === 'rejected' && 'ring-1 ring-danger/60',
                 )}
               >

@@ -42,7 +42,7 @@ export function CriterionStrip({ criteria, cells, currentIndex, onSelect }: Crit
                 aria-label={cellLabel(t, i18n.language, criterion, index + 1, cell)}
                 className={cn(
                   'relative flex h-14 w-12 flex-col items-center justify-center rounded-control bg-surface ring-1 ring-line transition-[box-shadow,background-color] duration-(--duration-fast)',
-                  current && 'bg-accent-soft ring-2 ring-accent',
+                  current && 'ring-2 ring-ink',
                   cell.state === 'rejected' && 'bg-danger-soft ring-danger/60',
                 )}
               >
