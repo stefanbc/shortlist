@@ -94,6 +94,7 @@ function DropZone({
           ref={inputRef}
           type="file"
           accept=".xlsx"
+          disabled={status === 'parsing'}
           aria-label={t('import.fileInputLabel')}
           className="sr-only"
           onChange={(e) => {
