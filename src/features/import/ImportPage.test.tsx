@@ -28,7 +28,7 @@ const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
  * Astra Hack's own sheets (criteria rows from row 2, juror columns from column D, a
  * "Scor" header once the juror columns end). Used by the synthetic tests so they never
  * depend on the private real-data fixture. */
-async function buildMinimalWorkbook(weight = 50): Promise<ArrayBuffer> {
+async function buildMinimalWorkbook(weight = 50, includeExpectedFinal = true): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet('E1')
   sheet.getCell(1, 1).value = 'Nr.'
@@ -40,7 +40,7 @@ async function buildMinimalWorkbook(weight = 50): Promise<ArrayBuffer> {
   sheet.getCell(2, 2).value = 'Impact'
   sheet.getCell(2, 3).value = weight
   sheet.getCell(2, 4).value = 4.5
-  sheet.getCell(3, 5).value = 4.5 // cached final: single criterion/juror -> final = score
+  if (includeExpectedFinal) sheet.getCell(3, 5).value = 4.5 // cached final: single criterion/juror -> final = score
   sheet.getCell(12, 2).value = 'Echipa:'
   sheet.getCell(13, 2).value = 'Team Rocket'
   const buffer = await workbook.xlsx.writeBuffer()
@@ -156,5 +156,30 @@ describe('ImportPage', () => {
     const warning = await screen.findByText('Fix the workbook before importing')
     expect(within(warning.closest('div')!).getByText(/invalid weight/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Import event' })).toBeDisabled()
+  })
+
+  it('shows a distinct badge for a scored team with no cached final in the sheet', async () => {
+    const user = userEvent.setup()
+    vi.mocked(useImportEvent).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as never)
+    renderPage()
+
+    const file = new File([await buildMinimalWorkbook(50, false)], 'mini.xlsx', { type: XLSX_TYPE })
+    await user.upload(screen.getByLabelText('Spreadsheet file'), file)
+
+    expect(await screen.findByText('No sheet value')).toBeInTheDocument()
+    expect(screen.queryByText('No-show')).not.toBeInTheDocument()
+    expect(screen.queryByText('Matches sheet')).not.toBeInTheDocument()
+    expect(screen.queryByText("Doesn't match")).not.toBeInTheDocument()
+  })
+
+  it('disables the drop zone while the import mutation is pending', () => {
+    vi.mocked(useImportEvent).mockReturnValue({
+      mutateAsync: vi.fn().mockReturnValue(new Promise(() => {})),
+      isPending: true,
+    } as never)
+    renderPage()
+
+    expect(screen.getByLabelText('Spreadsheet file')).toBeDisabled()
+    expect(screen.getByText('Drop the .xlsx file here').closest('button')).toBeDisabled()
   })
 })

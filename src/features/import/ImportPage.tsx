@@ -37,10 +37,13 @@ function formatFileSize(bytes: number): string {
 function DropZone({
   status,
   message,
+  disabled,
   onFile,
 }: {
   status: ParseStatus
   message: string | null
+  /** True while the import mutation is in flight: a new file must not be dropped mid-import. */
+  disabled: boolean
   onFile(file: File): void
 }) {
   const { t } = useTranslation()
@@ -59,7 +62,7 @@ function DropZone({
       <CardBody>
         <button
           type="button"
-          disabled={status === 'parsing'}
+          disabled={disabled}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault()
@@ -94,7 +97,7 @@ function DropZone({
           ref={inputRef}
           type="file"
           accept=".xlsx"
-          disabled={status === 'parsing'}
+          disabled={disabled}
           aria-label={t('import.fileInputLabel')}
           className="sr-only"
           onChange={(e) => {
@@ -127,9 +130,25 @@ function StatTile({ label, value }: { label: string; value: number }) {
   )
 }
 
-function matchTone(entry: RankedTeam, parsedTeam: ParsedTeam | undefined, expected: number | null): BadgeTone {
-  if (parsedTeam?.noShow || expected === null) return 'neutral'
-  return entry.final !== null && Math.abs(entry.final - expected) < SCORE_EPSILON ? 'success' : 'danger'
+type MatchStatus = 'noShow' | 'noSheetValue' | 'match' | 'mismatch'
+
+function matchStatus(
+  entry: RankedTeam,
+  parsedTeam: ParsedTeam | undefined,
+  expected: number | null,
+): MatchStatus {
+  if (parsedTeam?.noShow) return 'noShow'
+  if (expected === null) return 'noSheetValue'
+  return entry.final !== null && Math.abs(entry.final - expected) < SCORE_EPSILON
+    ? 'match'
+    : 'mismatch'
+}
+
+const MATCH_STATUS_TONE: Record<MatchStatus, BadgeTone> = {
+  noShow: 'neutral',
+  noSheetValue: 'neutral',
+  match: 'success',
+  mismatch: 'danger',
 }
 
 export function ImportPage() {
@@ -206,7 +225,12 @@ export function ImportPage() {
       <PageHeader title={t('import.title')} description={t('import.intro')} />
 
       <div className="flex flex-col gap-6">
-        <DropZone status={status} message={status === 'error' ? parseError : null} onFile={(f) => void handleFile(f)} />
+        <DropZone
+          status={status}
+          message={status === 'error' ? parseError : null}
+          disabled={status === 'parsing' || importEvent.isPending}
+          onFile={(f) => void handleFile(f)}
+        />
 
         {status === 'parsing' && (
           <p className="text-sm text-ink-muted">{t('import.parsing')}</p>
@@ -309,13 +333,16 @@ export function ImportPage() {
                       {ranked.map((entry) => {
                         const parsedTeam = parsedTeamsBySheet.get(entry.teamId)
                         const expected = result.event.expectedFinals[entry.teamId] ?? null
-                        const tone = matchTone(entry, parsedTeam, expected)
+                        const status = matchStatus(entry, parsedTeam, expected)
+                        const tone = MATCH_STATUS_TONE[status]
                         const badgeLabel =
-                          tone === 'neutral'
+                          status === 'noShow'
                             ? t('import.noShowBadge')
-                            : tone === 'success'
-                              ? t('import.matchBadge')
-                              : t('import.mismatchBadge')
+                            : status === 'noSheetValue'
+                              ? t('import.noSheetValueBadge')
+                              : status === 'match'
+                                ? t('import.matchBadge')
+                                : t('import.mismatchBadge')
                         return (
                           <tr key={entry.teamId} className="border-t border-line">
                             <td className="numeral px-3 py-2.5 text-lg">{entry.rank ?? '–'}</td>
