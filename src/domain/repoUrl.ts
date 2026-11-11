@@ -64,3 +64,22 @@ export function repoSlug(url: string | null | undefined): string | null {
   const parsed = parseRepoUrl(url)
   return parsed.ok ? `${parsed.owner}/${parsed.repo}` : null
 }
+
+/**
+ * The address to put in a link for a stored repository value, or null when it must not
+ * be linked. Saving validates the value, but a row may predate that check or have been
+ * written another way, so nothing stored is trusted at the point it becomes an `href`:
+ * a GitHub repository is linked by its canonical address, any other plain web address
+ * as it is, and everything else (`javascript:`, `data:`, free text) not at all.
+ */
+export function safeRepoHref(url: string | null | undefined): string | null {
+  if (!url) return null
+  const parsed = parseRepoUrl(url)
+  if (parsed.ok) return parsed.url
+  try {
+    const other = new URL(url.trim())
+    return other.protocol === 'https:' || other.protocol === 'http:' ? other.toString() : null
+  } catch {
+    return null
+  }
+}

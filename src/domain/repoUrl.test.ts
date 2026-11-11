@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseRepoUrl, repoSlug } from './repoUrl'
+import { parseRepoUrl, repoSlug, safeRepoHref } from './repoUrl'
 
 describe('parseRepoUrl', () => {
   it.each([
@@ -43,4 +43,21 @@ describe('repoSlug', () => {
     expect(repoSlug('https://example.com/x/y')).toBeNull()
     expect(repoSlug(null)).toBeNull()
   })
+})
+
+describe('safeRepoHref', () => {
+  it('links a GitHub repository by its canonical address', () => {
+    expect(safeRepoHref('github.com/byteme/ecotrack/tree/main')).toBe('https://github.com/byteme/ecotrack')
+  })
+
+  it('links an older, non-GitHub web address as stored', () => {
+    expect(safeRepoHref('https://gitlab.com/byteme/ecotrack')).toBe('https://gitlab.com/byteme/ecotrack')
+  })
+
+  it.each(['javascript:alert(1)', ' JavaScript:alert(1)', 'data:text/html,<script>1</script>', 'vbscript:x', 'not a link', '', null])(
+    'never links %s',
+    (value) => {
+      expect(safeRepoHref(value)).toBeNull()
+    },
+  )
 })

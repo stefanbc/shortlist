@@ -2,7 +2,7 @@ import { ChevronDown, ExternalLink, FolderGit2, Users } from 'lucide-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { buttonClasses } from '@/components/ui/buttonStyles'
-import { repoSlug } from '@/domain/repoUrl'
+import { repoSlug, safeRepoHref } from '@/domain/repoUrl'
 import type { TeamWithProject } from '@/features/teams/api'
 import { cn } from '@/lib/cn'
 
@@ -24,7 +24,9 @@ export function TeamBrief({ team, defaultOpen, className }: TeamBriefProps) {
   const [open, setOpen] = useState(defaultOpen)
   const [expanded, setExpanded] = useState(false)
 
-  const { description, repoUrl } = team.project
+  const { description } = team.project
+  // Never the stored value itself: only an address that has been checked (see safeRepoHref).
+  const repoUrl = safeRepoHref(team.project.repoUrl)
   const slug = repoSlug(repoUrl)
   const long = (description?.length ?? 0) > LONG_DESCRIPTION
   const empty = !description && !repoUrl && team.members.length === 0

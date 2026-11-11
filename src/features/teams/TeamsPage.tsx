@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/cn'
 import { RegistrationImportDialog } from './RegistrationImportDialog'
 import { TeamForm } from './TeamForm'
+import { safeRepoHref } from '@/domain/repoUrl'
 
 /** An in-flight action that needs the organizer to confirm before it's sent: deleting a
  * team, or flipping its no-show flag. Neither optimistically changes anything beforehand,
@@ -55,6 +56,8 @@ function TeamRow({
   onRequestNoShow(team: TeamWithProject, next: boolean): void
 }) {
   const { t } = useTranslation()
+  // Only a checked address is linked, never the stored value as it is.
+  const repoHref = safeRepoHref(team.project.repoUrl)
 
   return (
     <div className="flex items-start gap-3 py-1.5">
@@ -81,9 +84,9 @@ function TeamRow({
             <span className="text-ink-faint">{t('teams.noProject')}</span>
           )}
           {themeName && <Badge tone="accent">{themeName}</Badge>}
-          {team.project.repoUrl && (
+          {repoHref && (
             <a
-              href={team.project.repoUrl}
+              href={repoHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-accent-ink underline underline-offset-2"
