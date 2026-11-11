@@ -14,6 +14,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
-    exclude: [...configDefaults.exclude, 'tests/integration/**', 'e2e/**'],
+    exclude: [...configDefaults.exclude, 'tests/integration/**', 'e2e/**', '.worktrees/**'],
+    // Unit tests mock Supabase; these placeholders only satisfy the client's
+    // startup check so the suite runs on a fresh clone without .env.local.
+    env: {
+      VITE_SUPABASE_URL: 'http://127.0.0.1:54321',
+      VITE_SUPABASE_ANON_KEY: 'test-anon-key',
+    },
   },
 })
