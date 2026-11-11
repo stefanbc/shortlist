@@ -102,7 +102,14 @@ describe('juror-link', () => {
     expect(redeem).toEqual({ status: 400, body: { error: 'invalid_token' } })
   })
 
-  it('deactivated juror cannot redeem', async () => {
+  // 0004_revoke_on_role_change.sql revokes a juror's tokens the moment their profile goes
+  // inactive (any path: this edge function, or a direct `profiles` update -- the trigger
+  // fires on the column, not the caller), so a deactivated juror's link stops working via
+  // the token-revoked check in `redeem()`, before it would ever reach the inactive-profile
+  // check further down. That second check is defence-in-depth for a profile that somehow
+  // went inactive without its tokens being revoked (no code path does that today, but
+  // `redeem()` doesn't rely on it); this test covers the actual, reachable behavior.
+  it('deactivated juror cannot redeem: the link stops working (token already revoked)', async () => {
     const jurorId = await createJuror()
     const token = await issueToken(jurorId)
     const deactivated = await callFunction(
@@ -113,7 +120,7 @@ describe('juror-link', () => {
     expect(deactivated.status).toBe(200)
 
     const redeem = await callFunction('juror-link', { action: 'redeem', token })
-    expect(redeem).toEqual({ status: 400, body: { error: 'inactive' } })
+    expect(redeem).toEqual({ status: 400, body: { error: 'invalid_token' } })
   })
 
   it('juror caller cannot issue links', async () => {

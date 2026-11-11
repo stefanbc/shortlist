@@ -36,7 +36,10 @@ test('weight change while the event is open asks for confirmation, and the ranki
 test('setting who is pitching prompts an already-open juror to switch', async ({ page, browser }) => {
   await loginAsAdmin(page, seed)
 
-  const jurorContext = await browser.newContext()
+  // A context made via browser.newContext() doesn't inherit the "mobile" project's `use`
+  // options (that only applies to the page/context fixtures the test function itself
+  // provides), so the viewport is set explicitly here and below to match it.
+  const jurorContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   try {
     const jurorPage = await jurorContext.newPage()
     await openJurorLink(jurorPage, seed.jurors[0].linkPath)
@@ -58,7 +61,7 @@ test('setting who is pitching prompts an already-open juror to switch', async ({
 
 for (const lang of ['en', 'ro'] as const) {
   test(`no horizontal scroll at 360px on the admin dashboard (${lang})`, async ({ browser }) => {
-    const context = await browser.newContext()
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
     try {
       const page = await context.newPage()
       // loginAsAdmin's locators are English text, so sign in before switching language
