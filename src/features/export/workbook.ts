@@ -21,7 +21,7 @@ const RULES_TEXT =
   '- In cazul neprezentarii unei echipe se acord un punct din oficiu\n' +
   '- Fiecare echipa are la dispozitie 7 min (5 min pitch si 2 min Q&A)'
 
-/** "Mirela Groza" -> "Mirela\nGROZA": the source sheet's juror header style is the
+/** "Alex Example" -> "Alex\nEXAMPLE": the source sheet's juror header style is the
  * first name, a line break, then the last name upper-cased. Profiles only carry a
  * single `displayName`, so this splits on the LAST space -- the part after it is the
  * surname, everything before it (first name, possibly with a middle name) stays as

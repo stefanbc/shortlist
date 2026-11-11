@@ -226,7 +226,7 @@ insert into events (id, name, starts_at, ends_at)
 values ('10000000-0000-0000-0000-000000000009', 'Astra Hack', now() - interval '2 day', now() - interval '1 day');
 insert into themes (event_id, name, position)
 select '10000000-0000-0000-0000-000000000009', t, i
-from unnest(array['Artificial Intelligence', 'Cybersecurity', 'Sustainability']) with ordinality as x(t, i);
+from unnest(array['Theme Alpha', 'Theme Beta', 'Theme Gamma']) with ordinality as x(t, i);
 insert into criteria (event_id, name, weight, position)
 select '10000000-0000-0000-0000-000000000009', 'Criterion ' || i, w, i
 from unnest(array[20, 90, 25, 25, 100, 80, 70, 20, 100]) with ordinality as x(w, i);

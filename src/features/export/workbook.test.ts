@@ -34,7 +34,7 @@ const CRITERIA: Criterion[] = Array.from({ length: 9 }, (_, i) => ({
   position: i + 1,
 }))
 
-const JUROR_NAMES = ['Ana Pop', 'Ion Marin', 'Mirela Groza', 'Radu Ionescu', 'Bianca Dan', 'Sorin Terchila']
+const JUROR_NAMES = ['Ana Pop', 'Ion Marin', 'Alex Example', 'Pat Placeholder', 'Jo Testcase', 'Kim Fixture']
 const JURORS: Profile[] = JUROR_NAMES.map((displayName, i) => ({
   id: `j${i + 1}`,
   displayName,
@@ -91,7 +91,7 @@ function buildSyntheticData(): ExportData {
 
 describe('jurorHeaderText', () => {
   it('splits "First Last" into "First\\nLAST"', () => {
-    expect(jurorHeaderText('Mirela Groza')).toBe('Mirela\nGROZA')
+    expect(jurorHeaderText('Alex Example')).toBe('Alex\nEXAMPLE')
   })
 
   it('upper-cases a single-word name whole, with no line break', () => {
@@ -160,14 +160,14 @@ describe('buildWorkbook (synthetic round-trip, always runs)', () => {
 })
 
 describe('buildWorkbook (former juror still scored a team)', () => {
-  // Mirrors the real event's history: a juror (Mirela) scored the early teams, then was
-  // replaced by a different juror (Ovidia) for the rest -- Mirela is no longer assigned
+  // A mid-event juror swap: one juror (Alex) scored the early teams, then was
+  // replaced by a different juror (Sam) for the rest -- Alex is no longer assigned
   // to the event (absent from `results.jurors`/`data.jurors`' "currently assigned" part),
   // but her scores on the teams she judged still count, and `buildExportData` resolves
   // her name from `allProfiles` (see types.test.ts). Every sheet still has exactly 6
   // juror columns (just a different 6 for team one), so this does not touch the
   // Scor-column-position concern the "different shape" tests below cover.
-  const CURRENT_JUROR_NAMES = ['Ana Pop', 'Ion Marin', 'Bianca Dan', 'Radu Ionescu', 'Sorin Terchila', 'Ovidia Caba']
+  const CURRENT_JUROR_NAMES = ['Ana Pop', 'Ion Marin', 'Jo Testcase', 'Pat Placeholder', 'Kim Fixture', 'Sam Sample']
   const CURRENT_JURORS: Profile[] = CURRENT_JUROR_NAMES.map((displayName, i) => ({
     id: `cj${i + 1}`,
     displayName,
@@ -176,8 +176,8 @@ describe('buildWorkbook (former juror still scored a team)', () => {
     active: true,
   }))
   const FORMER_JUROR: Profile = {
-    id: 'former-mirela',
-    displayName: 'Mirela Groza',
+    id: 'former-alex',
+    displayName: 'Alex Example',
     email: null,
     role: 'juror',
     active: true,
@@ -241,13 +241,13 @@ describe('buildWorkbook (former juror still scored a team)', () => {
     await workbook.xlsx.load(await blobToArrayBuffer(blob))
     const t1Sheet = workbook.getWorksheet('E1')!
     const headerTexts = [4, 5, 6, 7, 8, 9].map((col) => t1Sheet.getCell(1, col).value)
-    expect(headerTexts).toContain(jurorHeaderText('Mirela Groza'))
+    expect(headerTexts).toContain(jurorHeaderText('Alex Example'))
 
     // Her scores round-trip through parseWorkbook under her normalized juror key.
     const parsed = await parseWorkbook(await blobToArrayBuffer(blob))
     const parsedT1 = parsed.teams.find((t) => t.sheet === 'E1')!
-    const formerKey = jurorKeyFor('Mirela Groza')
-    const formerScores = data.scores.filter((s) => s.teamId === 't1' && s.jurorId === 'former-mirela')
+    const formerKey = jurorKeyFor('Alex Example')
+    const formerScores = data.scores.filter((s) => s.teamId === 't1' && s.jurorId === 'former-alex')
     const expectedTuples = new Set(
       formerScores.map((s) => {
         const position = data.criteria.find((c) => c.id === s.criterionId)!.position
@@ -261,7 +261,7 @@ describe('buildWorkbook (former juror still scored a team)', () => {
     expect(actualTuples.size).toBe(CRITERIA.length)
 
     // The juror who replaced her never scored this team.
-    const currentSixthKey = jurorKeyFor('Ovidia Caba')
+    const currentSixthKey = jurorKeyFor('Sam Sample')
     expect(parsedT1.scores.some((s) => s.jurorKey === currentSixthKey)).toBe(false)
 
     // Both teams' finals round-trip correctly.

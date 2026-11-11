@@ -16,9 +16,9 @@ describe('toCriterion', () => {
 
 describe('toTheme', () => {
   it('maps the snake_case DB row to a camelCase Theme', () => {
-    expect(toTheme({ id: 't1', name: 'Sustainability', position: 3 })).toEqual({
+    expect(toTheme({ id: 't1', name: 'Theme Gamma', position: 3 })).toEqual({
       id: 't1',
-      name: 'Sustainability',
+      name: 'Theme Gamma',
       position: 3,
     })
   })

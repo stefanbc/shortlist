@@ -152,7 +152,7 @@ export interface EventResults {
 
 /** Combines an event's teams, criteria, assigned jurors and live scores into the ranking
  * and analytics the organizer dashboard (and later report pages) read. Scores from a juror
- * no longer assigned to the event still count here (the Mirela -> Ovidia swap), even though
+ * no longer assigned to the event still count here (a juror replaced mid-event), even though
  * `jurors` only lists who's currently assigned. */
 export function useEventResults(eventId: Id): EventResults {
   const { data: teams, isLoading: teamsLoading } = useTeams(eventId)

@@ -36,24 +36,24 @@ const EVENT: EventRow = {
   nowPitchingSince: null,
 }
 
-const MIRELA: Profile = {
-  id: 'j-mirela',
-  displayName: 'Mirela Pop',
-  email: 'mirela@example.com',
+const ALEX: Profile = {
+  id: 'j-alex',
+  displayName: 'Alex Example',
+  email: 'alex@example.com',
   role: 'juror',
   active: true,
 }
-const OVIDIA: Profile = {
-  id: 'j-ovidia',
-  displayName: 'Ovidia Ionescu',
+const SAM: Profile = {
+  id: 'j-sam',
+  displayName: 'Sam Sample',
   email: null,
   role: 'juror',
   active: true,
 }
 
 function renderPage({
-  assigned = [MIRELA],
-  allProfiles = [MIRELA, OVIDIA],
+  assigned = [ALEX],
+  allProfiles = [ALEX, SAM],
 }: {
   assigned?: Profile[]
   allProfiles?: Profile[]
@@ -82,7 +82,7 @@ describe('EventJurorsPage', () => {
 
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: 'Remove from event: Mirela Pop' }))
+    await user.click(screen.getByRole('button', { name: 'Remove from event: Alex Example' }))
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent(/stay counted in the results/)
@@ -91,7 +91,7 @@ describe('EventJurorsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Remove from event' }))
 
     await waitFor(() =>
-      expect(unassign).toHaveBeenCalledWith({ eventId: 'ev-1', jurorId: 'j-mirela' }),
+      expect(unassign).toHaveBeenCalledWith({ eventId: 'ev-1', jurorId: 'j-alex' }),
     )
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
@@ -106,9 +106,9 @@ describe('EventJurorsPage', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Assign juror' })[0])
     const dialog = await screen.findByRole('dialog')
-    await user.selectOptions(within(dialog).getByLabelText('Juror'), 'j-ovidia')
+    await user.selectOptions(within(dialog).getByLabelText('Juror'), 'j-sam')
     await user.click(within(dialog).getByRole('button', { name: 'Assign juror' }))
 
-    await waitFor(() => expect(assign).toHaveBeenCalledWith({ eventId: 'ev-1', jurorId: 'j-ovidia' }))
+    await waitFor(() => expect(assign).toHaveBeenCalledWith({ eventId: 'ev-1', jurorId: 'j-sam' }))
   })
 })

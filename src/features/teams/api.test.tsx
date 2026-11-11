@@ -19,31 +19,31 @@ describe('toTeam', () => {
     expect(
       toTeam({
         id: 't1',
-        name: 'Four the Win',
+        name: 'Team Vega',
         members: ['Ana', 'Bogdan'],
         pitch_order: 3,
         no_show: false,
         manual_tiebreak: null,
         projects: {
           id: 'p1',
-          name: 'Clearpath',
+          name: 'Project Atlas',
           description: 'A routing app.',
           theme_id: 'th1',
-          repo_url: 'https://github.com/example/clearpath',
+          repo_url: 'https://github.com/example/project-atlas',
         },
       }),
     ).toEqual({
       id: 't1',
-      name: 'Four the Win',
+      name: 'Team Vega',
       members: ['Ana', 'Bogdan'],
       pitchOrder: 3,
       noShow: false,
       manualTiebreak: null,
       project: {
-        name: 'Clearpath',
+        name: 'Project Atlas',
         description: 'A routing app.',
         themeId: 'th1',
-        repoUrl: 'https://github.com/example/clearpath',
+        repoUrl: 'https://github.com/example/project-atlas',
       },
     })
   })

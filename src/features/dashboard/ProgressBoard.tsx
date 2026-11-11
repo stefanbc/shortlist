@@ -25,7 +25,7 @@ type ProgressBoardProps = {
   criteria: Criterion[]
   /** Currently assigned jurors (useEventJurors) -- the grid's rows. A juror removed from
    * the event mid-way has no row here, but their past scores still count in the ranking
-   * (the Mirela -> Ovidia swap); `formerJurorsNote` below calls that out instead of adding
+   * (a juror replaced mid-event); `formerJurorsNote` below calls that out instead of adding
    * a row for someone no longer on the jury. */
   jurors: Profile[]
   scores: Score[]

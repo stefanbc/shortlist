@@ -17,7 +17,7 @@ const team = (id: string, name: string, pitchOrder: number): TeamWithProject => 
   project: { name: null, description: null, themeId: null, repoUrl: null },
 })
 
-const TEAMS = [team('t1', 'Codero', 1), team('t2', 'Four the Win', 2), team('t3', 'Nimbus', 3)]
+const TEAMS = [team('t1', 'Team Orion', 1), team('t2', 'Team Vega', 2), team('t3', 'Nimbus', 3)]
 
 const event = (nowPitchingTeamId: string | null, since = '2026-11-10T10:00:00.000Z'): EventRow => ({
   id: 'ev-1',
@@ -73,7 +73,7 @@ describe('NowPitchingDialog', () => {
 
     act(() => setEvent(event('t2', '2026-11-10T10:07:00.000Z')))
     const dialog = await screen.findByRole('alertdialog')
-    expect(dialog).toHaveTextContent('Four the Win is now pitching')
+    expect(dialog).toHaveTextContent('Team Vega is now pitching')
 
     await user.click(screen.getByRole('button', { name: 'Stay here' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())

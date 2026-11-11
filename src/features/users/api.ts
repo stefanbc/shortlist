@@ -88,7 +88,7 @@ export function useAssignJuror() {
 }
 
 /** Unassigns a juror from an event. Their scores already entered for it are untouched
- * and keep counting toward results (the Mirela -> Ovidia swap) -- this only stops them
+ * and keep counting toward results (a juror replaced mid-event) -- this only stops them
  * from judging it going forward. */
 export function useUnassignJuror() {
   const queryClient = useQueryClient()

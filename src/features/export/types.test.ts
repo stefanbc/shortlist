@@ -25,7 +25,7 @@ describe('buildExportData', () => {
   it('lists currently-assigned jurors before any former juror', () => {
     const data = buildExportData({
       eventName: 'Astra Hack',
-      themes: [{ id: 'th1', name: 'Sustainability', position: 1 }],
+      themes: [{ id: 'th1', name: 'Theme Gamma', position: 1 }],
       results: baseResults({
         jurors: [profile('j1', 'Ana Pop')],
         scores: [{ teamId: 't1', criterionId: 'c1', jurorId: 'j2', value: 4 }],
@@ -36,8 +36,8 @@ describe('buildExportData', () => {
 
     expect(data.jurors.map((j) => j.id)).toEqual(['j1', 'j2'])
     expect(data.jurors.find((j) => j.id === 'j2')?.displayName).toBe('Ion Marin')
-    expect(data.themeNames).toEqual({ th1: 'Sustainability' })
-    expect(data.themes).toEqual(['Sustainability'])
+    expect(data.themeNames).toEqual({ th1: 'Theme Gamma' })
+    expect(data.themes).toEqual(['Theme Gamma'])
   })
 
   it('falls back to the former-juror label when even the profile is gone', () => {

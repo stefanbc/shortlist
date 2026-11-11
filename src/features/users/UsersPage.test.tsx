@@ -39,10 +39,10 @@ const ME: Profile = { id: 'admin-1', displayName: 'You', email: 'me@example.com'
 
 const USERS: Profile[] = [
   ME,
-  { id: 'j-1', displayName: 'Mirela Pop', email: 'mirela@example.com', role: 'juror', active: true },
+  { id: 'j-1', displayName: 'Alex Example', email: 'alex@example.com', role: 'juror', active: true },
   {
     id: 'j-2',
-    displayName: 'Ovidia Ionescu',
+    displayName: 'Sam Sample',
     email: 'juror-abc@jurors.shortlist.invalid',
     role: 'juror',
     active: false,
@@ -75,9 +75,9 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    expect(screen.getByText('Mirela Pop')).toBeInTheDocument()
+    expect(screen.getByText('Alex Example')).toBeInTheDocument()
     expect(screen.getByText(/Astra Hack/)).toBeInTheDocument()
-    expect(screen.getByText('Ovidia Ionescu')).toBeInTheDocument()
+    expect(screen.getByText('Sam Sample')).toBeInTheDocument()
     expect(screen.getByText('Inactive')).toBeInTheDocument()
     expect(screen.getByText('No email')).toBeInTheDocument()
   })
@@ -91,7 +91,7 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: 'Deactivate: Mirela Pop' }))
+    await user.click(screen.getByRole('button', { name: 'Deactivate: Alex Example' }))
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toBeInTheDocument()
@@ -114,7 +114,7 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: 'Deactivate: Mirela Pop' }))
+    await user.click(screen.getByRole('button', { name: 'Deactivate: Alex Example' }))
     await screen.findByRole('alertdialog')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
@@ -142,7 +142,7 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Mirela Pop' }), 'admin')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'admin')
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent(/login link/i)
@@ -163,12 +163,12 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Mirela Pop' }), 'admin')
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'admin')
     await screen.findByRole('alertdialog')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(setRole).not.toHaveBeenCalled()
-    expect(screen.getByRole('combobox', { name: 'Role: Mirela Pop' })).toHaveValue('juror')
+    expect(screen.getByRole('combobox', { name: 'Role: Alex Example' })).toHaveValue('juror')
   })
 })

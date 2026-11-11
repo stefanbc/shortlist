@@ -65,10 +65,10 @@ const team = (id: string, name: string, pitchOrder: number, noShow = false): Tea
   project: { name: `${name} app`, description: null, themeId: null, repoUrl: null },
 })
 const TEAMS = [
-  team('t1', 'Codero', 3),
-  team('t2', 'Four the Win', 7),
+  team('t1', 'Team Orion', 3),
+  team('t2', 'Team Vega', 7),
   team('t3', 'Nimbus', 8),
-  team('t4', 'Polynomial', 12, true),
+  team('t4', 'Team Hydra', 12, true),
 ]
 
 const EVENT: EventRow = {
@@ -150,16 +150,16 @@ describe('JurorHomePage', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Your teams' })).toBeInTheDocument()
     const links = within(screen.getByRole('list', { name: 'Your teams' })).getAllByRole('link')
     expect(links.map((l) => l.textContent)).toEqual([
-      expect.stringContaining('Codero'),
-      expect.stringContaining('Four the Win'),
+      expect.stringContaining('Team Orion'),
+      expect.stringContaining('Team Vega'),
       expect.stringContaining('Nimbus'),
-      expect.stringContaining('Polynomial'),
+      expect.stringContaining('Team Hydra'),
     ])
-    expect(row('Codero')).toHaveTextContent('2/9 scored')
-    expect(row('Codero')).toHaveTextContent('1')
-    expect(row('Four the Win')).toHaveTextContent('Complete')
-    expect(row('Polynomial')).toHaveTextContent('No-show')
-    expect(row('Polynomial')).toHaveTextContent('4')
+    expect(row('Team Orion')).toHaveTextContent('2/9 scored')
+    expect(row('Team Orion')).toHaveTextContent('1')
+    expect(row('Team Vega')).toHaveTextContent('Complete')
+    expect(row('Team Hydra')).toHaveTextContent('No-show')
+    expect(row('Team Hydra')).toHaveTextContent('4')
   })
 
   it('highlights the team now pitching and links straight to it', async () => {
@@ -176,8 +176,8 @@ describe('JurorHomePage', () => {
     const rejected = tap('t1', 'c1', { status: 'rejected', reason: 'locked' })
     useScoreQueue.setState({ items: { [queueId(rejected)]: rejected } })
     renderHome()
-    expect(row('Codero')).toHaveTextContent('Not started')
-    expect(row('Codero')).toHaveTextContent('Not saved: 1')
+    expect(row('Team Orion')).toHaveTextContent('Not started')
+    expect(row('Team Orion')).toHaveTextContent('Not saved: 1')
   })
 
   it('explains when no event is assigned', () => {

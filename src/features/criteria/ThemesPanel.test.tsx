@@ -25,8 +25,8 @@ describe('ThemesPanel', () => {
     // Simulates the list after its middle item (originally position 2) was deleted:
     // positions 1 and 3 remain, with a gap at 2.
     const themesAfterDelete: Theme[] = [
-      { id: 't1', name: 'Artificial Intelligence', position: 1 },
-      { id: 't3', name: 'Sustainability', position: 3 },
+      { id: 't1', name: 'Theme Alpha', position: 1 },
+      { id: 't3', name: 'Theme Gamma', position: 3 },
     ]
     vi.mocked(useThemes).mockReturnValue({ data: themesAfterDelete, isLoading: false } as never)
     const saveTheme = vi.fn().mockResolvedValue(undefined)

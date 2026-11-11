@@ -33,7 +33,7 @@ describe('isPlaceholderEmail', () => {
   })
 
   it('treats a real address as not a placeholder', () => {
-    expect(isPlaceholderEmail('mirela@example.com')).toBe(false)
+    expect(isPlaceholderEmail('alex@example.com')).toBe(false)
   })
 
   it('treats null as not a placeholder', () => {
@@ -43,9 +43,9 @@ describe('isPlaceholderEmail', () => {
 
 describe('validateUserForm', () => {
   it('accepts a valid form with a blank (optional) email', () => {
-    const result = validateUserForm({ displayName: 'Ovidia Ionescu', email: '', role: 'juror' })
+    const result = validateUserForm({ displayName: 'Sam Sample', email: '', role: 'juror' })
     expect(result).toEqual({
-      data: { displayName: 'Ovidia Ionescu', email: undefined, role: 'juror' },
+      data: { displayName: 'Sam Sample', email: undefined, role: 'juror' },
     })
   })
 
@@ -55,14 +55,14 @@ describe('validateUserForm', () => {
   })
 
   it('rejects an invalid email', () => {
-    const result = validateUserForm({ displayName: 'Ovidia', email: 'not-an-email', role: 'admin' })
+    const result = validateUserForm({ displayName: 'Sam', email: 'not-an-email', role: 'admin' })
     expect(result).toEqual({ errors: { email: 'emailInvalid' } })
   })
 })
 
 describe('validateEmailForm', () => {
   it('accepts a valid email', () => {
-    expect(validateEmailForm(' mirela@example.com ')).toEqual({ data: 'mirela@example.com' })
+    expect(validateEmailForm(' alex@example.com ')).toEqual({ data: 'alex@example.com' })
   })
 
   it('rejects an invalid email', () => {
@@ -156,12 +156,12 @@ describe('useCreateUser', () => {
 
     let id: string | undefined
     await act(async () => {
-      id = await result.current.mutateAsync({ displayName: 'Ovidia', email: undefined, role: 'juror' })
+      id = await result.current.mutateAsync({ displayName: 'Sam', email: undefined, role: 'juror' })
     })
 
     expect(id).toBe('new-user-1')
     expect(supabase.functions.invoke).toHaveBeenCalledWith('admin-users', {
-      body: { action: 'create', displayName: 'Ovidia', email: undefined, role: 'juror' },
+      body: { action: 'create', displayName: 'Sam', email: undefined, role: 'juror' },
     })
   })
 

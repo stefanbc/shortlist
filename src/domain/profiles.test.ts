@@ -6,15 +6,15 @@ describe('toProfile', () => {
     expect(
       toProfile({
         id: 'u1',
-        display_name: 'Mirela Pop',
-        email: 'mirela@example.com',
+        display_name: 'Alex Example',
+        email: 'alex@example.com',
         role: 'juror',
         active: true,
       }),
     ).toEqual({
       id: 'u1',
-      displayName: 'Mirela Pop',
-      email: 'mirela@example.com',
+      displayName: 'Alex Example',
+      email: 'alex@example.com',
       role: 'juror',
       active: true,
     })

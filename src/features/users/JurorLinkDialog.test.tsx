@@ -12,7 +12,7 @@ vi.mock('./api', async (importOriginal) => {
 
 const JUROR: Profile = {
   id: 'j-1',
-  displayName: 'Mirela Pop',
+  displayName: 'Alex Example',
   email: null,
   role: 'juror',
   active: true,

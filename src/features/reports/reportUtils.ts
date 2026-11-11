@@ -7,7 +7,7 @@ import type { Profile } from '@/stores/session'
 
 /** Looks up a juror's display name: currently-assigned jurors first (the common case),
  * then any other known profile -- a juror later removed from the event, whose past scores
- * still count toward the results (the Mirela -> Ovidia swap) even though they no longer
+ * still count toward the results (a juror replaced mid-event) even though they no longer
  * have a row in `assignedJurors`. Falls back to `formerJurorLabel` only if the profile
  * itself is gone (e.g. the account was deleted outright). */
 export function jurorDisplayName(

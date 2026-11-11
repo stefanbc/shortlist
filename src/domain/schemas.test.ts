@@ -92,7 +92,7 @@ describe('criterionInputSchema', () => {
 
 describe('themeInputSchema', () => {
   it('accepts a valid theme name', () => {
-    expect(themeInputSchema.safeParse({ name: 'Artificial Intelligence' }).success).toBe(true)
+    expect(themeInputSchema.safeParse({ name: 'Theme Alpha' }).success).toBe(true)
   })
 
   it('rejects an empty or too-long name', () => {

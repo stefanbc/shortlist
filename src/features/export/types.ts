@@ -21,7 +21,7 @@ export interface ExportData {
 
 /** Assembles `ExportData` from `useEventResults`' output plus the event name and themes.
  * `jurors` lists every juror who has a score in the event: currently assigned jurors
- * first, then any juror no longer assigned (the Mirela -> Ovidia swap) resolved from
+ * first, then any juror no longer assigned (a juror replaced mid-event) resolved from
  * `allProfiles`, falling back to `formerJurorLabel` if even the profile is gone --
  * the same resolution `TeamBreakdownPage` uses for its per-team juror columns. */
 export function buildExportData(args: {

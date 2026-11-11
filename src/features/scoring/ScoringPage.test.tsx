@@ -70,7 +70,7 @@ const CRITERIA: Criterion[] = [
   'Prezentare',
 ].map((name, i) => ({ id: `c${i + 1}`, name, weight: 90 - i * 5, position: i + 1 }))
 
-const THEMES: Theme[] = [{ id: 'th-1', name: 'Sustainability', position: 1 }]
+const THEMES: Theme[] = [{ id: 'th-1', name: 'Theme Gamma', position: 1 }]
 
 const team = (id: string, name: string, pitchOrder: number, noShow = false): TeamWithProject => ({
   id,
@@ -84,8 +84,8 @@ const team = (id: string, name: string, pitchOrder: number, noShow = false): Tea
 
 // Pitch orders have a gap on purpose: position in the list, not pitchOrder, is "Team n".
 const TEAMS = [
-  team('t1', 'Codero', 2),
-  team('t2', 'Four the Win', 5),
+  team('t1', 'Team Orion', 2),
+  team('t2', 'Team Vega', 5),
   team('t3', 'Nimbus', 9, true),
 ]
 
@@ -159,10 +159,10 @@ afterEach(() => {
 describe('ScoringPage', () => {
   it('shows the team header with its position in the list, project and theme', async () => {
     renderPage()
-    expect(await screen.findByRole('heading', { level: 1, name: 'Codero' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'Team Orion' })).toBeInTheDocument()
     expect(screen.getByText('Team 1 / 3')).toBeInTheDocument()
-    expect(screen.getByText('Codero app')).toBeInTheDocument()
-    expect(screen.getByText('Sustainability')).toBeInTheDocument()
+    expect(screen.getByText('Team Orion app')).toBeInTheDocument()
+    expect(screen.getByText('Theme Gamma')).toBeInTheDocument()
   })
 
   it('tap 3.5 enqueues and advances to next criterion', async () => {

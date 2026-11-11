@@ -51,28 +51,28 @@ const EVENT: EventRow = {
 }
 
 const THEMES: Theme[] = [
-  { id: 'th-1', name: 'Sustainability', position: 1 },
-  { id: 'th-2', name: 'Cybersecurity', position: 2 },
+  { id: 'th-1', name: 'Theme Gamma', position: 1 },
+  { id: 'th-2', name: 'Theme Beta', position: 2 },
 ]
 
 const TEAMS: TeamWithProject[] = [
   {
     id: 't1',
-    name: 'Four the Win',
+    name: 'Team Vega',
     pitchOrder: 1,
     noShow: false,
     manualTiebreak: null,
     members: ['Ana', 'Bogdan'],
     project: {
-      name: 'Clearpath',
+      name: 'Project Atlas',
       description: 'A routing app.',
       themeId: 'th-1',
-      repoUrl: 'https://github.com/example/clearpath',
+      repoUrl: 'https://github.com/example/project-atlas',
     },
   },
   {
     id: 't2',
-    name: 'Polynomial Matrix',
+    name: 'Team Hydra',
     pitchOrder: 2,
     noShow: false,
     manualTiebreak: null,
@@ -128,7 +128,7 @@ describe('TeamsPage', () => {
 
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: 'Mark no-show: Four the Win' }))
+    await user.click(screen.getByRole('button', { name: 'Mark no-show: Team Vega' }))
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toBeInTheDocument()
@@ -149,7 +149,7 @@ describe('TeamsPage', () => {
 
     renderPage()
 
-    await user.click(screen.getByRole('button', { name: 'Mark no-show: Four the Win' }))
+    await user.click(screen.getByRole('button', { name: 'Mark no-show: Team Vega' }))
     await screen.findByRole('alertdialog')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
@@ -165,7 +165,7 @@ describe('TeamsPage', () => {
     renderPage()
 
     const link = await screen.findByRole('link', { name: /repository/i })
-    expect(link).toHaveAttribute('href', 'https://github.com/example/clearpath')
+    expect(link).toHaveAttribute('href', 'https://github.com/example/project-atlas')
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
   })
@@ -178,9 +178,9 @@ describe('TeamsPage', () => {
 
     renderPage()
 
-    await user.type(screen.getByLabelText('Search teams'), 'Polynomial')
+    await user.type(screen.getByLabelText('Search teams'), 'Hydra')
 
-    expect(screen.queryByText('Four the Win')).not.toBeInTheDocument()
-    expect(screen.getByText('Polynomial Matrix')).toBeInTheDocument()
+    expect(screen.queryByText('Team Vega')).not.toBeInTheDocument()
+    expect(screen.getByText('Team Hydra')).toBeInTheDocument()
   })
 })

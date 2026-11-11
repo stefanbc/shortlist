@@ -46,22 +46,30 @@ describe.skipIf(!FIXTURE_EXISTS)('reports (astra-hack.xlsx fixture)', () => {
     ? toArrayBuffer(readFileSync(FIXTURE))
     : (undefined as unknown as ArrayBuffer)
 
-  it('podium shows Dev.exe, MergeConflict, Hardcoded', async () => {
+  // Expectations are derived from the fixture itself (never hard-coded names or numbers:
+  // the fixture's contents are private and this repo is public).
+  async function fixtureResults() {
     const parsed = await parseWorkbook(data)
     const { criteria, teams, scores } = toDomain(parsed)
     const ranked = rankTeams(teams, criteria, scores)
+    const nameOf = (teamId: string) => teams.find((team) => team.id === teamId)!.name
+    return { parsed, criteria, teams, scores, ranked, nameOf }
+  }
+
+  it('podium shows the three top-ranked teams', async () => {
+    const { teams, ranked, nameOf } = await fixtureResults()
 
     render(<PodiumView eventId="ev-1" ranked={ranked} teams={teams.map((team) => withProject(team))} />)
 
-    expect(screen.getByText('Dev.exe')).toBeInTheDocument()
-    expect(screen.getByText('MergeConflict')).toBeInTheDocument()
-    expect(screen.getByText('Hardcoded')).toBeInTheDocument()
+    for (const entry of ranked.slice(0, 3)) {
+      expect(screen.getByText(nameOf(entry.teamId))).toBeInTheDocument()
+    }
   })
 
-  it('ranking shows Four the Win as no-show last', async () => {
-    const parsed = await parseWorkbook(data)
-    const { criteria, teams, scores } = toDomain(parsed)
-    const ranked = rankTeams(teams, criteria, scores)
+  it('ranking shows the no-show team last, with its badge', async () => {
+    const { teams, ranked } = await fixtureResults()
+    const noShows = teams.filter((team) => team.noShow)
+    expect(noShows).toHaveLength(1)
 
     renderWithRouter(
       <RankingView
@@ -74,20 +82,19 @@ describe.skipIf(!FIXTURE_EXISTS)('reports (astra-hack.xlsx fixture)', () => {
 
     const rows = screen.getAllByRole('row')
     const lastRow = rows[rows.length - 1]
-    expect(within(lastRow).getByText('Four the Win')).toBeInTheDocument()
+    expect(within(lastRow).getByText(noShows[0].name)).toBeInTheDocument()
     expect(within(lastRow).getByText(t('teams.noShowBadge'))).toBeInTheDocument()
   })
 
-  it('team breakdown for Codero shows final 2.962', async () => {
-    const parsed = await parseWorkbook(data)
-    const { criteria, teams, scores } = toDomain(parsed)
-    const ranked = rankTeams(teams, criteria, scores)
-    const codero = teams.find((team) => team.name === 'Codero')!
-    const entry = ranked.find((r) => r.teamId === codero.id)
+  it("team breakdown shows a team's final, matching the sheet's cached value", async () => {
+    const { parsed, criteria, scores, teams, ranked } = await fixtureResults()
+    const team = teams.find((candidate) => candidate.id === 'E1')!
+    const entry = ranked.find((r) => r.teamId === team.id)
+    const cachedFinal = parsed.expectedFinals['E1'] as number
 
     render(
       <TeamBreakdownView
-        team={withProject(codero)}
+        team={withProject(team)}
         entry={entry}
         criteria={criteria}
         scores={scores}
@@ -98,7 +105,7 @@ describe.skipIf(!FIXTURE_EXISTS)('reports (astra-hack.xlsx fixture)', () => {
     )
 
     // The final appears both in the summary card and the grid's footer row.
-    expect(screen.getAllByText('2.962').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(cachedFinal.toFixed(3)).length).toBeGreaterThan(0)
   })
 })
 
