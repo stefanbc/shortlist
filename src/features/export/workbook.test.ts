@@ -418,19 +418,40 @@ describe('buildWorkbook (Astra layout, 9 criteria)', () => {
   })
 })
 
-describe('buildWorkbook formula-injection guard', () => {
-  it('stores a formula-shaped team name as literal text, not a live formula', async () => {
+describe('buildWorkbook formula-shaped text', () => {
+  // exceljs writes a plain string as a shared string, never as a formula, so a
+  // formula-shaped name is already inert in the .xlsx -- no apostrophe prefix (which would
+  // show up literally in the cell). The CSV export keeps its guard (see csv.test.ts).
+  const EVIL = '=HYPERLINK("https://evil.example","click")'
+
+  it('stores a formula-shaped team name as a plain string value, exactly as typed', async () => {
     const data = buildSyntheticData()
-    data.teams[0] = { ...data.teams[0], name: '=HYPERLINK("https://evil.example","click")' }
+    data.teams[0] = { ...data.teams[0], name: EVIL }
 
     const blob = await buildWorkbook(data)
     const workbook = new ExcelJS.Workbook()
     await workbook.xlsx.load(await blobToArrayBuffer(blob))
-    const sheet = workbook.getWorksheet('E1')!
-    const cellValue = sheet.getCell(13, 2).value // B13: Echipa name
+    const cell = workbook.getWorksheet('E1')!.getCell(13, 2) // B13: Echipa name
 
-    expect(typeof cellValue).toBe('string')
-    expect(cellValue).toBe(`'=HYPERLINK("https://evil.example","click")`)
+    expect(cell.type).toBe(ExcelJS.ValueType.String)
+    expect(cell.formula).toBeUndefined()
+    expect(cell.value).toBe(EVIL)
+
+    const parsed = await parseWorkbook(await blobToArrayBuffer(blob))
+    expect(parsed.teams.find((t) => t.sheet === 'E1')!.name).toBe(EVIL)
+  })
+
+  it('keeps formula-shaped text verbatim on the results and themes sheets too', async () => {
+    const data = buildSyntheticData()
+    data.teams[0] = { ...data.teams[0], name: EVIL }
+    data.themes = [EVIL]
+
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await blobToArrayBuffer(await buildWorkbook(data)))
+    const results = workbook.getWorksheet('Rezultate Partiale')!
+    const resultNames = [2, 3, 4].map((row) => results.getCell(row, 2).value)
+    expect(resultNames).toContain(EVIL)
+    expect(workbook.getWorksheet('Tematica')!.getCell(2, 2).value).toBe(EVIL)
   })
 })
 

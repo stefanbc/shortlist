@@ -1,7 +1,6 @@
 import ExcelJS from 'exceljs'
 import type { Id } from '@/domain/types'
 import type { TeamWithProject } from '@/features/teams/api'
-import { guardFormulaInjection } from './csv'
 import type { ExportData } from './types'
 
 /** Column the first juror's scores live in on a team sheet (D). Columns A-C are
@@ -54,7 +53,7 @@ function addThemesSheet(workbook: ExcelJS.Workbook, data: ExportData): void {
   data.themes.forEach((name, index) => {
     const row = index + 2
     sheet.getCell(row, 1).value = index + 1
-    sheet.getCell(row, 2).value = guardFormulaInjection(name)
+    sheet.getCell(row, 2).value = name
   })
 }
 
@@ -96,7 +95,7 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
     const col = FIRST_JUROR_COL + index
     const cell = sheet.getCell(1, col)
     const displayName = jurorsById.get(jurorId)?.displayName ?? jurorId
-    cell.value = guardFormulaInjection(jurorHeaderText(displayName))
+    cell.value = jurorHeaderText(displayName)
     cell.alignment = { wrapText: true }
   })
 
@@ -109,7 +108,7 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
   data.criteria.forEach((criterion, index) => {
     const row = FIRST_CRITERION_ROW + index
     sheet.getCell(row, 1).value = criterion.position
-    sheet.getCell(row, 2).value = guardFormulaInjection(criterion.name)
+    sheet.getCell(row, 2).value = criterion.name
     sheet.getCell(row, 3).value = criterion.weight
 
     jurorIds.forEach((jurorId, jurorIndex) => {
@@ -166,14 +165,14 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
   const averagesRow = FIRST_CRITERION_ROW + data.criteria.length
   const top = Math.max(ASTRA_METADATA_ROW, averagesRow + 1)
   sheet.getCell(top, 2).value = 'Echipa:'
-  sheet.getCell(top + 1, 2).value = guardFormulaInjection(team.name)
+  sheet.getCell(top + 1, 2).value = team.name
   sheet.getCell(top + 3, 2).value = 'Numele Proiect:'
-  if (team.project.name) sheet.getCell(top + 4, 2).value = guardFormulaInjection(team.project.name)
+  if (team.project.name) sheet.getCell(top + 4, 2).value = team.project.name
   sheet.getCell(top + 6, 2).value = 'Tema Proiect:'
   const themeName = team.project.themeId ? data.themeNames[team.project.themeId] : undefined
-  if (themeName) sheet.getCell(top + 7, 2).value = guardFormulaInjection(themeName)
+  if (themeName) sheet.getCell(top + 7, 2).value = themeName
   sheet.getCell(top + 9, 2).value = 'Repo GitHub:'
-  if (team.project.repoUrl) sheet.getCell(top + 10, 2).value = guardFormulaInjection(team.project.repoUrl)
+  if (team.project.repoUrl) sheet.getCell(top + 10, 2).value = team.project.repoUrl
   sheet.getCell(top + 12, 2).value = RULES_TEXT
 }
 
@@ -192,9 +191,9 @@ function addResultsSheet(workbook: ExcelJS.Workbook, data: ExportData): void {
     if (!team) return
     const row = index + 2
     sheet.getCell(row, 1).value = team.pitchOrder
-    sheet.getCell(row, 2).value = guardFormulaInjection(team.name)
-    sheet.getCell(row, 3).value = guardFormulaInjection(team.project.name ?? '')
-    sheet.getCell(row, 4).value = guardFormulaInjection(team.project.description ?? '')
+    sheet.getCell(row, 2).value = team.name
+    sheet.getCell(row, 3).value = team.project.name ?? ''
+    sheet.getCell(row, 4).value = team.project.description ?? ''
     const finalCell = sheet.getCell(row, 5)
     const teamFinal = teamFinalCell(data, team.id)
     if (teamFinal) {
@@ -218,7 +217,9 @@ function addResultsSheet(workbook: ExcelJS.Workbook, data: ExportData): void {
  * per team with the full criteria x jurors grid and its own live formulas. Every formula
  * cell's cached `result` is set to our already-computed number, so a spreadsheet app
  * shows the right value immediately (no recalculation needed) and `parseWorkbook` can
- * read it straight back via `cell.result`. */
+ * read it straight back via `cell.result`. Text cells are written as plain strings, which
+ * exceljs stores as shared strings, never formulas -- so formula-shaped names are inert
+ * here without the apostrophe prefix the CSV export needs (it would show literally). */
 export async function buildWorkbook(data: ExportData): Promise<Blob> {
   const workbook = new ExcelJS.Workbook()
   addThemesSheet(workbook, data)
