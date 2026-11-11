@@ -7,6 +7,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { EventShell } from '@/features/events/EventShell'
 import { EventSettingsPage } from '@/features/events/EventSettingsPage'
 import { EventsPage } from '@/features/events/EventsPage'
+import { ImportPage } from '@/features/import/ImportPage'
 import { CriteriaReportPage } from '@/features/reports/CriteriaReportPage'
 import { JurorReportPage } from '@/features/reports/JurorReportPage'
 import { PodiumPage } from '@/features/reports/PodiumPage'
@@ -18,10 +19,9 @@ import { TeamsPage } from '@/features/teams/TeamsPage'
 import { EventJurorsPage } from '@/features/users/EventJurorsPage'
 import { UsersPage } from '@/features/users/UsersPage'
 import { RequireRole } from './guards'
-import { PlaceholderPage } from './PlaceholderPage'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
 
-// Placeholder pages are replaced feature by feature in later tasks.
+
 export const routes: RouteObject[] = [
   {
     errorElement: <RouteErrorPage />,
@@ -74,7 +74,7 @@ export const routes: RouteObject[] = [
             ],
           },
           { path: 'users', element: <UsersPage /> },
-          { path: 'import', element: <PlaceholderPage title="import.title" /> },
+          { path: 'import', element: <ImportPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

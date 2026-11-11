@@ -461,7 +461,52 @@
     "removeError": "Juratul nu a putut fi eliminat. Încearcă din nou."
   },
   "import": {
-    "title": "Import din foaia de calcul"
+    "title": "Import din foaia de calcul",
+    "intro": "Încarcă exportul organizatorului din foaia de calcul pentru a aduce un eveniment cu temele, criteriile, echipele, jurații și notele deja completate.",
+    "dropTitle": "Trage fișierul .xlsx aici",
+    "dropHint": "sau apasă pentru a-l alege",
+    "fileInputLabel": "Fișier foaie de calcul",
+    "chooseAnother": "Alege alt fișier",
+    "fileTooLarge": "Fișierul depășește 10 MB. Exportă un registru mai mic și încearcă din nou.",
+    "parsing": "Se citește registrul…",
+    "workbookErrors": {
+      "not_xlsx": "Acesta nu este un registru .xlsx valid. Verifică dacă se deschide corect în Excel sau Google Sheets, apoi încearcă din nou.",
+      "no_team_sheets": "Nu există foi de echipă. Se așteptau nume de foi precum „E1”, „E2” ș.a.m.d.",
+      "no_criteria": "Nu există rânduri de criterii pe prima foaie de echipă.",
+      "unknown": "Fișierul nu a putut fi citit. Încearcă să îl exporți din nou."
+    },
+    "errors": {
+      "invalid_request": "Datele interpretate nu au trecut validarea. Verifică registrul și încearcă din nou.",
+      "invalid_import": "Registrul face referire la ceva ce nu se potrivește, de exemplu o temă necunoscută sau o notă pentru un criteriu sau jurat nerecunoscut.",
+      "forbidden": "Nu ai permisiunea de a importa evenimente.",
+      "unknown": "Evenimentul nu a putut fi importat. Încearcă din nou."
+    },
+    "eventNameLabel": "Numele evenimentului",
+    "eventNameRequired": "Introdu un nume.",
+    "countThemes": "Teme",
+    "countCriteria": "Criterii",
+    "countTeams": "Echipe",
+    "countJurors": "Jurați",
+    "countScores": "Note",
+    "previewHeading": "Previzualizare clasament",
+    "previewHint": "Scorul final calculat pentru fiecare echipă este verificat față de rezultatul salvat în foaia de calcul.",
+    "rankHeader": "Loc",
+    "teamHeader": "Echipă",
+    "computedHeader": "Final calculat",
+    "expectedHeader": "Final din foaie",
+    "statusHeader": "Stare",
+    "matchBadge": "Se potrivește cu foaia",
+    "mismatchBadge": "Nu se potrivește",
+    "noShowBadge": "Absentă",
+    "warningsHeading": "Înainte să imporți",
+    "warningNoShows": "{{count}} echipă(e) sunt marcate ca absente și vor primi scorul 1,00: {{teams}}.",
+    "warningMissingProjects": "{{count}} echipă(e) nu au numele proiectului în foaie: {{teams}}.",
+    "weightWarningHeading": "Corectează registrul înainte de a importa",
+    "weightWarningBody": "{{count}} criteriu/criterii au o pondere invalidă (trebuie să fie mai mare decât 0): {{criteria}}. Importul este blocat până când foaia de calcul este corectată.",
+    "placeholderEmailNote": "Jurații sunt importați cu adrese de email temporare. Adaugă-le pe cele reale ulterior din pagina Persoane.",
+    "importButton": "Importă evenimentul",
+    "importing": "Se importă…",
+    "success": "{{name}} a fost importat."
   },
   "export": {
     "open": "Exportă",

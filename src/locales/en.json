@@ -461,7 +461,52 @@
     "removeError": "Couldn't remove the juror. Try again."
   },
   "import": {
-    "title": "Import from spreadsheet"
+    "title": "Import from spreadsheet",
+    "intro": "Upload the organizer's spreadsheet export to bring in an event with its themes, criteria, teams, jurors and scores already filled in.",
+    "dropTitle": "Drop the .xlsx file here",
+    "dropHint": "or click to browse",
+    "fileInputLabel": "Spreadsheet file",
+    "chooseAnother": "Choose a different file",
+    "fileTooLarge": "That file is larger than 10 MB. Export a smaller workbook and try again.",
+    "parsing": "Reading the workbook…",
+    "workbookErrors": {
+      "not_xlsx": "This isn't a valid .xlsx workbook. Check it opens correctly in Excel or Google Sheets, then try again.",
+      "no_team_sheets": "No team sheets found. Expected sheet names like \"E1\", \"E2\", and so on.",
+      "no_criteria": "No criteria rows found on the first team sheet.",
+      "unknown": "Couldn't read this file. Try exporting it again."
+    },
+    "errors": {
+      "invalid_request": "The parsed data didn't pass validation. Check the workbook and try again.",
+      "invalid_import": "The workbook references something that doesn't add up, like an unknown theme or a score for a criterion or juror it doesn't recognize.",
+      "forbidden": "You don't have permission to import events.",
+      "unknown": "Couldn't import the event. Try again."
+    },
+    "eventNameLabel": "Event name",
+    "eventNameRequired": "Enter a name.",
+    "countThemes": "Themes",
+    "countCriteria": "Criteria",
+    "countTeams": "Teams",
+    "countJurors": "Jurors",
+    "countScores": "Scores",
+    "previewHeading": "Ranking preview",
+    "previewHint": "Each team's computed final is checked against the sheet's own cached result.",
+    "rankHeader": "Rank",
+    "teamHeader": "Team",
+    "computedHeader": "Computed final",
+    "expectedHeader": "Sheet's final",
+    "statusHeader": "Status",
+    "matchBadge": "Matches sheet",
+    "mismatchBadge": "Doesn't match",
+    "noShowBadge": "No-show",
+    "warningsHeading": "Before you import",
+    "warningNoShows": "{{count}} team(s) are marked no-show and will be scored 1.00: {{teams}}.",
+    "warningMissingProjects": "{{count}} team(s) have no project name in the sheet: {{teams}}.",
+    "weightWarningHeading": "Fix the workbook before importing",
+    "weightWarningBody": "{{count}} criterion/criteria have an invalid weight (must be greater than 0): {{criteria}}. Import is blocked until the spreadsheet is fixed.",
+    "placeholderEmailNote": "Jurors are imported with placeholder email addresses. Add their real ones afterwards from the Users page.",
+    "importButton": "Import event",
+    "importing": "Importing…",
+    "success": "{{name}} imported."
   },
   "export": {
     "open": "Export",

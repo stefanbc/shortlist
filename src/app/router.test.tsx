@@ -45,6 +45,13 @@ vi.mock('@/features/criteria/api', async (importOriginal) => {
   return { ...actual, useCriteria: () => ({ data: undefined, isLoading: true }) }
 })
 
+// ImportPage's own mutation (see its own tests); mocked here purely so this shell-routing
+// test doesn't need a QueryClientProvider.
+vi.mock('@/features/import/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/import/api')>()
+  return { ...actual, useImportEvent: () => ({ mutateAsync: vi.fn(), isPending: false }) }
+})
+
 // DashboardPage's own composed data (see its own tests); mocked here purely so the admin
 // index route doesn't need a QueryClientProvider in this shell-routing test.
 vi.mock('@/features/reports/useEventResults', async (importOriginal) => {
@@ -83,6 +90,17 @@ describe('router', () => {
     await user.click(within(nav).getByRole('link', { name: 'Events' }))
     expect(router.state.location.pathname).toBe('/admin/events')
     expect(screen.getByRole('heading', { name: 'Events' })).toBeInTheDocument()
+  })
+
+  it('admins can reach the import page from the organizer navigation', async () => {
+    const user = userEvent.setup()
+    const router = renderAt('/admin')
+
+    const [nav] = screen.getAllByRole('navigation', { name: 'Main navigation' })
+    await user.click(within(nav).getByRole('link', { name: 'Import' }))
+
+    expect(router.state.location.pathname).toBe('/admin/import')
+    expect(await screen.findByRole('heading', { name: 'Import from spreadsheet' })).toBeInTheDocument()
   })
 
   it('event and report index routes land on their first screen', async () => {
