@@ -113,15 +113,15 @@ export function TeamBreakdownView({
         />
       ) : (
         <>
-          <Card>
-            <div className="-mx-5 overflow-x-auto px-5 py-5">
+          <Card className="overflow-hidden">
+            <div className="table-scroll">
               <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
                 <caption className="sr-only">
                   {t('reports.teamPage.tableCaption', { team: team.name })}
                 </caption>
                 <thead>
                   <tr className="text-left text-ink-muted">
-                    <th scope="col" className="sticky left-0 z-10 bg-surface px-3 py-2 font-medium">
+                    <th scope="col" className="sticky left-0 z-20 bg-surface px-3 py-2 font-medium">
                       {t('criteria.nameLabel')}
                     </th>
                     <th scope="col" className="px-3 py-2 text-right font-medium">

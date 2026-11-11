@@ -189,6 +189,7 @@ export function DashboardPage() {
                   criteria={results.criteria}
                   jurors={results.jurors}
                   scores={results.scores}
+                  nowPitchingTeamId={event.nowPitchingTeamId}
                 />
               )}
             </CardBody>

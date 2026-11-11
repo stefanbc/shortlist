@@ -20,7 +20,8 @@
     "notFoundBody": "This address doesn't lead to any page in Shortlist. Check the link or go back to the start.",
     "goHome": "Go to start",
     "errorTitle": "Something broke on this page",
-    "errorBody": "Reload the page. If it keeps happening, your entered scores are still saved on this device."
+    "errorBody": "Reload the page. If it keeps happening, your entered scores are still saved on this device.",
+    "showMore": "Show {{count}} more ({{remaining}} left)"
   },
   "nav": {
     "main": "Main navigation",
@@ -33,7 +34,9 @@
     "teams": "Teams",
     "criteria": "Criteria",
     "jurors": "Jurors",
-    "reports": "Reports"
+    "reports": "Reports",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "prefs": {
     "open": "Preferences",
@@ -94,7 +97,8 @@
       "cellLabel": "{{juror}} scored {{team}}: {{done}} of {{total}} criteria",
       "emptyTitle": "Nothing to score yet",
       "emptyBody": "Add teams, criteria and jurors to this event to see scoring progress here.",
-      "formerJurorsNote": "{{count}} juror(s) no longer on this event's jury also scored here — their scores still count in the ranking, but they're not shown as rows above."
+      "formerJurorsNote": "{{count}} juror(s) no longer on this event's jury also scored here — their scores still count in the ranking, but they're not shown as columns above.",
+      "teamHeader": "Team"
     },
     "ranking": {
       "heading": "Live ranking",

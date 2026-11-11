@@ -35,7 +35,7 @@ export function LiveRanking({ ranked, teams }: LiveRankingProps) {
   }
 
   return (
-    <ol aria-label={t('dashboard.ranking.heading')} className="divide-y divide-line border-y border-line">
+    <ol aria-label={t('dashboard.ranking.heading')} className="max-h-[26rem] divide-y divide-line overflow-y-auto overscroll-contain border-y border-line">
       {ranked.map((entry) => {
         const team = teamsById.get(entry.teamId)
         const name = team?.name ?? entry.teamId

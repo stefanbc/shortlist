@@ -10,8 +10,11 @@ type PreferencesState = {
   theme: ThemePref
   /** null = follow the browser language */
   lang: Lang | null
+  /** The organizer's sidebar shrunk to icons, to give wide tables more room. */
+  sidebarCollapsed: boolean
   setTheme(t: ThemePref): void
   setLang(l: Lang): void
+  toggleSidebar(): void
 }
 
 export const PREFERENCES_STORAGE_KEY = 'shortlist.prefs'
@@ -21,12 +24,14 @@ export const usePreferences = create<PreferencesState>()(
     (set) => ({
       theme: 'system',
       lang: null,
+      sidebarCollapsed: false,
       setTheme: (theme) => set({ theme }),
       setLang: (lang) => set({ lang }),
+      toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
-      partialize: ({ theme, lang }) => ({ theme, lang }),
+      partialize: ({ theme, lang, sidebarCollapsed }) => ({ theme, lang, sidebarCollapsed }),
     },
   ),
 )

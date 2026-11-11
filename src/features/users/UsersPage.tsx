@@ -11,6 +11,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Field } from '@/components/ui/Field'
 import { describedBy } from '@/components/ui/fieldStyles'
 import { Input } from '@/components/ui/Input'
+import { LoadMore } from '@/components/ui/LoadMore'
+import { usePaging } from '@/components/ui/usePaging'
 import { Select } from '@/components/ui/Select'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { useSession, type Profile } from '@/stores/session'
@@ -298,6 +300,7 @@ type PendingAction =
 
 export function UsersPage() {
   const { t } = useTranslation()
+  const paging = usePaging()
   const me = useSession((s) => s.profile)
   const { data: profiles, isLoading } = useProfiles()
   const { data: eventNamesByJuror } = useJurorEventNames()
@@ -319,6 +322,7 @@ export function UsersPage() {
     const haystack = `${user.displayName} ${user.email ?? ''}`.toLowerCase()
     return haystack.includes(normalizedSearch)
   })
+  const users = paging.of(filteredUsers)
 
   function handleChangeRole(user: Profile, role: 'admin' | 'juror') {
     if (role === user.role) return
@@ -421,7 +425,7 @@ export function UsersPage() {
 
           {!isLoading && filteredUsers.length > 0 && (
             <ul className="flex flex-col divide-y divide-line">
-              {filteredUsers.map((user) => (
+              {users.visible.map((user) => (
                 <li key={user.id}>
                   <UserRow
                     user={user}
@@ -436,6 +440,7 @@ export function UsersPage() {
               ))}
             </ul>
           )}
+          <LoadMore remaining={isLoading ? 0 : users.remaining} onLoadMore={users.loadMore} />
         </CardBody>
       </Card>
 

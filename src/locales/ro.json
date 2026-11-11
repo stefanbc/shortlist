@@ -20,7 +20,8 @@
     "notFoundBody": "Această adresă nu duce la nicio pagină din Shortlist. Verifică linkul sau întoarce-te la început.",
     "goHome": "Mergi la început",
     "errorTitle": "Ceva nu a funcționat pe această pagină",
-    "errorBody": "Reîncarcă pagina. Dacă problema persistă, notele introduse rămân salvate pe acest dispozitiv."
+    "errorBody": "Reîncarcă pagina. Dacă problema persistă, notele introduse rămân salvate pe acest dispozitiv.",
+    "showMore": "Arată încă {{count}} (au rămas {{remaining}})"
   },
   "nav": {
     "main": "Navigare principală",
@@ -33,7 +34,9 @@
     "teams": "Echipe",
     "criteria": "Criterii",
     "jurors": "Jurați",
-    "reports": "Rapoarte"
+    "reports": "Rapoarte",
+    "collapseSidebar": "Restrânge bara laterală",
+    "expandSidebar": "Extinde bara laterală"
   },
   "prefs": {
     "open": "Preferințe",
@@ -94,7 +97,8 @@
       "cellLabel": "{{juror}} a notat {{team}}: {{done}} din {{total}} criterii",
       "emptyTitle": "Încă nimic de notat",
       "emptyBody": "Adaugă echipe, criterii și jurați la acest eveniment ca să vezi aici progresul jurizării.",
-      "formerJurorsNote": "{{count}} jurat(ți) care nu mai fac parte din acest juriu au notat și ei — notele lor contează în continuare în clasament, dar nu apar ca rânduri mai sus."
+      "formerJurorsNote": "{{count}} jurat(ți) care nu mai fac parte din acest juriu au notat și ei — notele lor contează în continuare în clasament, dar nu apar ca coloane mai sus.",
+      "teamHeader": "Echipă"
     },
     "ranking": {
       "heading": "Clasament live",

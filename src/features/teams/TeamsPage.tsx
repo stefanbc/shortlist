@@ -10,6 +10,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
+import { LoadMore } from '@/components/ui/LoadMore'
+import { usePaging } from '@/components/ui/usePaging'
 import { Select } from '@/components/ui/Select'
 import { Sheet, SheetContent } from '@/components/ui/Sheet'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -135,6 +137,7 @@ function TeamRow({
 export function TeamsPage() {
   const { eventId } = useParams<{ eventId: string }>()
   const { t } = useTranslation()
+  const paging = usePaging()
   const id = eventId as Id
 
   const { data: event, isLoading: eventLoading } = useEvent(id)
@@ -172,6 +175,7 @@ export function TeamsPage() {
     const haystack = [team.name, ...team.members, team.project.name ?? ''].join(' ').toLowerCase()
     return haystack.includes(normalizedSearch)
   })
+  const paged = paging.of(filteredTeams)
 
   function requestDelete(team: TeamWithProject) {
     setPending({ kind: 'delete', team })
@@ -319,8 +323,11 @@ export function TeamsPage() {
 
           {!teamsLoading && filteredTeams.length > 0 && !hasFilters && (
             <SortableList
-              items={filteredTeams}
-              onReorder={(orderedIds) => reorderTeams.mutate(orderedIds)}
+              items={paged.visible}
+              // Rows not opened up yet keep their place after the ones just reordered.
+              onReorder={(orderedIds) =>
+                reorderTeams.mutate([...orderedIds, ...paged.hidden.map((team) => team.id)])
+              }
               renderItem={(team) => (
                 <TeamRow
                   team={team}
@@ -338,7 +345,7 @@ export function TeamsPage() {
           {!teamsLoading && filteredTeams.length > 0 && hasFilters && (
             <>
               <ul className="flex flex-col gap-2">
-                {filteredTeams.map((team) => (
+                {paged.visible.map((team) => (
                   <li key={team.id} className="rounded-control bg-surface px-3 ring-1 ring-line">
                     <TeamRow
                       team={team}
@@ -355,6 +362,7 @@ export function TeamsPage() {
               <p className="px-2 text-sm text-ink-faint">{t('teams.reorderHint')}</p>
             </>
           )}
+          <LoadMore remaining={teamsLoading ? 0 : paged.remaining} onLoadMore={paged.loadMore} />
         </CardBody>
       </Card>
 

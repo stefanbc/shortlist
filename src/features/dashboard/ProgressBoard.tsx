@@ -5,6 +5,7 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Criterion, Score } from '@/domain/types'
 import type { TeamWithProject } from '@/features/teams/api'
+import { cn } from '@/lib/cn'
 import type { Profile } from '@/stores/session'
 
 type CellState = 'empty' | 'partial' | 'complete'
@@ -23,18 +24,26 @@ function cellState(done: number, total: number): CellState {
 type ProgressBoardProps = {
   teams: TeamWithProject[]
   criteria: Criterion[]
-  /** Currently assigned jurors (useEventJurors) -- the grid's rows. A juror removed from
-   * the event mid-way has no row here, but their past scores still count in the ranking
+  /** Currently assigned jurors (useEventJurors) -- the grid's columns. A juror removed from
+   * the event mid-way has no column here, but their past scores still count in the ranking
    * (a juror replaced mid-event); `formerJurorsNote` below calls that out instead of adding
-   * a row for someone no longer on the jury. */
+   * a column for someone no longer on the jury. */
   jurors: Profile[]
   scores: Score[]
+  /** The team on stage, so its row stands out. */
+  nowPitchingTeamId?: string | null
 }
 
-/** Jurors x teams completion grid: each cell is how many of this event's criteria that
+/** Teams x jurors completion grid: each cell is how many of this event's criteria that
  * juror has scored for that team. No-show teams are greyed out -- they're excluded from
  * scoring entirely (their final is fixed, see `computeTeamResult`). */
-export function ProgressBoard({ teams, criteria, jurors, scores }: ProgressBoardProps) {
+export function ProgressBoard({
+  teams,
+  criteria,
+  jurors,
+  scores,
+  nowPitchingTeamId,
+}: ProgressBoardProps) {
   const { t } = useTranslation()
   const total = criteria.length
 
@@ -69,46 +78,51 @@ export function ProgressBoard({ teams, criteria, jurors, scores }: ProgressBoard
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="-mx-5 overflow-x-auto px-5">
+      {/* Teams run down (there are many), jurors across (there are few), inside a frame
+          with its own scroll: the juror names stay on top and the team names on the left. */}
+      <div className="table-scroll max-h-[26rem] rounded-control border border-line">
         <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
           <caption className="sr-only">{t('dashboard.progress.tableCaption')}</caption>
           <thead>
             <tr>
               <th
                 scope="col"
-                className="sticky left-0 z-10 bg-surface px-3 py-2 text-left font-medium text-ink-muted"
+                className="sticky left-0 z-20 bg-surface px-3 py-2 text-left font-medium text-ink-muted"
               >
-                {t('dashboard.progress.jurorHeader')}
+                {t('dashboard.progress.teamHeader')}
               </th>
-              {teams.map((team) => (
+              {jurors.map((juror) => (
                 <th
-                  key={team.id}
+                  key={juror.id}
                   scope="col"
                   className="px-3 py-2 text-left align-bottom font-medium whitespace-nowrap text-ink-muted"
                 >
-                  <span className={team.noShow ? 'text-ink-faint line-through' : undefined}>
-                    {team.name}
-                  </span>
-                  {team.noShow && (
-                    <Badge className="ml-1.5 align-middle">{t('teams.noShowBadge')}</Badge>
-                  )}
+                  {juror.displayName}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {jurors.map((juror) => (
-              <tr key={juror.id}>
+            {teams.map((team, index) => (
+              <tr key={team.id}>
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 bg-surface px-3 py-2 text-left font-medium whitespace-nowrap"
+                  className="sticky left-0 z-10 max-w-[45vw] bg-surface px-3 py-2 text-left font-medium sm:max-w-64"
                 >
-                  {juror.displayName}
+                  <span className="flex items-baseline gap-2">
+                    <span className="w-5 shrink-0 text-right text-sm font-normal text-ink-faint tabular-nums">
+                      {index + 1}
+                    </span>
+                    <span className={cn('min-w-0 truncate', team.noShow && 'text-ink-faint line-through')}>
+                      <span className={cn(team.id === nowPitchingTeamId && 'marked-text')}>{team.name}</span>
+                    </span>
+                    {team.noShow && <Badge className="shrink-0">{t('teams.noShowBadge')}</Badge>}
+                  </span>
                 </th>
-                {teams.map((team) => {
+                {jurors.map((juror) => {
                   if (team.noShow) {
                     return (
-                      <td key={team.id} className="px-3 py-2 opacity-50">
+                      <td key={juror.id} className="px-3 py-2 opacity-50">
                         <Badge tone="neutral" aria-label={t('teams.noShowBadge')}>
                           {'—'}
                         </Badge>
@@ -118,7 +132,7 @@ export function ProgressBoard({ teams, criteria, jurors, scores }: ProgressBoard
                   const done = counts.get(`${juror.id}:${team.id}`) ?? 0
                   const state = cellState(done, total)
                   return (
-                    <td key={team.id} className="px-3 py-2">
+                    <td key={juror.id} className="px-3 py-2">
                       <Badge
                         tone={CELL_TONE[state]}
                         aria-label={t('dashboard.progress.cellLabel', {
