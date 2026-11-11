@@ -11,7 +11,7 @@ import { eventPhase } from '@/domain/eventPhase'
 import type { Criterion } from '@/domain/types'
 import { useCriteria, useThemes } from '@/features/criteria/api'
 import { useEvent, useEventUpdates, type EventRow } from '@/features/events/api'
-import { useTeams, type TeamWithProject } from '@/features/teams/api'
+import { useJurorTeams, type TeamWithProject } from '@/features/teams/api'
 import { cn } from '@/lib/cn'
 import { useMediaQuery } from '@/lib/useMediaQuery'
 import { useNow } from '@/lib/useNow'
@@ -39,7 +39,7 @@ export function ScoringPage() {
   const { eventId = '', teamId = '' } = useParams()
   useEventUpdates(eventId)
   const { data: event } = useEvent(eventId)
-  const { data: teams } = useTeams(eventId)
+  const { data: teams } = useJurorTeams(eventId)
   const { data: criteria } = useCriteria(eventId)
 
   if (!event || !teams || !criteria) {

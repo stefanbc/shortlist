@@ -10,7 +10,7 @@ import type { Criterion } from '@/domain/types'
 import { useCriteria, useThemes } from '@/features/criteria/api'
 import { useActiveEvent, useEvent, useEvents, useEventUpdates } from '@/features/events/api'
 import { EventPhaseBadge } from '@/features/events/EventPhaseBadge'
-import { useTeams, type TeamWithProject } from '@/features/teams/api'
+import { useJurorTeams, type TeamWithProject } from '@/features/teams/api'
 import { cn } from '@/lib/cn'
 import { useNow } from '@/lib/useNow'
 import { useMyCellSync, useMyScores, useScoreSync, type CellSync } from './api'
@@ -84,7 +84,7 @@ function TeamOverview({
   nowPitchingTeamId: string | null
 }) {
   const { t } = useTranslation()
-  const { data: teams } = useTeams(eventId)
+  const { data: teams } = useJurorTeams(eventId)
   const { data: criteria } = useCriteria(eventId)
   const { data: themes } = useThemes(eventId)
   const { data: event } = useEvent(eventId)

@@ -1,9 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { supabase } from '@/lib/supabase'
-import { toTeam, useReorderTeams, useSetTiebreakOrder } from './api'
+import { toTeam, useJurorTeams, useReorderTeams, useSetTiebreakOrder, useTeams } from './api'
 
 vi.mock('@/lib/supabase', () => ({
   supabase: { from: vi.fn() },
@@ -125,5 +125,57 @@ describe('useSetTiebreakOrder', () => {
       { id: 'a', manual_tiebreak: 2 },
       { id: 'c', manual_tiebreak: 3 },
     ])
+  })
+})
+
+describe('team column lists', () => {
+  afterEach(() => {
+    vi.clearAllMocks()
+  })
+
+  /** Captures the column list each hook asks PostgREST for. */
+  function captureSelect() {
+    const selects: string[] = []
+    vi.mocked(supabase.from).mockImplementation(
+      () =>
+        ({
+          select: (columns: string) => {
+            selects.push(columns)
+            return { eq: () => ({ order: () => Promise.resolve({ data: [], error: null }) }) }
+          },
+        }) as never,
+    )
+    return selects
+  }
+
+  it("jurors' screens never ask for the organizer-only manual tie-break", async () => {
+    const selects = captureSelect()
+    const { result } = renderHook(() => useJurorTeams('ev-1'), { wrapper })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(selects).toHaveLength(1)
+    expect(selects[0]).not.toContain('manual_tiebreak')
+    expect(selects[0]).toContain('pitch_order')
+    expect(selects[0]).toContain('projects(')
+  })
+
+  it('a juror-loaded team maps with no manual tie-break', () => {
+    const team = toTeam({
+      id: 't3',
+      name: 'Team Lyra',
+      members: [],
+      pitch_order: 2,
+      no_show: false,
+      projects: null,
+    })
+    expect(team.manualTiebreak).toBeNull()
+  })
+
+  it('the organizer screens still load the manual tie-break', async () => {
+    const selects = captureSelect()
+    const { result } = renderHook(() => useTeams('ev-1'), { wrapper })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+
+    expect(selects[0]).toContain('manual_tiebreak')
   })
 })

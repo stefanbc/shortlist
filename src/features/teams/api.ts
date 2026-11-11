@@ -16,8 +16,12 @@ export interface TeamWithProject extends Team {
   }
 }
 
-const TEAM_COLUMNS =
-  'id, name, members, pitch_order, no_show, manual_tiebreak, projects(id, name, description, theme_id, repo_url)'
+/** What jurors' screens load: everything but `manual_tiebreak`, the organizer's private
+ * tie-break decision, which no juror screen shows. */
+const JUROR_TEAM_COLUMNS =
+  'id, name, members, pitch_order, no_show, projects(id, name, description, theme_id, repo_url)'
+/** What the organizer's screens load. */
+const TEAM_COLUMNS = `${JUROR_TEAM_COLUMNS}, manual_tiebreak`
 
 type ProjectDbRow = {
   id: string
@@ -33,7 +37,8 @@ type TeamDbRow = {
   members: string[]
   pitch_order: number | null
   no_show: boolean
-  manual_tiebreak: number | null
+  /** Absent when loaded with `JUROR_TEAM_COLUMNS`. */
+  manual_tiebreak?: number | null
   projects: ProjectDbRow
 }
 
@@ -45,7 +50,7 @@ export function toTeam(row: TeamDbRow): TeamWithProject {
     members: row.members,
     pitchOrder: row.pitch_order ?? 0,
     noShow: row.no_show,
-    manualTiebreak: row.manual_tiebreak,
+    manualTiebreak: row.manual_tiebreak ?? null,
     project: {
       name: row.projects?.name ?? null,
       description: row.projects?.description ?? null,
@@ -55,19 +60,32 @@ export function toTeam(row: TeamDbRow): TeamWithProject {
   }
 }
 
-/** An event's teams and their projects, in pitch order. */
+async function fetchTeams(eventId: Id, columns: string): Promise<TeamWithProject[]> {
+  const { data, error } = await supabase
+    .from('teams')
+    .select(columns)
+    .eq('event_id', eventId)
+    .order('pitch_order', { ascending: true })
+  if (error) throw error
+  return (data as unknown as TeamDbRow[]).map(toTeam)
+}
+
+/** An event's teams and their projects, in pitch order (organizer screens). */
 export function useTeams(eventId: Id): UseQueryResult<TeamWithProject[]> {
   return useQuery({
     queryKey: ['teams', eventId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('teams')
-        .select(TEAM_COLUMNS)
-        .eq('event_id', eventId)
-        .order('pitch_order', { ascending: true })
-      if (error) throw error
-      return (data as unknown as TeamDbRow[]).map(toTeam)
-    },
+    queryFn: () => fetchTeams(eventId, TEAM_COLUMNS),
+    enabled: Boolean(eventId),
+  })
+}
+
+/** The same, for jurors' screens: without the organizer-only manual tie-break
+ * (`manualTiebreak` is always null). Its own cache entry under the `['teams', eventId]`
+ * prefix, so every invalidation of an event's teams refreshes it too. */
+export function useJurorTeams(eventId: Id): UseQueryResult<TeamWithProject[]> {
+  return useQuery({
+    queryKey: ['teams', eventId, 'juror'],
+    queryFn: () => fetchTeams(eventId, JUROR_TEAM_COLUMNS),
     enabled: Boolean(eventId),
   })
 }

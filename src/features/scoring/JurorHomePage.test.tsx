@@ -8,7 +8,7 @@ import { useCriteria, useThemes } from '@/features/criteria/api'
 import type { EventRow } from '@/features/events/api'
 import { useActiveEvent, useEvent, useEvents } from '@/features/events/api'
 import type { TeamWithProject } from '@/features/teams/api'
-import { useTeams } from '@/features/teams/api'
+import { useJurorTeams } from '@/features/teams/api'
 import { queueId, scoreKey, useScoreQueue, type QueuedScore } from '@/stores/scoreQueue'
 import { useSession } from '@/stores/session'
 import { useScoreSync } from './api'
@@ -36,7 +36,7 @@ vi.mock('@/features/events/api', async (importOriginal) => {
 })
 vi.mock('@/features/teams/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/teams/api')>()
-  return { ...actual, useTeams: vi.fn() }
+  return { ...actual, useJurorTeams: vi.fn() }
 })
 vi.mock('@/features/criteria/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/criteria/api')>()
@@ -105,7 +105,7 @@ function renderHome(event: EventRow | null = EVENT) {
   vi.mocked(useActiveEvent).mockReturnValue(event)
   vi.mocked(useEvents).mockReturnValue({ data: event ? [event] : [], isLoading: false } as never)
   vi.mocked(useEvent).mockReturnValue({ data: event ?? undefined } as never)
-  vi.mocked(useTeams).mockReturnValue({ data: TEAMS, isLoading: false } as never)
+  vi.mocked(useJurorTeams).mockReturnValue({ data: TEAMS, isLoading: false } as never)
   vi.mocked(useCriteria).mockReturnValue({ data: CRITERIA, isLoading: false } as never)
   vi.mocked(useThemes).mockReturnValue({ data: [], isLoading: false } as never)
   vi.mocked(useScoreSync).mockReturnValue({ pending: 0, rejected: 0, online: true })
