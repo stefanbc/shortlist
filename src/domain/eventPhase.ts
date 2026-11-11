@@ -31,11 +31,16 @@ export function eventPhase(e: EventTiming, now: Date): EventPhase {
 
 /**
  * The instant at which scoring closes: the manual lock time when the
- * override is `locked`, otherwise the scheduled end of the event.
+ * override is `locked`; for `auto`, the scheduled end -- or `lockedAt` when
+ * that is later (an ended event re-opened and then handed back to `auto`,
+ * which stamps `lockedAt`); otherwise the scheduled end. Mirrors
+ * `public.event_closed_at` (migration 0006).
  */
 export function closedAt(e: EventTiming): Date {
-  if (e.statusOverride === 'locked' && e.lockedAt !== null) {
-    return new Date(e.lockedAt)
-  }
-  return new Date(e.endsAt)
+  const endsAt = new Date(e.endsAt)
+  if (e.lockedAt === null) return endsAt
+  const lockedAt = new Date(e.lockedAt)
+  if (e.statusOverride === 'locked') return lockedAt
+  if (e.statusOverride === 'auto' && lockedAt > endsAt) return lockedAt
+  return endsAt
 }

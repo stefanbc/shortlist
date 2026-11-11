@@ -73,6 +73,18 @@ describe('closedAt', () => {
     expect(closedAt(timing).toISOString()).toBe(ENDS_AT)
   })
 
+  it('returns lockedAt for auto when it is later than endsAt (re-opened, then back to auto)', () => {
+    const lockedAt = new Date(new Date(ENDS_AT).getTime() + 60 * 60_000).toISOString()
+    const timing = makeTiming({ statusOverride: 'auto', lockedAt })
+    expect(closedAt(timing).toISOString()).toBe(lockedAt)
+  })
+
+  it('returns endsAt for auto when lockedAt is earlier than endsAt', () => {
+    const lockedAt = new Date(new Date(ENDS_AT).getTime() - 60 * 60_000).toISOString()
+    const timing = makeTiming({ statusOverride: 'auto', lockedAt })
+    expect(closedAt(timing).toISOString()).toBe(ENDS_AT)
+  })
+
   it('returns endsAt when override is open', () => {
     const timing = makeTiming({ statusOverride: 'open' })
     expect(closedAt(timing).toISOString()).toBe(ENDS_AT)
