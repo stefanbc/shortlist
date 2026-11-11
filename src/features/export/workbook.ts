@@ -10,6 +10,12 @@ const FIRST_JUROR_COL = 4
 /** Row the first criterion lives in (row 1 is the header row). */
 const FIRST_CRITERION_ROW = 2
 
+/** Row the team metadata block ("Echipa:" ...) starts on in the source sheet: B12, right
+ * under its 9-criteria grid and averages row. A sheet with more criteria moves the block
+ * down so it always starts on the row after the averages row instead of overwriting the
+ * grid. */
+const ASTRA_METADATA_ROW = 12
+
 /** The exact boilerplate text the source sheet carries in B24 of every team sheet. */
 const RULES_TEXT =
   '- Punctajul se acorda de la 1 la 5, in incremente de 0.5.\n' +
@@ -155,16 +161,20 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
     finalLabelCell.alignment = { wrapText: true }
   }
 
-  sheet.getCell(12, 2).value = 'Echipa:'
-  sheet.getCell(13, 2).value = guardFormulaInjection(team.name)
-  sheet.getCell(15, 2).value = 'Numele Proiect:'
-  if (team.project.name) sheet.getCell(16, 2).value = guardFormulaInjection(team.project.name)
-  sheet.getCell(18, 2).value = 'Tema Proiect:'
+  // Offsets within the block mirror the source sheet: B12/B13, B15/B16, B18/B19, B21/B22,
+  // B24 for Astra's 9 criteria. `parseWorkbook` finds every value by its label, not by row.
+  const averagesRow = FIRST_CRITERION_ROW + data.criteria.length
+  const top = Math.max(ASTRA_METADATA_ROW, averagesRow + 1)
+  sheet.getCell(top, 2).value = 'Echipa:'
+  sheet.getCell(top + 1, 2).value = guardFormulaInjection(team.name)
+  sheet.getCell(top + 3, 2).value = 'Numele Proiect:'
+  if (team.project.name) sheet.getCell(top + 4, 2).value = guardFormulaInjection(team.project.name)
+  sheet.getCell(top + 6, 2).value = 'Tema Proiect:'
   const themeName = team.project.themeId ? data.themeNames[team.project.themeId] : undefined
-  if (themeName) sheet.getCell(19, 2).value = guardFormulaInjection(themeName)
-  sheet.getCell(21, 2).value = 'Repo GitHub:'
-  if (team.project.repoUrl) sheet.getCell(22, 2).value = guardFormulaInjection(team.project.repoUrl)
-  sheet.getCell(24, 2).value = RULES_TEXT
+  if (themeName) sheet.getCell(top + 7, 2).value = guardFormulaInjection(themeName)
+  sheet.getCell(top + 9, 2).value = 'Repo GitHub:'
+  if (team.project.repoUrl) sheet.getCell(top + 10, 2).value = guardFormulaInjection(team.project.repoUrl)
+  sheet.getCell(top + 12, 2).value = RULES_TEXT
 }
 
 function addResultsSheet(workbook: ExcelJS.Workbook, data: ExportData): void {

@@ -333,6 +333,91 @@ describe('buildWorkbook (a shape different from Astra Hack\'s 9 criteria / 6 jur
   })
 })
 
+describe('buildWorkbook (more criteria than the Astra layout has room for)', () => {
+  // Astra's metadata block starts at B12, right under a 9-criteria grid (rows 2-10, the
+  // averages on row 11). With 12 criteria the grid runs to row 13 and the averages to row
+  // 14, so the block has to move down below it instead of overwriting criterion names.
+  const MANY_CRITERIA: Criterion[] = Array.from({ length: 12 }, (_, i) => ({
+    id: `mc${i + 1}`,
+    name: `Many Criterion ${i + 1}`,
+    weight: 5 + i,
+    position: i + 1,
+  }))
+  const TWO_JURORS: Profile[] = [
+    { id: 'mj1', displayName: 'Ana Pop', email: null, role: 'juror', active: true },
+    { id: 'mj2', displayName: 'Ion Marin', email: null, role: 'juror', active: true },
+  ]
+
+  function buildManyCriteriaData(): ExportData {
+    const teams: Team[] = [{ id: 't1', name: 'Wide Team', pitchOrder: 1, noShow: false, manualTiebreak: null }]
+    const scores: Score[] = []
+    MANY_CRITERIA.forEach((criterion, ci) => {
+      TWO_JURORS.forEach((juror, ji) => {
+        scores.push({ teamId: 't1', criterionId: criterion.id, jurorId: juror.id, value: 1 + ((ci + ji) % 9) * 0.5 })
+      })
+    })
+    return {
+      eventName: 'Wide Hack',
+      themes: ['Theme W'],
+      criteria: MANY_CRITERIA,
+      teams: teams.map((team) => ({
+        ...team,
+        members: [],
+        project: project({ name: 'Wide Project', themeId: 'tw', repoUrl: 'https://example.test/wide' }),
+      })),
+      themeNames: { tw: 'Theme W' },
+      jurors: TWO_JURORS,
+      scores,
+      ranked: rankTeams(teams, MANY_CRITERIA, scores),
+    }
+  }
+
+  it('round-trips 12 criteria, every score, the final and the team metadata', async () => {
+    const data = buildManyCriteriaData()
+    const parsed = await parseWorkbook(await blobToArrayBuffer(await buildWorkbook(data)))
+
+    expect(parsed.criteria).toEqual(
+      MANY_CRITERIA.map(({ name, weight, position }) => ({ name, weight, position })),
+    )
+    const team = parsed.teams[0]
+    expect(team).toMatchObject({
+      name: 'Wide Team',
+      projectName: 'Wide Project',
+      theme: 'Theme W',
+      repoUrl: 'https://example.test/wide',
+    })
+    expect(team.scores).toHaveLength(MANY_CRITERIA.length * TWO_JURORS.length)
+    expect(parsed.expectedFinals['E1'] as number).toBeCloseTo(data.ranked[0].final as number, 9)
+  })
+
+  it('places the metadata block right below the averages row', async () => {
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await blobToArrayBuffer(await buildWorkbook(buildManyCriteriaData())))
+    const sheet = workbook.getWorksheet('E1')!
+    // Criteria rows 2-13, averages row 14, so the block starts at row 15.
+    expect(sheet.getCell('B13').value).toBe('Many Criterion 12')
+    expect(sheet.getCell('B15').value).toBe('Echipa:')
+    expect(sheet.getCell('B16').value).toBe('Wide Team')
+    expect(sheet.getCell('B27').value).toMatch(/^- Punctajul/)
+  })
+})
+
+describe('buildWorkbook (Astra layout, 9 criteria)', () => {
+  it('keeps the metadata block at its exact source-sheet cells', async () => {
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await blobToArrayBuffer(await buildWorkbook(buildSyntheticData())))
+    const sheet = workbook.getWorksheet('E1')!
+    expect(sheet.getCell('B12').value).toBe('Echipa:')
+    expect(sheet.getCell('B13').value).toBe('Team One')
+    expect(sheet.getCell('B15').value).toBe('Numele Proiect:')
+    expect(sheet.getCell('B16').value).toBe('Project One')
+    expect(sheet.getCell('B18').value).toBe('Tema Proiect:')
+    expect(sheet.getCell('B19').value).toBe('Theme A')
+    expect(sheet.getCell('B21').value).toBe('Repo GitHub:')
+    expect(sheet.getCell('B24').value).toMatch(/^- Punctajul/)
+  })
+})
+
 describe('buildWorkbook formula-injection guard', () => {
   it('stores a formula-shaped team name as literal text, not a live formula', async () => {
     const data = buildSyntheticData()
