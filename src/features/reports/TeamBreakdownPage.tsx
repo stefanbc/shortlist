@@ -1,9 +1,9 @@
 import { ArrowLeft, FileQuestion } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Link, useParams } from 'react-router'
 import { Page, PageHeader } from '@/components/layout/Page'
+import { CriterionBars } from './CriterionBars'
 import { Badge } from '@/components/ui/Badge'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -91,13 +91,15 @@ export function TeamBreakdownView({
           <CardTitle>{team.project.name ?? t('teams.noProject')}</CardTitle>
           {themeName && <Badge tone="accent">{themeName}</Badge>}
         </CardHeader>
-        <CardBody className="flex flex-wrap items-center gap-4">
+        <CardBody className="flex flex-wrap items-end gap-4">
           <div>
             <p className="text-sm text-ink-faint">{t('reports.teamPage.finalLabel')}</p>
-            <p className="numeral text-3xl">{format(entry?.final ?? null)}</p>
+            <p className="numeral text-5xl leading-none">{format(entry?.final ?? null)}</p>
           </div>
           {typeof entry?.rank === 'number' && (
-            <Badge tone="gold">{t('reports.teamPage.rankBadge', { rank: entry.rank })}</Badge>
+            <Badge tone={entry.rank === 1 ? 'gold' : 'neutral'}>
+              {t('reports.teamPage.rankBadge', { rank: entry.rank })}
+            </Badge>
           )}
           {team.noShow && <Badge>{t('teams.noShowBadge')}</Badge>}
         </CardBody>
@@ -113,7 +115,7 @@ export function TeamBreakdownView({
         <>
           <Card>
             <div className="-mx-5 overflow-x-auto px-5 py-5">
-              <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+              <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
                 <caption className="sr-only">
                   {t('reports.teamPage.tableCaption', { team: team.name })}
                 </caption>
@@ -199,39 +201,10 @@ export function TeamBreakdownView({
               {chartData.length === 0 ? (
                 <p className="text-sm text-ink-faint">{t('reports.teamPage.chartEmpty')}</p>
               ) : (
-                <div className="h-72 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ left: 0, right: 12, top: 8, bottom: 8 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={{ stroke: 'var(--line)' }}
-                        interval={0}
-                        angle={-20}
-                        textAnchor="end"
-                        height={60}
-                      />
-                      <YAxis
-                        domain={[0, 5]}
-                        tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={{ stroke: 'var(--line)' }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          background: 'var(--surface)',
-                          border: '1px solid var(--line)',
-                          borderRadius: 10,
-                          color: 'var(--ink)',
-                        }}
-                        formatter={(value) => format(typeof value === 'number' ? value : null)}
-                      />
-                      <Bar dataKey="average" fill="var(--accent)" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <CriterionBars
+                  data={chartData.map((row) => ({ name: row.name, value: row.average }))}
+                  format={format}
+                />
               )}
             </CardBody>
           </Card>

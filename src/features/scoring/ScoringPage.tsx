@@ -239,7 +239,8 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
             )}
             {team.noShow && <Badge>{t('scoring.status.noShow')}</Badge>}
           </div>
-          <h1 className="mt-1 text-3xl font-bold break-words sm:text-[2.5rem] sm:leading-tight">
+          <h1 className="mt-1 text-3xl break-words sm:text-[2.5rem] sm:leading-tight">
+            <title>{`${team.name} | Shortlist`}</title>
             {team.name}
           </h1>
           {(team.project.name || theme) && (

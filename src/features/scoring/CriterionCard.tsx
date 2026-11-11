@@ -68,7 +68,7 @@ export function CriterionCard({
       dragElastic={0.22}
       dragSnapToOrigin
       onDragEnd={onDragEnd}
-      className="rounded-panel bg-surface p-5 ring-1 ring-line sm:p-7"
+      className="rounded-panel border border-line bg-surface p-5 sm:p-7"
     >
       <div className="flex items-baseline justify-between gap-3 text-sm text-ink-muted">
         <span>{t('scoring.criterionPosition', { n, total })}</span>
@@ -140,7 +140,7 @@ export function CriterionCard({
       <div
         role="group"
         aria-label={t('scoring.scoreButtons', { criterion: criterion.name })}
-        className="grid grid-cols-5 gap-1.5 md:grid-cols-9"
+        className="grid grid-cols-3 gap-1.5 md:grid-cols-9"
       >
         {SCORE_VALUES.map((v) => {
           const selected = v === value
@@ -152,13 +152,13 @@ export function CriterionCard({
               aria-pressed={selected}
               onClick={() => onPick(v)}
               className={cn(
-                'numeral h-14 rounded-control text-xl ring-1 ring-inset transition-[background-color,box-shadow,transform] duration-(--duration-fast) active:scale-[0.94]',
+                'numeral h-14 rounded-control text-2xl transition-[background-color,box-shadow] duration-(--duration-fast) active:translate-y-px',
                 'disabled:pointer-events-none disabled:opacity-40',
                 selected
                   ? cell.state === 'rejected'
-                    ? 'bg-danger text-white ring-danger'
-                    : 'bg-accent text-on-accent shadow-glow ring-accent'
-                  : 'bg-raised text-ink ring-line hover:ring-line-strong',
+                    ? 'bg-danger text-white'
+                    : 'marked mark-stroke'
+                  : 'bg-surface text-ink ring-1 ring-inset ring-line-strong hover:bg-raised',
               )}
             >
               {formatScore(v, i18n.language)}

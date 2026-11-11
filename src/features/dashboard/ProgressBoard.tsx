@@ -70,7 +70,7 @@ export function ProgressBoard({ teams, criteria, jurors, scores }: ProgressBoard
   return (
     <div className="flex flex-col gap-3">
       <div className="-mx-5 overflow-x-auto px-5">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+        <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
           <caption className="sr-only">{t('dashboard.progress.tableCaption')}</caption>
           <thead>
             <tr>

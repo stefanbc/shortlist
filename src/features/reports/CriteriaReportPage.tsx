@@ -1,12 +1,12 @@
 import { ChartNoAxesColumn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { CriterionStat } from '@/domain/analytics'
 import type { Criterion, Id } from '@/domain/types'
 import { useScoreFormat } from './reportUtils'
+import { CriterionBars } from './CriterionBars'
 import { ReportPage } from './ReportPage'
 import { useEventResults } from './useEventResults'
 
@@ -48,7 +48,7 @@ export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps)
     <div className="flex flex-col gap-6">
       <Card>
         <div className="-mx-5 overflow-x-auto px-5 py-5">
-          <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+          <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
             <caption className="sr-only">{t('reports.criteriaPage.tableCaption')}</caption>
             <thead>
               <tr className="text-left text-ink-muted">
@@ -92,39 +92,10 @@ export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps)
           <CardTitle>{t('reports.criteriaPage.chartTitle')}</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ left: 0, right: 12, top: 8, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={{ stroke: 'var(--line)' }}
-                  interval={0}
-                  angle={-20}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis
-                  domain={[0, 5]}
-                  tick={{ fill: 'var(--ink-muted)', fontSize: 12 }}
-                  tickLine={false}
-                  axisLine={{ stroke: 'var(--line)' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 10,
-                    color: 'var(--ink)',
-                  }}
-                  formatter={(value) => format(typeof value === 'number' ? value : null)}
-                />
-                <Bar dataKey="mean" fill="var(--accent)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <CriterionBars
+            data={chartData.map((row) => ({ name: row.name, value: row.mean }))}
+            format={format}
+          />
         </CardBody>
       </Card>
     </div>

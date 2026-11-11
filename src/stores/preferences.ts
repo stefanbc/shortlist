@@ -52,7 +52,7 @@ function applyDark(dark: boolean) {
   root.style.colorScheme = dark ? 'dark' : 'light'
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', dark ? '#100e1f' : '#f6f5fb')
+    ?.setAttribute('content', dark ? '#12241d' : '#f1f3f1')
 }
 
 /**

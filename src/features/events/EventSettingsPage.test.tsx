@@ -6,6 +6,16 @@ import type { EventRow } from './api'
 import { useEvent, useSaveEvent, useSetEventStatus } from './api'
 import { EventSettingsPage } from './EventSettingsPage'
 
+// The stage timer card has its own query; these tests are about details and scoring control.
+vi.mock('./stagetimerUrl', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./stagetimerUrl')>()
+  return {
+    ...actual,
+    useStagetimerUrl: vi.fn(() => ({ data: null, isFetched: true })),
+    useSaveStagetimerUrl: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
+  }
+})
+
 vi.mock('./api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api')>()
   return {

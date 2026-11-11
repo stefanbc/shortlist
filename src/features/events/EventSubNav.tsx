@@ -23,20 +23,20 @@ export function EventSubNav({ eventId }: { eventId: Id }) {
   const { t } = useTranslation()
 
   return (
-    <div className="border-b border-line bg-surface/60">
+    <div className="border-b border-line bg-surface">
       <nav
         aria-label={t('events.subNavLabel')}
         className="mx-auto w-full max-w-6xl overflow-x-auto px-4 sm:px-6 lg:px-10"
       >
-        <div className="flex gap-1 py-2">
+        <div className="flex gap-6">
           {TABS.map(({ segment, label }) => (
             <NavLink
               key={segment}
               to={`/admin/events/${eventId}/${segment}`}
               className={({ isActive }) =>
                 cn(
-                  'flex h-9 shrink-0 items-center rounded-control px-3.5 text-sm font-medium whitespace-nowrap text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
-                  isActive && 'bg-raised text-ink',
+                  'flex h-12 shrink-0 items-center border-b-2 border-transparent text-[0.95rem] font-medium whitespace-nowrap text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
+                  isActive && 'border-accent font-semibold text-ink',
                 )
               }
             >

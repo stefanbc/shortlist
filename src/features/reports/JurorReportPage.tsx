@@ -64,7 +64,7 @@ export function JurorReportView({
     <div className="flex flex-col gap-6">
       <Card>
         <div className="-mx-5 overflow-x-auto px-5 py-5">
-          <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+          <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
             <caption className="sr-only">{t('reports.jurorsPage.tableCaption')}</caption>
             <thead>
               <tr className="text-left text-ink-muted">

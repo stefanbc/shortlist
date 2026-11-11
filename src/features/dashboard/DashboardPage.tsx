@@ -19,6 +19,7 @@ import {
   useSetNowPitching,
   type EventRow,
 } from '@/features/events/api'
+import { StageTimerPanel } from '@/features/events/StageTimer'
 import { EventPhaseBadge } from '@/features/events/EventPhaseBadge'
 import { ExportMenu } from '@/features/export/ExportMenu'
 import { useEventResults } from '@/features/reports/useEventResults'
@@ -72,8 +73,12 @@ export function NowPitchingCard({ event, teams }: { event: EventRow; teams: Team
         )}
       </CardHeader>
       <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="min-w-0 text-xl font-bold break-words">
-          {current ? current.name : t('dashboard.nowPitching.none')}
+        <p className="title min-w-0 text-2xl break-words">
+          {current ? (
+            <span className="marked-text">{current.name}</span>
+          ) : (
+            <span className="text-ink-muted">{t('dashboard.nowPitching.none')}</span>
+          )}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <Select
@@ -158,6 +163,8 @@ export function DashboardPage() {
         <NowPitchingCard event={event} teams={results.teams} />
 
         <LateScoresNotice eventId={event.id} teams={results.teams} jurors={results.jurors} />
+
+        <StageTimerPanel eventId={event.id} />
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
           <Card>

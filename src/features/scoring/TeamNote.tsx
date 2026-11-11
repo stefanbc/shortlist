@@ -15,7 +15,7 @@ export function TeamNote({ teamId, teamName }: { teamId: Id; teamName: string })
   const hasNote = Boolean(note.data)
 
   return (
-    <div className="rounded-card bg-surface/60 ring-1 ring-line">
+    <div className="rounded-card border border-line bg-surface">
       <button
         type="button"
         aria-expanded={open}

@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, Pencil, Plus, Search, Trash2, UserX, Users } from 'lucide-react'
+import { ArrowLeft, ExternalLink, FileUp, Pencil, Plus, Search, Trash2, UserX, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
@@ -28,6 +28,8 @@ import {
   useTeams,
   type TeamWithProject,
 } from './api'
+import { cn } from '@/lib/cn'
+import { RegistrationImportDialog } from './RegistrationImportDialog'
 import { TeamForm } from './TeamForm'
 
 /** An in-flight action that needs the organizer to confirm before it's sent: deleting a
@@ -54,19 +56,59 @@ function TeamRow({
   const { t } = useTranslation()
 
   return (
-    <div className="flex flex-col gap-2 py-1">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-ink-faint">#{team.pitchOrder}</span>
-            <span className="truncate font-semibold">{team.name}</span>
-            {team.noShow && <Badge tone="danger">{t('teams.noShowBadge')}</Badge>}
-          </div>
-          {team.members.length > 0 && (
-            <p className="mt-0.5 truncate text-sm text-ink-muted">{team.members.join(', ')}</p>
+    <div className="flex items-start gap-3 py-1.5">
+      <span className="numeral w-7 shrink-0 pt-0.5 text-right text-2xl leading-none text-ink-faint">
+        {team.pitchOrder}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn('font-semibold break-words', team.noShow && 'text-ink-muted line-through')}
+          >
+            {team.name}
+          </span>
+          {team.noShow && <Badge tone="danger">{t('teams.noShowBadge')}</Badge>}
+        </div>
+        {team.members.length > 0 && (
+          <p className="text-sm break-words text-ink-muted">{team.members.join(', ')}</p>
+        )}
+        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          {team.project.name ? (
+            <span className="break-words text-ink">{team.project.name}</span>
+          ) : (
+            <span className="text-ink-faint">{t('teams.noProject')}</span>
+          )}
+          {themeName && <Badge tone="accent">{themeName}</Badge>}
+          {team.project.repoUrl && (
+            <a
+              href={team.project.repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-accent-ink underline underline-offset-2"
+            >
+              <ExternalLink aria-hidden className="size-3.5" />
+              {t('teams.viewRepo')}
+            </a>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+      </div>
+
+      <div className="flex shrink-0 flex-col items-end sm:flex-row sm:items-center">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-11"
+          aria-label={`${team.noShow ? t('teams.clearNoShow') : t('teams.markNoShow')}: ${team.name}`}
+          onClick={() => onRequestNoShow(team, !team.noShow)}
+        >
+          <UserX aria-hidden />
+          <span className="hidden md:inline">
+            {team.noShow ? t('teams.clearNoShow') : t('teams.markNoShow')}
+          </span>
+        </Button>
+        <div className="flex">
           <Button
             type="button"
             variant="ghost"
@@ -86,37 +128,6 @@ function TeamRow({
             <Trash2 aria-hidden />
           </Button>
         </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 pl-1 text-sm">
-        {team.project.name ? (
-          <span className="text-ink-muted">{team.project.name}</span>
-        ) : (
-          <span className="text-ink-faint italic">{t('teams.noProject')}</span>
-        )}
-        {themeName && <Badge tone="accent">{themeName}</Badge>}
-        {team.project.repoUrl && (
-          <a
-            href={team.project.repoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-accent-ink underline underline-offset-2"
-          >
-            <ExternalLink aria-hidden className="size-3.5" />
-            {t('teams.viewRepo')}
-          </a>
-        )}
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          className="h-11"
-          aria-label={`${team.noShow ? t('teams.clearNoShow') : t('teams.markNoShow')}: ${team.name}`}
-          onClick={() => onRequestNoShow(team, !team.noShow)}
-        >
-          <UserX aria-hidden />
-          {team.noShow ? t('teams.clearNoShow') : t('teams.markNoShow')}
-        </Button>
       </div>
     </div>
   )
@@ -139,6 +150,7 @@ export function TeamsPage() {
   const [themeFilter, setThemeFilter] = useState('all')
   const [editingTeam, setEditingTeam] = useState<TeamWithProject | 'new' | null>(null)
   const [pending, setPending] = useState<PendingAction | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
 
   if (eventLoading || !event) {
     return (
@@ -244,6 +256,10 @@ export function TeamsPage() {
               <ArrowLeft aria-hidden />
               {t('common.back')}
             </Link>
+            <Button variant="secondary" onClick={() => setImportOpen(true)}>
+              <FileUp aria-hidden />
+              {t('teams.registrations.open')}
+            </Button>
             <Button
               onClick={() => {
                 setEditingTeam('new')
@@ -257,7 +273,7 @@ export function TeamsPage() {
       />
 
       <Card>
-        <CardHeader>
+        <CardHeader className="sr-only">
           <CardTitle>{t('events.teams')}</CardTitle>
         </CardHeader>
         <CardBody className="flex flex-col gap-4">
@@ -267,7 +283,7 @@ export function TeamsPage() {
               placeholder={t('teams.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-11 flex-1"
+              className="h-11 shrink-0 sm:flex-1"
             />
             <Select
               aria-label={t('teams.themeFilterLabel')}
@@ -292,10 +308,16 @@ export function TeamsPage() {
               title={t('teams.emptyTitle')}
               description={t('teams.emptyDescription')}
               action={
-                <Button onClick={() => setEditingTeam('new')}>
-                  <Plus aria-hidden />
-                  {t('teams.addTeam')}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => setImportOpen(true)}>
+                    <FileUp aria-hidden />
+                    {t('teams.registrations.open')}
+                  </Button>
+                  <Button variant="secondary" onClick={() => setEditingTeam('new')}>
+                    <Plus aria-hidden />
+                    {t('teams.addTeam')}
+                  </Button>
+                </div>
               }
             />
           )}
@@ -326,7 +348,7 @@ export function TeamsPage() {
             <>
               <ul className="flex flex-col gap-2">
                 {filteredTeams.map((team) => (
-                  <li key={team.id} className="rounded-control bg-surface px-2 ring-1 ring-line">
+                  <li key={team.id} className="rounded-control bg-surface px-3 ring-1 ring-line">
                     <TeamRow
                       team={team}
                       themeName={
@@ -381,6 +403,12 @@ export function TeamsPage() {
           onConfirm={confirmPending}
         />
       )}
+      <RegistrationImportDialog
+        eventId={id}
+        existingTeamNames={allTeams.map((team) => team.name)}
+        open={importOpen}
+        onOpenChange={setImportOpen}
+      />
     </Page>
   )
 }

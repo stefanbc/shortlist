@@ -71,27 +71,24 @@ function DropZone({
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           className={cn(
-            'flex w-full flex-col items-center gap-3 rounded-panel border border-dashed px-6 py-12 text-center',
+            'flex w-full items-center gap-4 rounded-control border border-dashed px-5 py-6 text-left',
             'transition-colors duration-(--duration-fast) disabled:cursor-not-allowed disabled:opacity-70',
             status === 'error'
-              ? 'border-danger/40 bg-danger-soft/40'
+              ? 'border-danger bg-danger-soft/40'
               : dragActive
-                ? 'border-accent bg-accent-soft/60'
-                : 'border-line-strong hover:border-accent/60 hover:bg-sunken/40',
+                ? 'border-ink bg-raised'
+                : 'border-line-strong hover:bg-raised',
           )}
         >
-          <div
-            className={cn(
-              'grid size-14 place-items-center rounded-card',
-              status === 'error' ? 'bg-danger-soft text-danger' : 'bg-accent-soft text-accent-ink',
-            )}
-          >
-            <UploadCloud aria-hidden className="size-6" strokeWidth={1.75} />
-          </div>
-          <div>
-            <p className="font-semibold">{t('import.dropTitle')}</p>
-            <p className="mt-1 text-sm text-ink-muted">{t('import.dropHint')}</p>
-          </div>
+          <UploadCloud
+            aria-hidden
+            className={cn('size-7 shrink-0', status === 'error' ? 'text-danger' : 'text-ink-muted')}
+            strokeWidth={1.5}
+          />
+          <span>
+            <span className="block text-lg font-semibold">{t('import.dropTitle')}</span>
+            <span className="block text-sm text-ink-muted">{t('import.dropHint')}</span>
+          </span>
         </button>
         <input
           ref={inputRef}
@@ -225,6 +222,7 @@ export function ImportPage() {
       <PageHeader title={t('import.title')} description={t('import.intro')} />
 
       <div className="flex flex-col gap-6">
+        <p className="-mt-3 max-w-prose text-sm text-ink-muted">{t('import.registrationsNote')}</p>
         <DropZone
           status={status}
           message={status === 'error' ? parseError : null}
@@ -240,7 +238,7 @@ export function ImportPage() {
           <div className="flex items-center gap-2 text-sm text-ink-muted">
             <FileSpreadsheet aria-hidden className="size-4 shrink-0" />
             <span className="truncate">
-              {file.name} · {formatFileSize(file.size)}
+              {file.name} ({formatFileSize(file.size)})
             </span>
           </div>
         )}
@@ -258,7 +256,7 @@ export function ImportPage() {
             </Card>
 
             {invalidCriteria.length > 0 && (
-              <div className="flex items-start gap-3 rounded-panel bg-danger-soft px-5 py-4 ring-1 ring-danger/25">
+              <div className="flex items-start gap-3 rounded-card bg-danger-soft px-5 py-4">
                 <AlertTriangle aria-hidden className="mt-0.5 size-5 shrink-0 text-danger" />
                 <div>
                   <p className="font-semibold text-danger">{t('import.weightWarningHeading')}</p>
@@ -273,7 +271,7 @@ export function ImportPage() {
             )}
 
             {(noShowTeams.length > 0 || missingProjectTeams.length > 0) && (
-              <div className="flex flex-col gap-2 rounded-panel bg-warning-soft px-5 py-4 ring-1 ring-warning/25">
+              <div className="flex flex-col gap-2 rounded-card bg-warning-soft px-5 py-4">
                 <div className="flex items-center gap-2 font-semibold text-warning">
                   <AlertTriangle aria-hidden className="size-4 shrink-0" />
                   {t('import.warningsHeading')}
@@ -309,7 +307,7 @@ export function ImportPage() {
               <CardBody>
                 <p className="text-sm text-ink-muted">{t('import.previewHint')}</p>
                 <div className="-mx-5 mt-4 overflow-x-auto px-5">
-                  <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+                  <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
                     <thead>
                       <tr className="text-left text-ink-muted">
                         <th scope="col" className="px-3 py-2 font-medium">

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/cn'
 
-/** The Shortlist mark: a list cut down to its top entries, the first one picked. */
+/** The Shortlist mark: a list of three, the first one gone over with a highlighter. */
 export function BrandMark({
   className,
   showName = true,
@@ -12,13 +12,14 @@ export function BrandMark({
   const { t } = useTranslation()
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <svg viewBox="0 0 24 24" aria-hidden className="size-7 shrink-0">
-        <rect x="2" y="3.5" width="20" height="4.5" rx="2.25" className="fill-accent" />
-        <rect x="2" y="10" width="14" height="4.5" rx="2.25" className="fill-ink-muted/70" />
-        <rect x="2" y="16.5" width="8" height="4.5" rx="2.25" className="fill-ink-faint/60" />
+      <svg viewBox="0 0 28 24" aria-hidden className="h-6 w-7 shrink-0">
+        <path d="M1.5 2.2 25.6.9l1 7.3L.9 9.4Z" className="fill-mark" />
+        <rect x="5" y="4" width="17" height="2.6" rx="1.3" className="fill-on-mark" />
+        <rect x="5" y="12.2" width="12" height="2.6" rx="1.3" className="fill-current opacity-75" />
+        <rect x="5" y="19" width="7" height="2.6" rx="1.3" className="fill-current opacity-45" />
       </svg>
       {showName && (
-        <span className="text-[1.3rem] leading-none font-bold tracking-[-0.03em] [font-stretch:85%]">
+        <span className="text-[1.25rem] leading-none font-extrabold tracking-[-0.03em] [font-stretch:118%]">
           {t('common.appName')}
         </span>
       )}

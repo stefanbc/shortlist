@@ -41,7 +41,9 @@
     "light": "Light",
     "dark": "Dark",
     "system": "Auto",
-    "language": "Language"
+    "language": "Language",
+    "signOut": "Sign out",
+    "signOutJurorHint": "To sign back in you'll need your personal link again."
   },
   "auth": {
     "signIn": "Sign in",
@@ -64,7 +66,8 @@
     "redeemInactiveTitle": "This link is paused",
     "redeemInactiveBody": "Your juror account isn't active right now. Ask the organizer to reactivate it.",
     "redeemErrorTitle": "Couldn't open your link",
-    "redeemErrorBody": "Something went wrong. Ask the organizer to resend your link."
+    "redeemErrorBody": "Something went wrong. Ask the organizer to resend your link.",
+    "showPassword": "Show password"
   },
   "dashboard": {
     "title": "Live event",
@@ -159,6 +162,22 @@
       "setup": "Setup",
       "open": "Open",
       "locked": "Locked"
+    },
+    "detailsTitle": "Details",
+    "stagetimer": {
+      "title": "Stage timer",
+      "label": "stagetimer.io viewer link",
+      "hint": "Paste your room's viewer link, not the controller link. The timer then shows on the Live page. You still start and stop it in stagetimer.",
+      "save": "Save link",
+      "saved": "Stage timer link saved.",
+      "removed": "Stage timer removed.",
+      "saveError": "Couldn't save the link. Try again.",
+      "openInTab": "Open in a new tab",
+      "frameTitle": "Stage timer from stagetimer.io",
+      "errors": {
+        "notStagetimer": "Enter a link that starts with https://stagetimer.io/.",
+        "controllerLink": "That's the controller link. Paste the viewer link instead, so nobody else can run the timer."
+      }
     }
   },
   "criteria": {
@@ -228,7 +247,37 @@
     "repoUrlInvalid": "Enter a valid link starting with http:// or https://.",
     "viewRepo": "Repository",
     "sheetCreateTitle": "Add team",
-    "sheetEditTitle": "Edit team"
+    "sheetEditTitle": "Edit team",
+    "registrations": {
+      "open": "Import registrations",
+      "title": "Import team registrations",
+      "description": "Upload the registration form's responses sheet, downloaded from Google Sheets as .xlsx or .csv. Each response becomes a team in this event.",
+      "chooseFile": "Choose the responses file",
+      "chooseAnother": "Choose another file",
+      "fileHint": ".xlsx or .csv, one response per row",
+      "privacy": "Only team names, member names and project details are imported. Phone numbers, e-mail addresses, ages and consent answers stay in your file.",
+      "unnamed": "No team name",
+      "confirmIdle": "Import teams",
+      "importError": "Couldn't import the teams. Check the Teams list for any that were added, then try again.",
+      "issues": {
+        "missingName": "Skipped: no team name",
+        "duplicateInFile": "Skipped: this team answered again later",
+        "alreadyInEvent": "Skipped: already in this event",
+        "badRepoUrl": "Repository answer isn't a link, left empty",
+        "descriptionTrimmed": "Description cut to 5,000 characters"
+      },
+      "errors": {
+        "unreadable": "This file couldn't be read. Download the responses sheet as .xlsx or .csv and try again.",
+        "empty": "This sheet has no responses.",
+        "no_team_column": "This sheet has no \"Numele echipei\" column, so it doesn't look like the registration responses."
+      },
+      "summary": "Teams ready to import: {{count}}.",
+      "summarySkipped": "Rows skipped: {{count}}.",
+      "summaryThemes": "Themes used: {{count}}. Any this event doesn't have yet are added.",
+      "memberCount": "members: {{count}}",
+      "confirm": "Import teams ({{count}})",
+      "imported": "Teams imported: {{count}}."
+    }
   },
   "scoring": {
     "title": "Your teams",
@@ -505,7 +554,8 @@
     "placeholderEmailNote": "Jurors are imported with placeholder email addresses. Add their real ones afterwards from the Users page.",
     "importButton": "Import event",
     "importing": "Importing…",
-    "success": "{{name}} imported."
+    "success": "{{name}} imported.",
+    "registrationsNote": "This brings in a finished evaluation workbook as a new event. To add teams from the registration form, open the event's Teams tab and choose Import registrations."
   },
   "export": {
     "open": "Export",

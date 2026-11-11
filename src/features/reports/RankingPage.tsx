@@ -1,3 +1,4 @@
+import { cn } from '@/lib/cn'
 import { Trophy } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -49,7 +50,7 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
 
       <Card>
         <div className="-mx-5 overflow-x-auto px-5 py-5">
-          <table className="w-full min-w-max border-separate border-spacing-0 text-sm">
+          <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
             <caption className="sr-only">{t('reports.rankingPage.tableCaption')}</caption>
             <thead>
               <tr className="text-left text-ink-muted">
@@ -81,7 +82,10 @@ export function RankingView({ eventId, ranked, teams, themeNames }: RankingViewP
                     <td className="px-3 py-2.5">
                       <Link
                         to={`/admin/events/${eventId}/reports/teams/${entry.teamId}`}
-                        className="font-semibold underline-offset-2 hover:underline"
+                        className={cn(
+                          'font-semibold underline-offset-2 hover:underline',
+                          entry.rank === 1 && entry.final !== null && 'marked-text',
+                        )}
                       >
                         {team?.name ?? entry.teamId}
                       </Link>

@@ -35,27 +35,33 @@ export function LiveRanking({ ranked, teams }: LiveRankingProps) {
   }
 
   return (
-    <ol aria-label={t('dashboard.ranking.heading')} className="flex flex-col gap-2">
+    <ol aria-label={t('dashboard.ranking.heading')} className="divide-y divide-line border-y border-line">
       {ranked.map((entry) => {
         const team = teamsById.get(entry.teamId)
         const name = team?.name ?? entry.teamId
         const notScored = entry.final === null && !team?.noShow
+        const leads = entry.rank === 1 && entry.final !== null
 
         return (
           <motion.li
             key={entry.teamId}
             layout
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="flex items-center gap-4 rounded-card bg-surface px-4 py-3 ring-1 ring-line"
+            className="flex items-center gap-4 py-3"
           >
-            <span className="numeral w-9 shrink-0 text-right text-2xl leading-none text-ink-faint">
+            <span
+              className={cn(
+                'numeral w-8 shrink-0 text-right text-3xl leading-none',
+                !leads && 'text-ink-faint',
+              )}
+            >
               {entry.rank ?? '–'}
             </span>
             <span className="min-w-0 flex-1">
               <span
                 className={cn('block font-semibold break-words', team?.noShow && 'text-ink-muted line-through')}
               >
-                {name}
+                <span className={cn(leads && 'marked-text')}>{name}</span>
               </span>
               <span className="mt-1 flex flex-wrap gap-1.5">
                 {team?.noShow && <Badge>{t('teams.noShowBadge')}</Badge>}
