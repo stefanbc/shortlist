@@ -33,4 +33,8 @@ describe('production Content-Security-Policy (vercel.json)', () => {
     expect(directive('script-src')).not.toContain("'unsafe-eval'")
   })
 
+
+  it('lets the team form ask GitHub whether a repository is public', () => {
+    expect(directive('connect-src')).toContain('https://api.github.com')
+  })
 })

@@ -16,6 +16,9 @@ import {
 } from './api'
 import { TeamsPage } from './TeamsPage'
 
+// The team form asks GitHub about a repository link as it is typed; not from a test.
+vi.mock('./repoCheck', () => ({ checkRepo: vi.fn().mockResolvedValue('public') }))
+
 vi.mock('@/features/events/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/events/api')>()
   return { ...actual, useEvent: vi.fn() }
@@ -115,7 +118,9 @@ describe('TeamsPage', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(
-      await screen.findByText('Enter a valid link starting with http:// or https://.'),
+      await screen.findByText(
+        'Enter a GitHub repository link, like https://github.com/team/project.',
+      ),
     ).toBeInTheDocument()
     expect(saveTeam).not.toHaveBeenCalled()
   })

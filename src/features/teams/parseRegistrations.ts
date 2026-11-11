@@ -1,4 +1,5 @@
 import type ExcelJS from 'exceljs'
+import { parseRepoUrl } from '@/domain/repoUrl'
 
 /**
  * Reads the team registration sheet: the Google Form responses, downloaded from Google
@@ -163,18 +164,10 @@ function orNull(value: string): string | null {
   return value === '' ? null : value
 }
 
-/** Accepts a full link, or a bare "github.com/team/repo" that only lacks the scheme. */
+/** The repository answer as a canonical GitHub link, or null when it isn't one. */
 export function normalizeRepoUrl(value: string): string | null {
-  const text = value.trim()
-  if (text === '') return null
-  const candidate = /^https?:\/\//i.test(text) ? text : /^[\w-]+(\.[\w-]+)+\//.test(text) ? `https://${text}` : null
-  if (!candidate || /\s/.test(candidate)) return null
-  try {
-    const url = new URL(candidate)
-    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString() : null
-  } catch {
-    return null
-  }
+  const parsed = parseRepoUrl(value)
+  return parsed.ok ? parsed.url : null
 }
 
 interface Columns {

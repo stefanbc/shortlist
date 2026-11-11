@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
 import type { ParseKeys, TFunction } from 'i18next'
 import { teamInputSchema, type TeamInput } from '@/domain/schemas'
+import { parseRepoUrl } from '@/domain/repoUrl'
 import type { Id, Team } from '@/domain/types'
 import { supabase } from '@/lib/supabase'
 import { normalizeLabel, type ParsedRegistration } from './parseRegistrations'
@@ -309,12 +310,19 @@ export function toTeamFormValue(team: TeamWithProject): TeamFormValue {
   }
 }
 
-export type TeamFormErrorCode = 'nameRequired' | 'repoUrlInvalid' | 'descriptionTooLong'
+export type TeamFormErrorCode =
+  | 'nameRequired'
+  | 'repoUrlInvalid'
+  | 'repoUrlNotGithub'
+  | 'repoUrlNotRepo'
+  | 'descriptionTooLong'
 export type TeamFormErrors = Partial<Record<'name' | 'repoUrl' | 'description', TeamFormErrorCode>>
 
 export const TEAM_FORM_ERROR_KEYS: Record<TeamFormErrorCode, ParseKeys> = {
   nameRequired: 'teams.nameRequired',
   repoUrlInvalid: 'teams.repoUrlInvalid',
+  repoUrlNotGithub: 'teams.repoUrlNotGithub',
+  repoUrlNotRepo: 'teams.repoUrlNotRepo',
   descriptionTooLong: 'teams.descriptionTooLong',
 }
 
@@ -332,6 +340,19 @@ export function validateTeamForm(
   form: TeamFormValue,
   pitchOrder: number,
 ): { data: TeamInput } | { errors: TeamFormErrors } {
+  // The link is checked first and stored in its canonical form, so every saved link is a
+  // GitHub repository address jurors can open.
+  const repoText = form.repoUrl.trim()
+  const repo = repoText === '' ? null : parseRepoUrl(repoText)
+  const repoError: TeamFormErrorCode | undefined =
+    repo === null || repo.ok
+      ? undefined
+      : repo.problem === 'notGithub'
+        ? 'repoUrlNotGithub'
+        : repo.problem === 'notRepo'
+          ? 'repoUrlNotRepo'
+          : 'repoUrlInvalid'
+
   const result = teamInputSchema.safeParse({
     name: form.name,
     members: form.members,
@@ -340,12 +361,14 @@ export function validateTeamForm(
       name: form.projectName.trim() || null,
       description: form.projectDescription.trim() || null,
       themeId: form.themeId || null,
-      repoUrl: form.repoUrl.trim() || null,
+      repoUrl: repo?.ok ? repo.url : null,
     },
   })
-  if (result.success) return { data: result.data }
+  if (result.success && !repoError) return { data: result.data }
 
   const errors: TeamFormErrors = {}
+  if (repoError) errors.repoUrl = repoError
+  if (result.success) return { errors }
   for (const issue of result.error.issues) {
     const path = issue.path.join('.')
     if (path === 'name') errors.name ??= 'nameRequired'

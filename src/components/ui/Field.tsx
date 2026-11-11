@@ -9,21 +9,37 @@ type FieldProps = {
   hint?: ReactNode
   error?: ReactNode
   optional?: boolean
+  /** `text` for a control made of several inputs (a date picker): the label is then a
+   * caption with id `${id}-label` rather than a <label> pointing at one input. */
+  labelAs?: 'label' | 'text'
   className?: string
   children: ReactNode
 }
 
 /** Label + control + hint/error. Give the control `aria-describedby={describedBy(id, …)}` (from fieldStyles). */
-export function Field({ id, label, hint, error, optional, className, children }: FieldProps) {
+export function Field({
+  id,
+  label,
+  hint,
+  error,
+  optional,
+  labelAs = 'label',
+  className,
+  children,
+}: FieldProps) {
+  const Label = labelAs === 'label' ? 'label' : 'span'
   const { t } = useTranslation()
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="text-sm font-medium text-ink">
+      <Label
+        {...(labelAs === 'label' ? { htmlFor: id } : { id: `${id}-label` })}
+        className="text-sm font-medium text-ink"
+      >
         {label}
         {optional && (
           <span className="ml-1.5 font-normal text-ink-faint">({t('common.optional')})</span>
         )}
-      </label>
+      </Label>
       {children}
       {error ? (
         <p id={`${id}-error`} className="text-sm text-danger">

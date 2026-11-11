@@ -71,7 +71,7 @@ export function AdminNav({
                   className={cn('relative size-5', isActive && 'text-on-mark')}
                   strokeWidth={isActive ? 2.25 : 1.75}
                 />
-                <span className={cn('relative', sidebar && collapsed && 'sr-only')}>{t(label)}</span>
+                <span className={sidebar && collapsed ? 'sr-only' : 'relative'}>{t(label)}</span>
               </>
             )}
           </NavLink>

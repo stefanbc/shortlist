@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/archivo/wdth.css';
+/* The date picker's own styles sit in the components layer so the rules below, and any
+   utility, can restyle it with the app's tokens. */
+@import 'react-datetime-picker/dist/DateTimePicker.css' layer(components);
+@import 'react-calendar/dist/Calendar.css' layer(components);
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -351,6 +355,137 @@
   .ruled td.numeral {
     font-size: 1.125rem;
     line-height: 1.5rem;
+  }
+
+  /* ---- Date and time field (react-datetime-picker), dressed as one of our controls ---- */
+  .date-time-field .react-datetime-picker {
+    display: flex;
+    width: 100%;
+  }
+  .date-time-field .react-datetime-picker__wrapper {
+    height: 2.75rem;
+    align-items: center;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--surface);
+    padding-inline: 0.75rem 0.25rem;
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+    font-variant-numeric: tabular-nums;
+    transition: box-shadow var(--duration-fast);
+  }
+  .date-time-field .react-datetime-picker__wrapper:hover {
+    box-shadow: inset 0 0 0 1px var(--ink-faint);
+  }
+  .date-time-field .react-datetime-picker:focus-within .react-datetime-picker__wrapper,
+  .date-time-field .react-datetime-picker--open .react-datetime-picker__wrapper {
+    box-shadow: inset 0 0 0 2px var(--ring);
+  }
+  .date-time-field[data-invalid] .react-datetime-picker__wrapper {
+    box-shadow: inset 0 0 0 2px var(--danger);
+  }
+  .date-time-field .react-datetime-picker__inputGroup {
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .date-time-field .react-datetime-picker__inputGroup__input {
+    height: 1.75rem;
+    border-radius: 0.2rem;
+    color: var(--ink);
+    outline: none;
+  }
+  .date-time-field .react-datetime-picker__inputGroup__input:focus {
+    background: var(--mark);
+    color: var(--on-mark);
+  }
+  .date-time-field .react-datetime-picker__inputGroup__input:invalid {
+    background: var(--danger-soft);
+  }
+  .date-time-field .react-datetime-picker__inputGroup__amPm {
+    background: transparent;
+  }
+  .date-time-field .react-datetime-picker__button {
+    display: grid;
+    width: 2.5rem;
+    height: 2.5rem;
+    place-items: center;
+    border-radius: var(--radius-control);
+    color: var(--ink-muted);
+  }
+  .date-time-field .react-datetime-picker__button:enabled:hover,
+  .date-time-field .react-datetime-picker__button:enabled:focus-visible {
+    color: var(--ink);
+  }
+  .date-time-field .react-datetime-picker__calendar {
+    z-index: 70;
+    width: min(20rem, calc(100vw - 2rem));
+  }
+  .date-time-field .react-calendar {
+    width: 100%;
+    margin-top: 0.375rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    padding: 0.5rem;
+    color: var(--ink);
+    font-family: inherit;
+    line-height: 1.2;
+    box-shadow: var(--shadow-pop);
+  }
+  .date-time-field .react-calendar button {
+    border-radius: 0.25rem;
+    color: inherit;
+  }
+  .date-time-field .react-calendar__navigation {
+    height: 2.5rem;
+    margin-bottom: 0.25rem;
+  }
+  .date-time-field .react-calendar__navigation button {
+    min-width: 2.5rem;
+    font-weight: 600;
+  }
+  .date-time-field .react-calendar__month-view__weekdays {
+    color: var(--ink-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: none;
+  }
+  .date-time-field .react-calendar__month-view__weekdays abbr {
+    text-decoration: none;
+  }
+  .date-time-field .react-calendar__tile {
+    height: 2.5rem;
+    padding: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .date-time-field .react-calendar__month-view__days__day--weekend {
+    color: inherit;
+  }
+  .date-time-field .react-calendar__month-view__days__day--neighboringMonth {
+    color: var(--ink-faint);
+  }
+  .date-time-field .react-calendar__tile--now {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+  .date-time-field .react-calendar__navigation button:enabled:hover,
+  .date-time-field .react-calendar__navigation button:enabled:focus,
+  .date-time-field .react-calendar__tile:enabled:hover,
+  .date-time-field .react-calendar__tile:enabled:focus {
+    background: var(--raised);
+  }
+  .date-time-field .react-calendar__navigation button:disabled,
+  .date-time-field .react-calendar__tile:disabled {
+    background: transparent;
+    color: var(--ink-faint);
+  }
+  /* The chosen day is the highlighted one. */
+  .date-time-field .react-calendar__tile--active,
+  .date-time-field .react-calendar__tile--active:enabled:hover,
+  .date-time-field .react-calendar__tile--active:enabled:focus,
+  .date-time-field .react-calendar__tile--hasActive {
+    background: var(--mark);
+    color: var(--on-mark);
+    font-weight: 700;
   }
 
   /* One pass of the pen, played when a juror picks a score. */

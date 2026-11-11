@@ -62,40 +62,47 @@ export function NowPitchingCard({ event, teams }: { event: EventRow; teams: Team
   }
 
   return (
-    <section aria-labelledby="on-stage-heading" className="flex flex-col gap-4 p-5 sm:p-6">
-      <h2 id="on-stage-heading" className="text-sm font-semibold text-ink-muted">
-        {t('dashboard.nowPitching.heading')}
-      </h2>
-
-      <div className="min-w-0">
-        <p className="title text-3xl break-words sm:text-4xl">
-          {current ? (
-            <span className="marked-text">{current.name}</span>
-          ) : (
-            <span className="text-ink-muted">{t('dashboard.nowPitching.none')}</span>
-          )}
-        </p>
-        {current?.project.name && <p className="mt-2 text-ink-muted">{current.project.name}</p>}
-        <p className="mt-2 text-sm text-ink-muted">
-          {next
-            ? t('dashboard.nowPitching.upNext', { team: next.name })
-            : current
-              ? t('dashboard.nowPitching.lastTeam')
-              : null}
-        </p>
+    <section aria-labelledby="on-stage-heading" className="flex flex-col p-5 sm:p-6">
+      <div className="flex items-baseline justify-between gap-4">
+        <h2 id="on-stage-heading" className="text-sm font-semibold text-ink-muted">
+          {t('dashboard.nowPitching.heading')}
+        </h2>
+        {current && (
+          <p className="text-sm text-ink-muted tabular-nums">
+            {t('dashboard.nowPitching.position', { n: currentIndex + 1, total: teams.length })}
+          </p>
+        )}
       </div>
 
-      <div className="mt-auto flex flex-col gap-2 pt-2">
-        <Button size="lg" disabled={!next} onClick={() => next && void set(next.id)} className="self-start">
-          <SkipForward aria-hidden />
-          {t('dashboard.nowPitching.next')}
-        </Button>
-        <div className="flex flex-wrap items-center gap-2">
+      <p className="title mt-3 text-3xl break-words sm:text-4xl">
+        {current ? (
+          <span className="marked-text">{current.name}</span>
+        ) : (
+          <span className="text-ink-muted">{t('dashboard.nowPitching.none')}</span>
+        )}
+      </p>
+      <p className="mt-2 min-h-6 text-ink-muted">{current?.project.name}</p>
+
+      {/* The rundown: what comes next, then the ways to change who is on stage. */}
+      <div className="mt-4 divide-y divide-line border-y border-line">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+          <p className="min-w-0">
+            <span className="block text-sm text-ink-muted">{t('dashboard.nowPitching.upNextLabel')}</span>
+            <span className="block font-semibold break-words">
+              {next ? next.name : t('dashboard.nowPitching.lastTeam')}
+            </span>
+          </p>
+          <Button disabled={!next} onClick={() => next && void set(next.id)}>
+            <SkipForward aria-hidden />
+            {t('dashboard.nowPitching.next')}
+          </Button>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
           <Select
             aria-label={t('dashboard.nowPitching.selectLabel')}
             value={current?.id ?? ''}
             disabled={teams.length === 0}
-            onChange={(e) => void set(e.target.value || null)}
+            onValueChange={(teamId) => void set(teamId || null)}
             className="w-full sm:w-64"
           >
             <option value="">{t('dashboard.nowPitching.placeholder')}</option>

@@ -64,8 +64,7 @@ function AssignJurorDialog({
               <Select
                 id="assign-juror-picker"
                 value={jurorId}
-                onChange={(e) => setJurorId(e.target.value)}
-                autoFocus
+                onValueChange={setJurorId}
               >
                 <option value="">{t('eventJurors.pickerPlaceholder')}</option>
                 {candidates.map((juror) => (

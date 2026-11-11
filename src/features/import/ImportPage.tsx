@@ -1,4 +1,4 @@
-import { AlertTriangle, FileSpreadsheet, Info, UploadCloud } from 'lucide-react'
+import { AlertTriangle, Download, FileSpreadsheet, Info, UploadCloud } from 'lucide-react'
 import { useRef, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -15,6 +15,8 @@ import type { Criterion, Score, Team } from '@/domain/types'
 import { cn } from '@/lib/cn'
 import { importErrorCode, importErrorMessage, useImportEvent, workbookErrorMessage } from './api'
 import type { ParsedEvent, ParsedTeam, WorkbookFormatErrorCode } from './parseWorkbook'
+import { downloadBlob } from '@/lib/download'
+import { buildWorkbookTemplate, WORKBOOK_TEMPLATE_FILENAME } from './workbookTemplate'
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024
 const DEFAULT_EVENT_NAME = 'Astra Hack'
@@ -223,6 +225,21 @@ export function ImportPage() {
 
       <div className="flex flex-col gap-6">
         <p className="-mt-3 max-w-prose text-sm text-ink-muted">{t('import.registrationsNote')}</p>
+        <p className="-mt-3 text-sm text-ink-muted">
+          {t('import.templateHint')}{' '}
+          <button
+            type="button"
+            onClick={() =>
+              void buildWorkbookTemplate()
+                .then((blob) => downloadBlob(blob, WORKBOOK_TEMPLATE_FILENAME))
+                .catch(() => toast.error(t('import.templateError')))
+            }
+            className="inline-flex items-center gap-1 rounded-control font-semibold text-accent-ink underline underline-offset-2"
+          >
+            <Download aria-hidden className="size-3.5" />
+            {t('import.downloadTemplate')}
+          </button>
+        </p>
         <DropZone
           status={status}
           message={status === 'error' ? parseError : null}

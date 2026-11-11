@@ -12,6 +12,7 @@ import {
   useSetUserRole,
 } from './api'
 import { UsersPage } from './UsersPage'
+import { chooseOption } from '@/test/select'
 
 vi.mock('./api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api')>()
@@ -142,7 +143,7 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'admin')
+    await chooseOption(user, screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'Admin')
 
     const dialog = await screen.findByRole('alertdialog')
     expect(dialog).toHaveTextContent(/login link/i)
@@ -163,12 +164,12 @@ describe('UsersPage', () => {
 
     renderPage()
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'admin')
+    await chooseOption(user, screen.getByRole('combobox', { name: 'Role: Alex Example' }), 'Admin')
     await screen.findByRole('alertdialog')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(setRole).not.toHaveBeenCalled()
-    expect(screen.getByRole('combobox', { name: 'Role: Alex Example' })).toHaveValue('juror')
+    expect(screen.getByRole('combobox', { name: 'Role: Alex Example' })).toHaveTextContent('Juror')
   })
 })

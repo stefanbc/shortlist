@@ -21,7 +21,15 @@
     "goHome": "Mergi la început",
     "errorTitle": "Ceva nu a funcționat pe această pagină",
     "errorBody": "Reîncarcă pagina. Dacă problema persistă, notele introduse rămân salvate pe acest dispozitiv.",
-    "showMore": "Arată încă {{count}} (au rămas {{remaining}})"
+    "showMore": "Arată încă {{count}} (au rămas {{remaining}})",
+    "date": {
+      "day": "zi",
+      "month": "lună",
+      "year": "an",
+      "hour": "oră",
+      "minute": "minut",
+      "openCalendar": "deschide calendarul"
+    }
   },
   "nav": {
     "main": "Navigare principală",
@@ -86,8 +94,9 @@
       "next": "Echipa următoare",
       "clear": "Golește",
       "error": "Nu am putut actualiza cine prezintă. Încearcă din nou.",
-      "upNext": "Urmează: {{team}}",
-      "lastTeam": "Ultima echipă din ordinea de prezentare."
+      "lastTeam": "Ultima echipă din ordinea de prezentare.",
+      "position": "Echipa {{n}} din {{total}}",
+      "upNextLabel": "Urmează"
     },
     "progress": {
       "heading": "Progres jurizare",
@@ -169,7 +178,17 @@
       "open": "Deschis",
       "locked": "Blocat"
     },
-    "detailsTitle": "Detalii"
+    "detailsTitle": "Detalii",
+    "overview": {
+      "heading": "Configurare pe scurt",
+      "teams": "Echipe",
+      "criteria": "Criterii",
+      "jurors": "Jurați",
+      "themes": "Teme",
+      "teamsMissing": "Adaugă echipe",
+      "criteriaMissing": "Adaugă criterii",
+      "jurorsMissing": "Alocă jurați"
+    }
   },
   "criteria": {
     "themesHeading": "Teme",
@@ -234,8 +253,8 @@
     "themeLabel": "Temă",
     "themeNone": "Fără temă",
     "repoUrlLabel": "Repository GitHub",
-    "repoUrlHint": "Link către repository-ul echipei (opțional).",
-    "repoUrlInvalid": "Introdu un link valid, care începe cu http:// sau https://.",
+    "repoUrlHint": "Repository-ul echipei pe GitHub. Jurații îl pot deschide în timpul jurizării.",
+    "repoUrlInvalid": "Introdu un link către un repository GitHub, de forma https://github.com/echipa/proiect.",
     "viewRepo": "Repository",
     "sheetCreateTitle": "Adaugă echipă",
     "sheetEditTitle": "Editează echipa",
@@ -254,7 +273,7 @@
         "missingName": "Omis: fără nume de echipă",
         "duplicateInFile": "Omis: echipa a răspuns din nou mai târziu",
         "alreadyInEvent": "Omis: există deja în eveniment",
-        "badRepoUrl": "Răspunsul pentru repository nu este un link, lăsat gol",
+        "badRepoUrl": "Răspunsul pentru repository nu este un link către un repository GitHub, lăsat gol",
         "descriptionTrimmed": "Descriere scurtată la 5.000 de caractere"
       },
       "errors": {
@@ -267,7 +286,17 @@
       "summaryThemes": "Teme folosite: {{count}}. Cele care nu există încă în eveniment sunt adăugate.",
       "memberCount": "membri: {{count}}",
       "confirm": "Importă echipele ({{count}})",
-      "imported": "Echipe importate: {{count}}."
+      "imported": "Echipe importate: {{count}}.",
+      "templateHint": "Pregătești foaia manual?",
+      "downloadTemplate": "Descarcă un șablon"
+    },
+    "repoUrlNotGithub": "Linkul nu este pe github.com. Introdu linkul către repository-ul GitHub al echipei.",
+    "repoUrlNotRepo": "Aceasta este o pagină GitHub, nu un repository. Linkul trebuie să fie de forma https://github.com/echipa/proiect.",
+    "repoCheck": {
+      "checking": "Se verifică la GitHub…",
+      "public": "Repository public găsit: {{repo}}.",
+      "missing": "GitHub nu are un repository public la {{repo}}. Poate fi privat sau scris greșit, iar jurații nu îl vor putea deschide până nu devine public.",
+      "unknown": "Verificarea la GitHub nu a fost posibilă acum. Linkul este salvat așa cum a fost scris."
     }
   },
   "scoring": {
@@ -352,7 +381,16 @@
     "discardRejected": "Renunță la nota nesalvată",
     "noCriteriaTitle": "Niciun criteriu încă",
     "noCriteriaBody": "Organizatorul nu a stabilit încă criteriile de notare pentru acest eveniment. Revino după ce le adaugă.",
-    "breakHeading": "Pauză"
+    "breakHeading": "Pauză",
+    "brief": {
+      "heading": "Echipă și proiect",
+      "description": "Despre proiect",
+      "members": "Membrii echipei ({{count}})",
+      "openRepo": "Deschide repository-ul",
+      "showAll": "Arată toată descrierea",
+      "showLess": "Arată mai puțin",
+      "empty": "Organizatorul nu a adăugat încă detalii pentru această echipă."
+    }
   },
   "reports": {
     "podium": "Podium",
@@ -480,7 +518,12 @@
     "confirmRevokeBody": "{{name}} nu se va mai putea autentifica cu el. Poți genera unul nou oricând.",
     "linkRevokeError": "Linkul nu a putut fi revocat. Încearcă din nou.",
     "linkRevokedHint": "Linkul pentru {{name}} este revocat. Generează unul nou când are nevoie.",
-    "qrTitle": "Cod QR cu linkul de autentificare pentru {{name}}"
+    "qrTitle": "Cod QR cu linkul de autentificare pentru {{name}}",
+    "filterAll": "Toți",
+    "filterAdmins": "Administratori",
+    "filterJurors": "Jurați",
+    "filterInactive": "Inactivi",
+    "adminAccess": "Gestionează toate evenimentele"
   },
   "eventJurors": {
     "heading": "Jurați repartizați",
@@ -547,7 +590,10 @@
     "importButton": "Importă evenimentul",
     "importing": "Se importă…",
     "success": "{{name}} a fost importat.",
-    "registrationsNote": "Aici se importă un registru de evaluare completat, ca eveniment nou. Pentru a adăuga echipele din formularul de înscriere, deschide fila Echipe a evenimentului și alege Importă înscrierile."
+    "registrationsNote": "Aici se importă un registru de evaluare completat, ca eveniment nou. Pentru a adăuga echipele din formularul de înscriere, deschide fila Echipe a evenimentului și alege Importă înscrierile.",
+    "templateHint": "Nu ești sigur de format?",
+    "downloadTemplate": "Descarcă un registru exemplu",
+    "templateError": "Registrul exemplu nu a putut fi generat. Încearcă din nou."
   },
   "export": {
     "open": "Exportă",

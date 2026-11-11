@@ -15,6 +15,7 @@ import {
   type TeamFormErrors,
   type TeamFormValue,
 } from './api'
+import { RepoLinkStatus } from './RepoLinkStatus'
 
 type TeamFormProps = {
   /** Prefixes each input's id. Only one TeamForm is ever mounted at a time (the create/edit
@@ -161,7 +162,7 @@ export function TeamForm({
           <Select
             id={`${idPrefix}-theme`}
             value={value.themeId}
-            onChange={(e) => setValue((prev) => ({ ...prev, themeId: e.target.value }))}
+            onValueChange={(themeId) => setValue((prev) => ({ ...prev, themeId }))}
           >
             <option value="">{t('teams.themeNone')}</option>
             {themes.map((theme) => (
@@ -186,7 +187,7 @@ export function TeamForm({
             // never reaching our own (translated, schema-backed) error message below.
             type="text"
             inputMode="url"
-            placeholder="https://github.com/..."
+            placeholder="https://github.com/team/project"
             value={value.repoUrl}
             aria-describedby={describedBy(`${idPrefix}-repo-url`, {
               hint: t('teams.repoUrlHint'),
@@ -195,6 +196,7 @@ export function TeamForm({
             aria-invalid={Boolean(errors.repoUrl)}
             onChange={(e) => setValue((prev) => ({ ...prev, repoUrl: e.target.value }))}
           />
+          <RepoLinkStatus value={value.repoUrl} />
         </Field>
       </div>
 

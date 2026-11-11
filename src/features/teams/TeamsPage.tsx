@@ -283,7 +283,7 @@ export function TeamsPage() {
             <Select
               aria-label={t('teams.themeFilterLabel')}
               value={themeFilter}
-              onChange={(e) => setThemeFilter(e.target.value)}
+              onValueChange={setThemeFilter}
               className="sm:w-56"
             >
               <option value="all">{t('teams.themeFilterAll')}</option>

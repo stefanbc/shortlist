@@ -1,10 +1,19 @@
-import { KeyRound, Mail, Pencil, Plus, Search, UserX, Users as UsersIcon } from 'lucide-react'
+import type { ParseKeys } from 'i18next'
+import {
+  KeyRound,
+  Mail,
+  Pencil,
+  Plus,
+  Search,
+  UserCheck,
+  UserX,
+  Users as UsersIcon,
+} from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/Dialog'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -35,6 +44,7 @@ import {
   type UserFormValue,
 } from './api'
 import { JurorLinkDialog } from './JurorLinkDialog'
+import { cn } from '@/lib/cn'
 
 function CreateUserDialog({
   open,
@@ -114,8 +124,8 @@ function CreateUserDialog({
             <Select
               id="new-user-role"
               value={form.role}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, role: e.target.value as UserFormValue['role'] }))
+              onValueChange={(role) =>
+                setForm((prev) => ({ ...prev, role: role as UserFormValue['role'] }))
               }
             >
               <option value="juror">{t('users.roleJuror')}</option>
@@ -224,74 +234,103 @@ function UserRow({
   const placeholderEmail = isPlaceholderEmail(user.email)
 
   return (
-    <div className="flex flex-col gap-3 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="truncate font-semibold">{user.displayName}</span>
-            {isSelf && <Badge tone="accent">{t('users.you')}</Badge>}
-            {!user.active && <Badge tone="danger">{t('users.statusInactive')}</Badge>}
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-ink-muted">
-            <Mail aria-hidden className="size-3.5 shrink-0" />
-            {placeholderEmail ? (
-              <span className="text-ink-faint italic">{t('users.noEmail')}</span>
-            ) : (
-              <span className="truncate">{user.email}</span>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={`${placeholderEmail ? t('users.addEmail') : t('users.editEmail')}: ${user.displayName}`}
-              onClick={() => onEditEmail(user)}
-            >
-              <Pencil aria-hidden className="size-3.5" />
-            </Button>
-          </div>
-          {user.role === 'juror' && (
-            <p className="mt-1.5 text-sm text-ink-faint">
-              {t('users.eventsJudgedLabel')}:{' '}
-              {eventNames.length > 0 ? eventNames.join(', ') : t('users.eventsJudgedNone')}
-            </p>
-          )}
+    <div
+      className={cn(
+        'grid gap-x-6 gap-y-3 px-4 py-3.5 sm:px-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_auto] lg:items-center',
+        !user.active && 'bg-canvas',
+      )}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={cn('font-semibold break-words', !user.active && 'text-ink-muted')}>
+            {user.displayName}
+          </span>
+          {isSelf && <Badge tone="accent">{t('users.you')}</Badge>}
+          {!user.active && <Badge tone="danger">{t('users.statusInactive')}</Badge>}
         </div>
-
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
-          <Select
-            aria-label={`${t('users.roleLabel')}: ${user.displayName}`}
-            value={user.role}
-            disabled={isSelf}
-            className="w-32"
-            onChange={(e) => onChangeRole(user, e.target.value as 'admin' | 'juror')}
-          >
-            <option value="juror">{t('users.roleJuror')}</option>
-            <option value="admin">{t('users.roleAdmin')}</option>
-          </Select>
-
-          {user.role === 'juror' && (
-            <Button variant="secondary" size="sm" className="h-11" onClick={() => onOpenLink(user)}>
-              <KeyRound aria-hidden />
-              {t('users.loginLink')}
-            </Button>
+        <div className="flex items-center gap-1 text-sm text-ink-muted">
+          <Mail aria-hidden className="size-3.5 shrink-0" />
+          {placeholderEmail ? (
+            <span className="text-ink-faint">{t('users.noEmail')}</span>
+          ) : (
+            <span className="min-w-0 truncate">{user.email}</span>
           )}
-
           <Button
             type="button"
-            variant="secondary"
-            size="sm"
-            className="h-11"
-            disabled={isSelf}
-            aria-label={`${user.active ? t('users.deactivate') : t('users.activate')}: ${user.displayName}`}
-            onClick={() => onRequestActive(user, !user.active)}
+            variant="ghost"
+            size="icon"
+            className="size-9"
+            aria-label={`${placeholderEmail ? t('users.addEmail') : t('users.editEmail')}: ${user.displayName}`}
+            onClick={() => onEditEmail(user)}
           >
-            <UserX aria-hidden />
-            {user.active ? t('users.deactivate') : t('users.activate')}
+            <Pencil aria-hidden className="size-3.5" />
           </Button>
         </div>
       </div>
+
+      <p className="min-w-0 text-sm text-ink-muted">
+        {user.role === 'juror' ? (
+          <>
+            <span className="text-ink-faint">{t('users.eventsJudgedLabel')}: </span>
+            <span className="break-words">
+              {eventNames.length > 0 ? eventNames.join(', ') : t('users.eventsJudgedNone')}
+            </span>
+          </>
+        ) : (
+          t('users.adminAccess')
+        )}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <Select
+          aria-label={`${t('users.roleLabel')}: ${user.displayName}`}
+          value={user.role}
+          disabled={isSelf}
+          className="w-32"
+          onValueChange={(role) => onChangeRole(user, role as 'admin' | 'juror')}
+        >
+          <option value="juror">{t('users.roleJuror')}</option>
+          <option value="admin">{t('users.roleAdmin')}</option>
+        </Select>
+
+        {user.role === 'juror' && (
+          <Button variant="secondary" size="sm" className="h-11" onClick={() => onOpenLink(user)}>
+            <KeyRound aria-hidden />
+            {t('users.loginLink')}
+          </Button>
+        )}
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-11"
+          disabled={isSelf}
+          aria-label={`${user.active ? t('users.deactivate') : t('users.activate')}: ${user.displayName}`}
+          onClick={() => onRequestActive(user, !user.active)}
+        >
+          {user.active ? <UserX aria-hidden /> : <UserCheck aria-hidden />}
+          {user.active ? t('users.deactivate') : t('users.activate')}
+        </Button>
+      </div>
     </div>
   )
+}
+
+type UserFilter = 'all' | 'admin' | 'juror' | 'inactive'
+
+const FILTERS: Record<UserFilter, (user: Profile) => boolean> = {
+  all: () => true,
+  admin: (user) => user.role === 'admin',
+  juror: (user) => user.role === 'juror',
+  inactive: (user) => !user.active,
+}
+
+const FILTER_LABELS: Record<UserFilter, ParseKeys> = {
+  all: 'users.filterAll',
+  admin: 'users.filterAdmins',
+  juror: 'users.filterJurors',
+  inactive: 'users.filterInactive',
 }
 
 type PendingAction =
@@ -308,7 +347,7 @@ export function UsersPage() {
   const setUserActive = useSetUserActive()
 
   const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState<'all' | 'admin' | 'juror'>('all')
+  const [filter, setFilter] = useState<UserFilter>('all')
   const [createOpen, setCreateOpen] = useState(false)
   const [emailUser, setEmailUser] = useState<Profile | null>(null)
   const [linkUser, setLinkUser] = useState<Profile | null>(null)
@@ -317,7 +356,7 @@ export function UsersPage() {
   const allUsers = profiles ?? []
   const normalizedSearch = search.trim().toLowerCase()
   const filteredUsers = allUsers.filter((user) => {
-    if (roleFilter !== 'all' && user.role !== roleFilter) return false
+    if (!FILTERS[filter](user)) return false
     if (!normalizedSearch) return true
     const haystack = `${user.displayName} ${user.email ?? ''}`.toLowerCase()
     return haystack.includes(normalizedSearch)
@@ -378,30 +417,42 @@ export function UsersPage() {
         }
       />
 
-      <Card>
-        <CardHeader className="sr-only">
-          <CardTitle>{t('users.title')}</CardTitle>
-        </CardHeader>
-        <CardBody className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Input
-              aria-label={t('users.searchLabel')}
-              placeholder={t('users.searchPlaceholder')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-11 shrink-0 sm:flex-1"
-            />
-            <Select
-              aria-label={t('users.roleFilterLabel')}
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
-              className="sm:w-48"
-            >
-              <option value="all">{t('users.roleFilterAll')}</option>
-              <option value="admin">{t('users.roleAdmin')}</option>
-              <option value="juror">{t('users.roleJuror')}</option>
-            </Select>
+      <h2 className="sr-only">{t('users.title')}</h2>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            role="group"
+            aria-label={t('users.roleFilterLabel')}
+            className="flex flex-wrap gap-1 rounded-control bg-sunken p-1"
+          >
+            {(Object.keys(FILTERS) as UserFilter[]).map((key) => {
+              const count = allUsers.filter(FILTERS[key]).length
+              if (key === 'inactive' && count === 0) return null
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={filter === key}
+                  onClick={() => setFilter(key)}
+                  className={cn(
+                    'flex h-9 items-center rounded-[0.25rem] px-3 text-sm font-medium whitespace-nowrap text-ink-muted transition-colors duration-(--duration-fast) hover:text-ink',
+                    filter === key &&
+                      'bg-surface font-semibold text-ink ring-1 ring-line-strong dark:bg-raised',
+                  )}
+                >
+                  {`${t(FILTER_LABELS[key])} (${count})`}
+                </button>
+              )
+            })}
           </div>
+          <Input
+            aria-label={t('users.searchLabel')}
+            placeholder={t('users.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-11 lg:max-w-xs"
+          />
+        </div>
 
           {isLoading && <Skeleton className="h-64 w-full" />}
 
@@ -424,7 +475,7 @@ export function UsersPage() {
           )}
 
           {!isLoading && filteredUsers.length > 0 && (
-            <ul className="flex flex-col divide-y divide-line">
+            <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
               {users.visible.map((user) => (
                 <li key={user.id}>
                   <UserRow
@@ -441,8 +492,7 @@ export function UsersPage() {
             </ul>
           )}
           <LoadMore remaining={isLoading ? 0 : users.remaining} onLoadMore={users.loadMore} />
-        </CardBody>
-      </Card>
+      </div>
 
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
       <EmailDialog

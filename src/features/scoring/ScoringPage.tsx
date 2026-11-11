@@ -25,6 +25,7 @@ import { CriterionStrip } from './CriterionStrip'
 import { NowPitchingDialog } from './NowPitchingDialog'
 import { PitchTimer } from './PitchTimer'
 import { RejectedNotice, SyncIndicator } from './SyncStatus'
+import { TeamBrief } from './TeamBrief'
 import { TeamNote } from './TeamNote'
 import { useScoringKeys } from './useScoringKeys'
 
@@ -260,11 +261,15 @@ function TeamScoring({ event, team, position, teamCount, criteria }: TeamScoring
 
       <div className={cn('mt-4', wide && 'grid grid-cols-[minmax(14rem,18rem)_1fr] gap-8')}>
         {wide ? (
-          <aside>
+          <aside className="flex flex-col gap-4">
             <CriterionList {...nav} />
+            <TeamBrief team={team} defaultOpen />
           </aside>
         ) : (
-          <CriterionStrip {...nav} />
+          <>
+            <TeamBrief team={team} defaultOpen={false} className="mb-3" />
+            <CriterionStrip {...nav} />
+          </>
         )}
 
         <div className={cn('flex flex-col gap-3', !wide && 'mt-3')}>

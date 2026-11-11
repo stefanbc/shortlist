@@ -30,3 +30,13 @@ if (typeof window !== 'undefined' && !window.ResizeObserver) {
     disconnect() {}
   }
 }
+
+// Radix Select captures the pointer and scrolls the chosen item into view when it opens;
+// jsdom implements neither.
+if (typeof window !== 'undefined') {
+  const proto = window.HTMLElement.prototype
+  proto.hasPointerCapture ??= () => false
+  proto.setPointerCapture ??= () => {}
+  proto.releasePointerCapture ??= () => {}
+  proto.scrollIntoView ??= () => {}
+}
