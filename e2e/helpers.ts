@@ -13,23 +13,16 @@ export async function setLang(page: Page, lang: 'ro' | 'en'): Promise<void> {
   }, lang)
 }
 
-/** Signs in on /login with the seeded admin's password and waits for the dashboard.
- * Signing in doesn't itself navigate anywhere (the admin is expected to already be headed
- * somewhere, e.g. a bookmark), so this goes to /admin itself once the session is up. */
+/** Signs in on /login with the seeded admin's password and waits for the sign-in itself to
+ * land on the dashboard -- no manual navigation, so every spec that signs in also proves
+ * that a successful sign-in routes the admin to /admin. */
 export async function loginAsAdmin(page: Page, seed: SeedData): Promise<void> {
   await page.goto('/login')
   // getByLabel also matches the tabpanel itself (aria-labelledby points to the same tab
   // trigger text), so scope to the actual form control by role instead.
   await page.getByRole('textbox', { name: 'Email', exact: true }).fill(seed.admin.email)
   await page.getByRole('textbox', { name: 'Password', exact: true }).fill(seed.admin.password)
-  const signIn = page.getByRole('button', { name: 'Sign in' })
-  await signIn.click()
-  // The button disables itself (aria-busy) while signInWithPassword is in flight, and
-  // re-enables once it settles -- the signal that the session (success or failure) is
-  // ready, since the form itself never navigates away on success.
-  await expect(signIn).toBeDisabled()
-  await expect(signIn).toBeEnabled()
-  await page.goto('/admin')
+  await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page).toHaveURL(/\/admin$/)
 }
 

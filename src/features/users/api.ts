@@ -3,6 +3,7 @@ import type { ParseKeys, TFunction } from 'i18next'
 import { PROFILE_COLUMNS, toProfile, type ProfileDbRow } from '@/domain/profiles'
 import { userInputSchema, type UserInput } from '@/domain/schemas'
 import type { Id } from '@/domain/types'
+import { appUrl } from '@/lib/appUrl'
 import { readFunctionsErrorCode } from '@/lib/functionsError'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/stores/session'
@@ -199,13 +200,6 @@ export function useSetUserEmail() {
   })
 }
 
-/** `${VITE_APP_URL}/j/${token}`, falling back to the current origin when the env var
- * isn't set (e.g. local dev without a `.env.local`). */
-function buildJurorLinkUrl(token: string): string {
-  const base = (import.meta.env.VITE_APP_URL as string | undefined)?.replace(/\/$/, '')
-  return `${base || window.location.origin}/j/${token}`
-}
-
 /** Issues a fresh personal login link for one juror, revoking any previous one (the
  * edge function does the revoke). Bound to a specific juror at the hook call site, like
  * `useEventJurors(eventId)` -- the dialog that shows the link is always for one juror. */
@@ -216,7 +210,7 @@ export function useIssueJurorLink(jurorId: Id) {
         body: { action: 'issue', jurorId },
       })
       if (error) throw error
-      return { url: buildJurorLinkUrl(data!.token) }
+      return { url: appUrl(`/j/${data!.token}`) }
     },
   })
 }

@@ -12,6 +12,7 @@ vi.mock('./guards', () => ({
   RequireRole: ({ role, children }: { role: 'admin' | 'juror'; children: ReactNode }) => (
     <div data-guard-role={role}>{children}</div>
   ),
+  RoleHomeRedirect: () => <div>Role home redirect</div>,
 }))
 
 // EventsPage/EventSettingsPage own their data-fetching behaviour (see their own tests);
@@ -120,6 +121,12 @@ describe('router', () => {
     renderAt('/nowhere')
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Go to start' })).toHaveAttribute('href', '/')
+  })
+
+  it('the app root waits for the session and routes by role (magic links land here)', async () => {
+    const router = renderAt('/')
+    expect(await screen.findByText('Role home redirect')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
   })
 
   it('gates /admin behind the admin role guard', async () => {

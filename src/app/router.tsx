@@ -18,7 +18,7 @@ import { ScoringPage } from '@/features/scoring/ScoringPage'
 import { TeamsPage } from '@/features/teams/TeamsPage'
 import { EventJurorsPage } from '@/features/users/EventJurorsPage'
 import { UsersPage } from '@/features/users/UsersPage'
-import { RequireRole } from './guards'
+import { RequireRole, RoleHomeRedirect } from './guards'
 import { NotFoundPage, RouteErrorPage } from './RouteStatus'
 
 
@@ -26,7 +26,7 @@ export const routes: RouteObject[] = [
   {
     errorElement: <RouteErrorPage />,
     children: [
-      { path: '/', element: <Navigate to="/login" replace /> },
+      { path: '/', element: <RoleHomeRedirect /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/j/:token', element: <RedeemJurorLinkPage /> },
       {

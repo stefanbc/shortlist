@@ -105,7 +105,14 @@ access to create/link those — they are not run as part of this repository's au
    ```bash
    supabase secrets set APP_URL=https://your-app.vercel.app
    ```
-6. Deploy the edge functions:
+6. In the dashboard (Authentication → URL Configuration), set **Site URL** to the same
+   production app URL (`APP_URL`, e.g. `https://your-app.vercel.app`) and add
+   `https://your-app.vercel.app/**` to **Redirect URLs**. Admin email-link sign-ins redirect
+   to the app root (`VITE_APP_URL` + `/`), which must be allowed here — otherwise Supabase
+   falls back to the Site URL, and with the default `http://localhost:3000` the link is
+   useless. (Locally, `supabase/config.toml` already allows `http://localhost:5173` and
+   `http://127.0.0.1:5173`.)
+7. Deploy the edge functions:
    ```bash
    supabase functions deploy juror-link admin-users import-event
    ```

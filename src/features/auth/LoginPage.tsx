@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Navigate } from 'react-router'
+import { roleHome } from '@/domain/profiles'
 import { BrandMark } from '@/components/layout/BrandMark'
 import { PreferencesMenu } from '@/components/layout/PreferencesMenu'
 import { Button } from '@/components/ui/Button'
@@ -7,10 +9,13 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
 import { Input } from '@/components/ui/Input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs'
+import { appUrl } from '@/lib/appUrl'
 import { supabase } from '@/lib/supabase'
+import { useSession } from '@/stores/session'
 
 /** Admin sign-in: password, or a one-time email link. Jurors never see this page —
- * they sign in through their personal /j/:token link instead. */
+ * they sign in through their personal /j/:token link instead. A signed-in user (including
+ * one who just signed in here) is sent on to their role's home. */
 export function LoginPage() {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
@@ -20,6 +25,8 @@ export function LoginPage() {
   const [magicLinkPending, setMagicLinkPending] = useState(false)
   const [magicLinkError, setMagicLinkError] = useState<string | null>(null)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const status = useSession((s) => s.status)
+  const profile = useSession((s) => s.profile)
 
   async function handlePasswordSubmit(event: FormEvent) {
     event.preventDefault()
@@ -35,14 +42,18 @@ export function LoginPage() {
     setMagicLinkError(null)
     setMagicLinkPending(true)
     // Only existing admins can request a link — the login form never creates accounts.
+    // The link lands on the app root, which routes by role once the session from the
+    // link's tokens settles; that URL must be in Supabase Auth's Redirect URLs.
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: { shouldCreateUser: false, emailRedirectTo: appUrl('/') },
     })
     setMagicLinkPending(false)
     if (error) setMagicLinkError(t('auth.genericError'))
     else setMagicLinkSent(true)
   }
+
+  if (status === 'signedIn' && profile) return <Navigate to={roleHome(profile.role)} replace />
 
   return (
     <div className="relative grid min-h-svh place-items-center px-4 py-16">

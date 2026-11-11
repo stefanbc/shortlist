@@ -26,3 +26,8 @@ export function toProfile(row: ProfileDbRow): Profile | null {
     active: row.active,
   }
 }
+
+/** Where a signed-in user of each role starts. */
+export function roleHome(role: Profile['role']): '/admin' | '/score' {
+  return role === 'admin' ? '/admin' : '/score'
+}

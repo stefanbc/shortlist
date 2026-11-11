@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useSession } from '@/stores/session'
-import { RequireRole } from './guards'
+import { RequireRole, RoleHomeRedirect } from './guards'
 
 type AuthCallback = (event: string, session: { user: { id: string } } | null) => void
 
@@ -60,6 +60,7 @@ function emitSession(userId: string | null) {
 
 function renderGuarded(initialPath: string) {
   const routes = [
+    { path: '/', element: <RoleHomeRedirect /> },
     { path: '/login', element: <div>Login page</div> },
     {
       path: '/admin',
@@ -133,5 +134,34 @@ describe('RequireRole', () => {
     expect(toastError).toHaveBeenCalledWith(
       'Your account was deactivated. Contact the event organizer.',
     )
+  })
+})
+
+describe('RoleHomeRedirect ("/")', () => {
+  it('waits for the session instead of bouncing to /login while it resolves', () => {
+    const router = renderGuarded('/')
+    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/')
+  })
+
+  it('sends a signed-in admin (e.g. landing from a magic link) to /admin', async () => {
+    mockProfileRow({ id: 'a1', display_name: 'Ann', email: null, role: 'admin', active: true })
+    const router = renderGuarded('/')
+    emitSession('a1')
+    expect(await screen.findByText('Admin home')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/admin')
+  })
+
+  it('sends a signed-in juror to /score', async () => {
+    mockProfileRow({ id: 'j1', display_name: 'Jane', email: null, role: 'juror', active: true })
+    renderGuarded('/')
+    emitSession('j1')
+    expect(await screen.findByText('Juror home')).toBeInTheDocument()
+  })
+
+  it('sends a signed-out visitor to /login', async () => {
+    renderGuarded('/')
+    emitSession(null)
+    expect(await screen.findByText('Login page')).toBeInTheDocument()
   })
 })
