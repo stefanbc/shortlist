@@ -119,18 +119,27 @@ function parseCriteria(
   return criteria
 }
 
-/** Juror columns from column D (4) up to (excluding) the header starting with "Scor". */
+/** Juror columns from column D (4) up to (excluding) the header starting with "Scor",
+ * plus that "Scor" column's index itself (Ruling R17: the cached final's cell must be
+ * located dynamically -- it's only ever at the fixed address J11 by coincidence, for a
+ * sheet shaped like Astra Hack's (6 juror columns). A sheet with no "Scor" header at all
+ * (this exporter's no-show teams, which carry no juror columns) yields `scoreCol: null`. */
 function parseJurorColumns(
   sheet: ExcelJS.Worksheet,
-): { col: number; key: string; displayName: string }[] {
+): { jurors: { col: number; key: string; displayName: string }[]; scoreCol: number | null } {
   const jurors: { col: number; key: string; displayName: string }[] = []
+  let scoreCol: number | null = null
   const maxCol = Math.max(sheet.columnCount, 4) + 5 // tolerate a little slack beyond the reported extent
   for (let col = 4; col <= maxCol; col++) {
     const header = collapseWhitespace(cellText(sheet.getCell(1, col).value))
-    if (header === '' || header.startsWith('Scor')) break
+    if (header === '') break
+    if (header.startsWith('Scor')) {
+      scoreCol = col
+      break
+    }
     jurors.push({ col, key: jurorKeyFor(header), displayName: header })
   }
-  return jurors
+  return { jurors, scoreCol }
 }
 
 function parseThemes(workbook: ExcelJS.Workbook): string[] {
@@ -187,9 +196,14 @@ export async function parseWorkbook(data: ArrayBuffer): Promise<ParsedEvent> {
   const teams: ParsedTeam[] = []
   const expectedFinals: Record<string, number | null> = {}
 
+  // The cached final always sits one row below the last criterion row (row 1 is the
+  // header, criteria start at row 2) -- true for every team sheet, since criteria are
+  // the same across the whole workbook (parsed once, above, from the first team sheet).
+  const finalRow = criteria.length + 2
+
   for (const sheet of teamSheets) {
     const pitchOrder = Number(TEAM_SHEET_NAME.exec(sheet.name)![1])
-    const jurorColumns = parseJurorColumns(sheet)
+    const { jurors: jurorColumns, scoreCol } = parseJurorColumns(sheet)
     for (const juror of jurorColumns) {
       if (!jurorsByKey.has(juror.key)) {
         jurorsByKey.set(juror.key, { key: juror.key, displayName: juror.displayName })
@@ -219,7 +233,8 @@ export async function parseWorkbook(data: ArrayBuffer): Promise<ParsedEvent> {
       scores,
     })
 
-    expectedFinals[sheet.name] = numericResult(sheet.getCell('J11').value)
+    expectedFinals[sheet.name] =
+      scoreCol === null ? null : numericResult(sheet.getCell(finalRow, scoreCol).value)
   }
 
   return {

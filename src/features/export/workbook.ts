@@ -63,6 +63,18 @@ function teamJurorIds(data: ExportData, teamId: Id): Id[] {
   return [...ordered, ...missing]
 }
 
+/** Where a team's own "Scor"/final cell lands on its own `E{pitchOrder}` sheet: the
+ * column right after its last juror column, on the row right after the last criterion
+ * row (Ruling R17 -- this is NOT always J11; that's only true for a 9-criteria,
+ * 6-juror sheet, Astra Hack's shape). `null` for a team with no juror columns at all
+ * (a no-show, which carries no Scor column either). Shared by `addTeamSheet` (which
+ * writes the cell) and `addResultsSheet` (whose cross-sheet formula must point at it). */
+function teamFinalCell(data: ExportData, teamId: Id): { col: number; row: number } | null {
+  const jurorCount = teamJurorIds(data, teamId).length
+  if (jurorCount === 0) return null
+  return { col: FIRST_JUROR_COL + jurorCount, row: FIRST_CRITERION_ROW + data.criteria.length }
+}
+
 function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWithProject): void {
   const sheet = workbook.addWorksheet(`E${team.pitchOrder}`)
   const entry = data.ranked.find((r) => r.teamId === team.id)
@@ -82,9 +94,9 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
     cell.alignment = { wrapText: true }
   })
 
-  const scoreCol = FIRST_JUROR_COL + jurorIds.length
-  if (jurorIds.length > 0) {
-    sheet.getCell(1, scoreCol).value = 'Scor'
+  const finalCell = teamFinalCell(data, team.id)
+  if (finalCell) {
+    sheet.getCell(1, finalCell.col).value = 'Scor'
   }
   sheet.getRow(1).font = { bold: true }
 
@@ -103,11 +115,11 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
       }
     })
 
-    if (jurorIds.length > 0) {
+    if (finalCell) {
       const firstCol = columnLetter(FIRST_JUROR_COL)
       const lastCol = columnLetter(FIRST_JUROR_COL + jurorIds.length - 1)
       const criterionResult = entry?.criteria.find((c) => c.criterionId === criterion.id)
-      const cell = sheet.getCell(row, scoreCol)
+      const cell = sheet.getCell(row, finalCell.col)
       cell.value = {
         formula: `SUM(${firstCol}${row}:${lastCol}${row})*C${row} / COUNTIF(${firstCol}${row}:${lastCol}${row}, "<>")`,
         ...(criterionResult?.weighted !== null && criterionResult?.weighted !== undefined
@@ -117,9 +129,9 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
     }
   })
 
-  if (jurorIds.length > 0) {
+  if (finalCell) {
     const lastCriterionRow = FIRST_CRITERION_ROW + data.criteria.length - 1
-    const averageRow = lastCriterionRow + 1
+    const averageRow = finalCell.row
 
     jurorIds.forEach((jurorId, jurorIndex) => {
       const col = FIRST_JUROR_COL + jurorIndex
@@ -131,14 +143,14 @@ function addTeamSheet(workbook: ExcelJS.Workbook, data: ExportData, team: TeamWi
       }
     })
 
-    const scoreColLetter = columnLetter(scoreCol)
-    const finalCell = sheet.getCell(averageRow, scoreCol)
-    finalCell.value = {
+    const scoreColLetter = columnLetter(finalCell.col)
+    const finalValueCell = sheet.getCell(averageRow, finalCell.col)
+    finalValueCell.value = {
       formula: `SUM(${scoreColLetter}${FIRST_CRITERION_ROW}:${scoreColLetter}${lastCriterionRow}) / SUM(C${FIRST_CRITERION_ROW}:C${lastCriterionRow})`,
       ...(entry?.final !== null && entry?.final !== undefined ? { result: entry.final } : {}),
     }
 
-    const finalLabelCell = sheet.getCell(averageRow, scoreCol + 1)
+    const finalLabelCell = sheet.getCell(averageRow, finalCell.col + 1)
     finalLabelCell.value = 'Scor\nfinal:'
     finalLabelCell.alignment = { wrapText: true }
   }
@@ -174,9 +186,19 @@ function addResultsSheet(workbook: ExcelJS.Workbook, data: ExportData): void {
     sheet.getCell(row, 3).value = guardFormulaInjection(team.project.name ?? '')
     sheet.getCell(row, 4).value = guardFormulaInjection(team.project.description ?? '')
     const finalCell = sheet.getCell(row, 5)
-    finalCell.value = {
-      formula: `'E${team.pitchOrder}'!J$11`,
-      ...(entry.final !== null ? { result: entry.final } : {}),
+    const teamFinal = teamFinalCell(data, team.id)
+    if (teamFinal) {
+      // Points at wherever this team's own final actually landed on its sheet (Ruling
+      // R17) -- only ever column J, row 11 for a 9-criteria/6-juror sheet.
+      const cellRef = `${columnLetter(teamFinal.col)}$${teamFinal.row}`
+      finalCell.value = {
+        formula: `'E${team.pitchOrder}'!${cellRef}`,
+        ...(entry.final !== null ? { result: entry.final } : {}),
+      }
+    } else if (entry.final !== null) {
+      // No-show (or otherwise juror-less) team: its own sheet has no Scor column to
+      // point at, so there's nothing to reference live -- write the plain number.
+      finalCell.value = entry.final
     }
   })
 }

@@ -159,6 +159,180 @@ describe('buildWorkbook (synthetic round-trip, always runs)', () => {
   })
 })
 
+describe('buildWorkbook (former juror still scored a team)', () => {
+  // Mirrors the real event's history: a juror (Mirela) scored the early teams, then was
+  // replaced by a different juror (Ovidia) for the rest -- Mirela is no longer assigned
+  // to the event (absent from `results.jurors`/`data.jurors`' "currently assigned" part),
+  // but her scores on the teams she judged still count, and `buildExportData` resolves
+  // her name from `allProfiles` (see types.test.ts). Every sheet still has exactly 6
+  // juror columns (just a different 6 for team one), so this does not touch the
+  // Scor-column-position concern the "different shape" tests below cover.
+  const CURRENT_JUROR_NAMES = ['Ana Pop', 'Ion Marin', 'Bianca Dan', 'Radu Ionescu', 'Sorin Terchila', 'Ovidia Caba']
+  const CURRENT_JURORS: Profile[] = CURRENT_JUROR_NAMES.map((displayName, i) => ({
+    id: `cj${i + 1}`,
+    displayName,
+    email: null,
+    role: 'juror',
+    active: true,
+  }))
+  const FORMER_JUROR: Profile = {
+    id: 'former-mirela',
+    displayName: 'Mirela Groza',
+    email: null,
+    role: 'juror',
+    active: true,
+  }
+
+  function scoresForTeam(teamId: string, jurors: Profile[]): Score[] {
+    const scores: Score[] = []
+    CRITERIA.forEach((criterion, ci) => {
+      jurors.forEach((juror, ji) => {
+        scores.push({
+          teamId,
+          criterionId: criterion.id,
+          jurorId: juror.id,
+          value: 1 + ((ci * 3 + ji * 7) % 9) * 0.5,
+        })
+      })
+    })
+    return scores
+  }
+
+  function buildFormerJurorData(): ExportData {
+    const teams: Team[] = [
+      { id: 't1', name: 'Early Team', pitchOrder: 1, noShow: false, manualTiebreak: null },
+      { id: 't2', name: 'Later Team', pitchOrder: 2, noShow: false, manualTiebreak: null },
+    ]
+    // t1 was judged before the swap: 5 current jurors + the former juror (not juror 6).
+    const t1Jurors = [...CURRENT_JURORS.slice(0, 5), FORMER_JUROR]
+    // t2 was judged after the swap: all 6 current jurors, no former juror at all.
+    const t2Jurors = CURRENT_JURORS
+    const scores = [...scoresForTeam('t1', t1Jurors), ...scoresForTeam('t2', t2Jurors)]
+    const ranked = rankTeams(teams, CRITERIA, scores)
+
+    const teamsWithProject: TeamWithProject[] = teams.map((team) => ({
+      ...team,
+      members: [],
+      project: project(),
+    }))
+
+    return {
+      eventName: 'Synthetic Hack (juror swap)',
+      themes: [],
+      criteria: CRITERIA,
+      teams: teamsWithProject,
+      themeNames: {},
+      // Only the 6 CURRENTLY assigned jurors -- `buildExportData` is what adds the
+      // former juror in production; here we build `ExportData` directly, the way the
+      // real `buildWorkbook` consumer would receive it, with the former juror already
+      // resolved and appended (see `types.test.ts` for `buildExportData` itself).
+      jurors: [...CURRENT_JURORS, FORMER_JUROR],
+      scores,
+      ranked,
+    }
+  }
+
+  it("includes the former juror's column on the team they scored, and their scores round-trip", async () => {
+    const data = buildFormerJurorData()
+    const blob = await buildWorkbook(data)
+
+    // The exported sheet has a header cell for the former juror.
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await blobToArrayBuffer(blob))
+    const t1Sheet = workbook.getWorksheet('E1')!
+    const headerTexts = [4, 5, 6, 7, 8, 9].map((col) => t1Sheet.getCell(1, col).value)
+    expect(headerTexts).toContain(jurorHeaderText('Mirela Groza'))
+
+    // Her scores round-trip through parseWorkbook under her normalized juror key.
+    const parsed = await parseWorkbook(await blobToArrayBuffer(blob))
+    const parsedT1 = parsed.teams.find((t) => t.sheet === 'E1')!
+    const formerKey = jurorKeyFor('Mirela Groza')
+    const formerScores = data.scores.filter((s) => s.teamId === 't1' && s.jurorId === 'former-mirela')
+    const expectedTuples = new Set(
+      formerScores.map((s) => {
+        const position = data.criteria.find((c) => c.id === s.criterionId)!.position
+        return `${position}:${formerKey}:${s.value}`
+      }),
+    )
+    const actualTuples = new Set(
+      parsedT1.scores.filter((s) => s.jurorKey === formerKey).map((s) => `${s.criterionPosition}:${s.jurorKey}:${s.value}`),
+    )
+    expect(actualTuples).toEqual(expectedTuples)
+    expect(actualTuples.size).toBe(CRITERIA.length)
+
+    // The juror who replaced her never scored this team.
+    const currentSixthKey = jurorKeyFor('Ovidia Caba')
+    expect(parsedT1.scores.some((s) => s.jurorKey === currentSixthKey)).toBe(false)
+
+    // Both teams' finals round-trip correctly.
+    for (const team of data.teams) {
+      const sheetName = `E${team.pitchOrder}`
+      const entry = data.ranked.find((r) => r.teamId === team.id)!
+      const expectedFinal = parsed.expectedFinals[sheetName]
+      expect(expectedFinal).not.toBeNull()
+      expect(expectedFinal as number).toBeCloseTo(entry.final as number, 9)
+    }
+  })
+})
+
+describe('buildWorkbook (a shape different from Astra Hack\'s 9 criteria / 6 jurors)', () => {
+  // Ruling R17: parseWorkbook must locate the cached final dynamically (the "Scor"
+  // header's column, on the row right after the last criterion row) rather than the
+  // literal cell J11 -- which is only correct by coincidence for a 9-criteria/6-juror
+  // sheet. This shape (3 criteria, 2 jurors) puts the final at F5, nowhere near J11, so
+  // it fails loudly if that dynamic lookup regresses.
+  const SMALL_CRITERIA: Criterion[] = [
+    { id: 'sc1', name: 'Small Criterion 1', weight: 10, position: 1 },
+    { id: 'sc2', name: 'Small Criterion 2', weight: 20, position: 2 },
+    { id: 'sc3', name: 'Small Criterion 3', weight: 30, position: 3 },
+  ]
+  const SMALL_JURORS: Profile[] = [
+    { id: 'sj1', displayName: 'Ana Pop', email: null, role: 'juror', active: true },
+    { id: 'sj2', displayName: 'Ion Marin', email: null, role: 'juror', active: true },
+  ]
+
+  function buildSmallShapeData(): ExportData {
+    const teams: Team[] = [{ id: 't1', name: 'Only Team', pitchOrder: 5, noShow: false, manualTiebreak: null }]
+    const scores: Score[] = []
+    SMALL_CRITERIA.forEach((criterion, ci) => {
+      SMALL_JURORS.forEach((juror, ji) => {
+        scores.push({ teamId: 't1', criterionId: criterion.id, jurorId: juror.id, value: 2 + ci * 0.5 + ji })
+      })
+    })
+    const ranked = rankTeams(teams, SMALL_CRITERIA, scores)
+
+    return {
+      eventName: 'Small Shape Hack',
+      themes: [],
+      criteria: SMALL_CRITERIA,
+      teams: teams.map((team) => ({ ...team, members: [], project: project() })),
+      themeNames: {},
+      jurors: SMALL_JURORS,
+      scores,
+      ranked,
+    }
+  }
+
+  it('the export -> parse round trip gives the correct expectedFinal, not null', async () => {
+    const data = buildSmallShapeData()
+    const blob = await buildWorkbook(data)
+
+    // Sanity-check where the final actually landed: column F (4 + 2 jurors), row 5
+    // (2 + 3 criteria) -- nowhere near J11.
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(await blobToArrayBuffer(blob))
+    const sheet = workbook.getWorksheet('E5')!
+    const finalCellValue = sheet.getCell('F5').value as { result?: number } | null
+    expect(finalCellValue).not.toBeNull()
+    expect(typeof finalCellValue).toBe('object')
+
+    const parsed = await parseWorkbook(await blobToArrayBuffer(blob))
+    const entry = data.ranked.find((r) => r.teamId === 't1')!
+    expect(parsed.expectedFinals['E5']).not.toBeNull()
+    expect(parsed.expectedFinals['E5'] as number).toBeCloseTo(entry.final as number, 9)
+  })
+})
+
 describe('buildWorkbook formula-injection guard', () => {
   it('stores a formula-shaped team name as literal text, not a live formula', async () => {
     const data = buildSyntheticData()

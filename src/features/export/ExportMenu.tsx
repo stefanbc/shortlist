@@ -97,7 +97,8 @@ export function ExportMenu({ eventId, className }: ExportMenuProps) {
         const blob = await pdf(<ResultsPdf data={data} lang={lang} />).toBlob()
         downloadBlob(blob, `shortlist-${slug}-results.pdf`)
       }
-    } catch {
+    } catch (error) {
+      console.error(`Failed to build the ${format} export`, error)
       toast.error(t('export.error'))
     } finally {
       setBusy(null)
