@@ -39,7 +39,7 @@ vi.mock('@/features/events/api', async (importOriginal) => {
 // The scoring screen's own data (see ScoringPage.test.tsx); here it stays loading.
 vi.mock('@/features/teams/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/teams/api')>()
-  return { ...actual, useTeams: () => ({ data: undefined, isLoading: true }) }
+  return { ...actual, useJurorTeams: () => ({ data: undefined, isLoading: true }) }
 })
 vi.mock('@/features/criteria/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/criteria/api')>()
@@ -90,7 +90,7 @@ describe('router', () => {
 
     await user.click(within(nav).getByRole('link', { name: 'Events' }))
     expect(router.state.location.pathname).toBe('/admin/events')
-    expect(screen.getByRole('heading', { name: 'Events' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Events' })).toBeInTheDocument()
   })
 
   it('admins can reach the import page from the organizer navigation', async () => {

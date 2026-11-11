@@ -1,26 +1,47 @@
+import { lazy, Suspense, type ComponentType } from 'react'
 import { Navigate, type RouteObject } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RedeemJurorLinkPage } from '@/features/auth/RedeemJurorLinkPage'
-import { CriteriaPage } from '@/features/criteria/CriteriaPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { EventShell } from '@/features/events/EventShell'
-import { EventSettingsPage } from '@/features/events/EventSettingsPage'
-import { EventsPage } from '@/features/events/EventsPage'
-import { ImportPage } from '@/features/import/ImportPage'
-import { CriteriaReportPage } from '@/features/reports/CriteriaReportPage'
-import { JurorReportPage } from '@/features/reports/JurorReportPage'
-import { PodiumPage } from '@/features/reports/PodiumPage'
-import { RankingPage } from '@/features/reports/RankingPage'
-import { TeamBreakdownPage } from '@/features/reports/TeamBreakdownPage'
 import { JurorHomePage } from '@/features/scoring/JurorHomePage'
 import { ScoringPage } from '@/features/scoring/ScoringPage'
-import { TeamsPage } from '@/features/teams/TeamsPage'
-import { EventJurorsPage } from '@/features/users/EventJurorsPage'
-import { UsersPage } from '@/features/users/UsersPage'
 import { RequireRole, RoleHomeRedirect } from './guards'
-import { NotFoundPage, RouteErrorPage } from './RouteStatus'
+import { NotFoundPage, PageLoading, RouteErrorPage } from './RouteStatus'
 
+/** An organizer page, loaded on first visit: jurors' phones only ever download the
+ * sign-in and scoring screens, never the admin, report, export or import code. */
+function adminPage<M>(load: () => Promise<M>, name: keyof M) {
+  const Page = lazy(async () => ({ default: (await load())[name] as ComponentType }))
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <Page />
+    </Suspense>
+  )
+}
+
+const dashboardPage = adminPage(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage')
+const eventsPage = adminPage(() => import('@/features/events/EventsPage'), 'EventsPage')
+const eventShell = adminPage(() => import('@/features/events/EventShell'), 'EventShell')
+const eventSettingsPage = adminPage(
+  () => import('@/features/events/EventSettingsPage'),
+  'EventSettingsPage',
+)
+const teamsPage = adminPage(() => import('@/features/teams/TeamsPage'), 'TeamsPage')
+const criteriaPage = adminPage(() => import('@/features/criteria/CriteriaPage'), 'CriteriaPage')
+const eventJurorsPage = adminPage(() => import('@/features/users/EventJurorsPage'), 'EventJurorsPage')
+const podiumPage = adminPage(() => import('@/features/reports/PodiumPage'), 'PodiumPage')
+const rankingPage = adminPage(() => import('@/features/reports/RankingPage'), 'RankingPage')
+const criteriaReportPage = adminPage(
+  () => import('@/features/reports/CriteriaReportPage'),
+  'CriteriaReportPage',
+)
+const jurorReportPage = adminPage(() => import('@/features/reports/JurorReportPage'), 'JurorReportPage')
+const teamBreakdownPage = adminPage(
+  () => import('@/features/reports/TeamBreakdownPage'),
+  'TeamBreakdownPage',
+)
+const usersPage = adminPage(() => import('@/features/users/UsersPage'), 'UsersPage')
+const importPage = adminPage(() => import('@/features/import/ImportPage'), 'ImportPage')
 
 export const routes: RouteObject[] = [
   {
@@ -49,32 +70,32 @@ export const routes: RouteObject[] = [
           </RequireRole>
         ),
         children: [
-          { index: true, element: <DashboardPage /> },
-          { path: 'events', element: <EventsPage /> },
+          { index: true, element: dashboardPage },
+          { path: 'events', element: eventsPage },
           {
             path: 'events/:eventId',
-            element: <EventShell />,
+            element: eventShell,
             children: [
               { index: true, element: <Navigate to="settings" replace /> },
-              { path: 'settings', element: <EventSettingsPage /> },
-              { path: 'teams', element: <TeamsPage /> },
-              { path: 'criteria', element: <CriteriaPage /> },
-              { path: 'jurors', element: <EventJurorsPage /> },
+              { path: 'settings', element: eventSettingsPage },
+              { path: 'teams', element: teamsPage },
+              { path: 'criteria', element: criteriaPage },
+              { path: 'jurors', element: eventJurorsPage },
               {
                 path: 'reports',
                 children: [
                   { index: true, element: <Navigate to="podium" replace /> },
-                  { path: 'podium', element: <PodiumPage /> },
-                  { path: 'ranking', element: <RankingPage /> },
-                  { path: 'criteria', element: <CriteriaReportPage /> },
-                  { path: 'jurors', element: <JurorReportPage /> },
-                  { path: 'teams/:teamId', element: <TeamBreakdownPage /> },
+                  { path: 'podium', element: podiumPage },
+                  { path: 'ranking', element: rankingPage },
+                  { path: 'criteria', element: criteriaReportPage },
+                  { path: 'jurors', element: jurorReportPage },
+                  { path: 'teams/:teamId', element: teamBreakdownPage },
                 ],
               },
             ],
           },
-          { path: 'users', element: <UsersPage /> },
-          { path: 'import', element: <ImportPage /> },
+          { path: 'users', element: usersPage },
+          { path: 'import', element: importPage },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

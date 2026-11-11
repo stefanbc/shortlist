@@ -6,6 +6,7 @@ import { BrandMark } from '@/components/layout/BrandMark'
 import { Button } from '@/components/ui/Button'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 function Frame({
   icon,
@@ -58,5 +59,20 @@ export function RouteErrorPage() {
         </Button>
       }
     />
+  )
+}
+
+/** Shown while a lazily loaded page's code downloads (see router.tsx). */
+export function PageLoading() {
+  const { t } = useTranslation()
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true">
+      <span className="sr-only" role="status">
+        {t('common.loading')}
+      </span>
+      <Skeleton className="h-8 w-48" />
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full" />
+    </div>
   )
 }
