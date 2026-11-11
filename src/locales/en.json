@@ -163,22 +163,7 @@
       "open": "Open",
       "locked": "Locked"
     },
-    "detailsTitle": "Details",
-    "stagetimer": {
-      "title": "Stage timer",
-      "label": "stagetimer.io viewer link",
-      "hint": "Paste your room's viewer link, not the controller link. The timer then shows on the Live page. You still start and stop it in stagetimer.",
-      "save": "Save link",
-      "saved": "Stage timer link saved.",
-      "removed": "Stage timer removed.",
-      "saveError": "Couldn't save the link. Try again.",
-      "openInTab": "Open in a new tab",
-      "frameTitle": "Stage timer from stagetimer.io",
-      "errors": {
-        "notStagetimer": "Enter a link that starts with https://stagetimer.io/.",
-        "controllerLink": "That's the controller link. Paste the viewer link instead, so nobody else can run the timer."
-      }
-    }
+    "detailsTitle": "Details"
   },
   "criteria": {
     "themesHeading": "Themes",
@@ -321,7 +306,9 @@
       "over": "{{time}} over",
       "start": "Start {{minutes}}-min timer",
       "reset": "Reset timer",
-      "onStageLabel": "Pitch time for the team on stage"
+      "onStageLabel": "Pitch time for the team on stage",
+      "ready": "{{time}} to pitch",
+      "paused": "{{time}} left, paused"
     },
     "sync": {
       "saved": "All saved",
@@ -563,5 +550,32 @@
     "excel": "Excel workbook",
     "pdf": "PDF report",
     "error": "Couldn't build that export. Try again."
+  },
+  "timer": {
+    "heading": "Pitch timer",
+    "ready": "Ready",
+    "running": "Running",
+    "paused": "Paused",
+    "over": "Over time",
+    "start": "Start",
+    "resume": "Resume",
+    "pause": "Pause",
+    "reset": "Reset",
+    "add": "Add 30 seconds",
+    "remove": "Remove 30 seconds",
+    "projector": "Projector view",
+    "error": "Couldn't update the timer. Try again.",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "nextUp": "Next: {{team}}",
+    "nowPitching": "Now pitching",
+    "noTeam": "No team on stage",
+    "nextTeam": "Next team",
+    "keysHint": "Space starts and pauses, F toggles full screen.",
+    "backToLive": "Back to Live",
+    "clockLeft": "{{time}} left",
+    "clockOver": "{{time}} over time",
+    "controls": "Timer controls",
+    "stageTitle": "Stage timer"
   }
 }

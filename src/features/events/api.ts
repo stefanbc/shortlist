@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import type { ParseKeys, TFunction } from 'i18next'
 import { eventPhase, type EventTiming, type StatusOverride } from '@/domain/eventPhase'
 import { eventInputSchema, type EventInput } from '@/domain/schemas'
+import type { PitchTimer } from '@/domain/pitchTimer'
 import type { Id } from '@/domain/types'
 import { supabase } from '@/lib/supabase'
 
@@ -12,10 +13,12 @@ export interface EventRow extends EventTiming {
   pitchMinutes: number
   nowPitchingTeamId: Id | null
   nowPitchingSince: string | null
+  /** The shared pitch timer. Always set on rows read from the database. */
+  timer?: PitchTimer
 }
 
 const EVENT_COLUMNS =
-  'id, name, starts_at, ends_at, status_override, locked_at, pitch_minutes, now_pitching_team_id, now_pitching_since'
+  'id, name, starts_at, ends_at, status_override, locked_at, pitch_minutes, now_pitching_team_id, now_pitching_since, timer_duration_s, timer_started_at, timer_elapsed_ms'
 
 type EventDbRow = {
   id: string
@@ -27,6 +30,9 @@ type EventDbRow = {
   pitch_minutes: number
   now_pitching_team_id: string | null
   now_pitching_since: string | null
+  timer_duration_s?: number | null
+  timer_started_at?: string | null
+  timer_elapsed_ms?: number | null
 }
 
 /** Exported for its own unit test; also the only place that knows the DB's snake_case shape. */
@@ -41,6 +47,11 @@ export function toEventRow(row: EventDbRow): EventRow {
     pitchMinutes: row.pitch_minutes,
     nowPitchingTeamId: row.now_pitching_team_id,
     nowPitchingSince: row.now_pitching_since,
+    timer: {
+      durationS: row.timer_duration_s ?? null,
+      startedAt: row.timer_started_at ?? null,
+      elapsedMs: Number(row.timer_elapsed_ms ?? 0),
+    },
   }
 }
 
@@ -189,6 +200,27 @@ export function useSetNowPitching() {
       if (error) throw error
     },
     onSuccess: (_data, { eventId }) => {
+      void queryClient.invalidateQueries({ queryKey: ['events', eventId] })
+    },
+  })
+}
+
+export type TimerAction = 'start' | 'pause' | 'reset' | 'add'
+
+/** Runs the shared pitch timer (`pitch_timer` RPC). The database stamps the times, and
+ * the new row comes back to every screen over `useEventUpdates`. */
+export function useTimerControl(eventId: Id) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ action, seconds }: { action: TimerAction; seconds?: number }) => {
+      const { error } = await supabase.rpc('pitch_timer', {
+        p_event: eventId,
+        p_action: action,
+        ...(seconds === undefined ? {} : { p_seconds: seconds }),
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['events', eventId] })
     },
   })

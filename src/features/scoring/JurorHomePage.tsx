@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge'
 import { buttonClasses } from '@/components/ui/buttonStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { IDLE_TIMER } from '@/domain/pitchTimer'
 import type { Criterion } from '@/domain/types'
 import { useCriteria, useThemes } from '@/features/criteria/api'
 import { useActiveEvent, useEvent, useEvents, useEventUpdates } from '@/features/events/api'
@@ -16,6 +17,7 @@ import { useNow } from '@/lib/useNow'
 import { useMyCellSync, useMyScores, useScoreSync, type CellSync } from './api'
 import { cellViews, countScored } from './cells'
 import { NowPitchingDialog } from './NowPitchingDialog'
+import { SharedTimer } from './PitchTimer'
 import { RejectedNotice, SyncIndicator } from './SyncStatus'
 
 /** The juror's start screen: their active event's teams in pitch order, each with how far
@@ -137,6 +139,13 @@ function TeamOverview({
             </p>
             <p className="title mt-1 text-2xl break-words">{onStage.name}</p>
             {onStage.project.name && <p className="opacity-80">{onStage.project.name}</p>}
+            {event && (
+              <SharedTimer
+                pitchMinutes={event.pitchMinutes}
+                timer={event.timer ?? IDLE_TIMER}
+                className="mt-3 h-9 bg-on-mark/10 text-on-mark"
+              />
+            )}
           </div>
           <Link
             to={`/score/${eventId}/${onStage.id}`}

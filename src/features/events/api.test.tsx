@@ -37,6 +37,9 @@ describe('toEventRow', () => {
         pitch_minutes: 7,
         now_pitching_team_id: 'team-3',
         now_pitching_since: '2026-01-01T12:00:00.000Z',
+        timer_duration_s: 450,
+        timer_started_at: '2026-01-01T12:01:00.000Z',
+        timer_elapsed_ms: 30_000,
       }),
     ).toEqual({
       id: 'ev-1',
@@ -48,6 +51,7 @@ describe('toEventRow', () => {
       pitchMinutes: 7,
       nowPitchingTeamId: 'team-3',
       nowPitchingSince: '2026-01-01T12:00:00.000Z',
+      timer: { durationS: 450, startedAt: '2026-01-01T12:01:00.000Z', elapsedMs: 30_000 },
     })
   })
 
@@ -66,6 +70,8 @@ describe('toEventRow', () => {
     expect(row.lockedAt).toBeNull()
     expect(row.nowPitchingTeamId).toBeNull()
     expect(row.nowPitchingSince).toBeNull()
+    // A row without timer columns reads as a stopped, full clock.
+    expect(row.timer).toEqual({ durationS: null, startedAt: null, elapsedMs: 0 })
   })
 })
 

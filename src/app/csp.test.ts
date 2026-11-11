@@ -33,7 +33,4 @@ describe('production Content-Security-Policy (vercel.json)', () => {
     expect(directive('script-src')).not.toContain("'unsafe-eval'")
   })
 
-  it('allows only the stagetimer.io frame on the live dashboard', () => {
-    expect(directive('frame-src')).toEqual(['https://stagetimer.io', 'https://*.stagetimer.io'])
-  })
 })

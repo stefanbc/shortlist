@@ -42,6 +42,7 @@ const teamBreakdownPage = adminPage(
 )
 const usersPage = adminPage(() => import('@/features/users/UsersPage'), 'UsersPage')
 const importPage = adminPage(() => import('@/features/import/ImportPage'), 'ImportPage')
+const stagePage = adminPage(() => import('@/features/timer/StagePage'), 'StagePage')
 
 export const routes: RouteObject[] = [
   {
@@ -98,6 +99,8 @@ export const routes: RouteObject[] = [
           { path: 'import', element: importPage },
         ],
       },
+      // The projector page: organizer-only, but outside the shell so it fills the screen.
+      { path: '/stage/:eventId', element: <RequireRole role="admin">{stagePage}</RequireRole> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

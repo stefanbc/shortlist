@@ -137,9 +137,11 @@ export type Database = {
           now_pitching_since: string | null
           now_pitching_team_id: string | null
           pitch_minutes: number
-          stagetimer_url: string | null
           starts_at: string
           status_override: string
+          timer_duration_s: number | null
+          timer_elapsed_ms: number
+          timer_started_at: string | null
           event_closed_at: string | null
           event_phase: string | null
         }
@@ -153,9 +155,11 @@ export type Database = {
           now_pitching_since?: string | null
           now_pitching_team_id?: string | null
           pitch_minutes?: number
-          stagetimer_url?: string | null
           starts_at: string
           status_override?: string
+          timer_duration_s?: number | null
+          timer_elapsed_ms?: number
+          timer_started_at?: string | null
         }
         Update: {
           created_at?: string
@@ -166,9 +170,11 @@ export type Database = {
           now_pitching_since?: string | null
           now_pitching_team_id?: string | null
           pitch_minutes?: number
-          stagetimer_url?: string | null
           starts_at?: string
           status_override?: string
+          timer_duration_s?: number | null
+          timer_elapsed_ms?: number
+          timer_started_at?: string | null
         }
         Relationships: [
           {
@@ -626,6 +632,10 @@ export type Database = {
       has_permission: { Args: { p: string }; Returns: boolean }
       import_event: { Args: { p: Json }; Returns: string }
       is_event_juror: { Args: { event: string }; Returns: boolean }
+      pitch_timer: {
+        Args: { p_action: string; p_event: string; p_seconds?: number }
+        Returns: undefined
+      }
       require_permission: { Args: { p: string }; Returns: undefined }
       set_event_status: { Args: { p_event: string; p_override: string }; Returns: undefined }
       set_now_pitching: { Args: { p_event: string; p_team: string }; Returns: undefined }

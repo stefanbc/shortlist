@@ -19,9 +19,9 @@ import {
   useSetNowPitching,
   type EventRow,
 } from '@/features/events/api'
-import { StageTimerPanel } from '@/features/events/StageTimer'
 import { EventPhaseBadge } from '@/features/events/EventPhaseBadge'
 import { ExportMenu } from '@/features/export/ExportMenu'
+import { TimerCard } from '@/features/timer/TimerCard'
 import { useEventResults } from '@/features/reports/useEventResults'
 import type { TeamWithProject } from '@/features/teams/api'
 import { useNow } from '@/lib/useNow'
@@ -72,7 +72,7 @@ export function NowPitchingCard({ event, teams }: { event: EventRow; teams: Team
           </Badge>
         )}
       </CardHeader>
-      <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <CardBody className="flex flex-col gap-4">
         <p className="title min-w-0 text-2xl break-words">
           {current ? (
             <span className="marked-text">{current.name}</span>
@@ -160,11 +160,12 @@ export function DashboardPage() {
       />
 
       <div className="flex flex-col gap-6">
-        <NowPitchingCard event={event} teams={results.teams} />
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <NowPitchingCard event={event} teams={results.teams} />
+          <TimerCard event={event} />
+        </div>
 
         <LateScoresNotice eventId={event.id} teams={results.teams} jurors={results.jurors} />
-
-        <StageTimerPanel eventId={event.id} />
 
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
           <Card>

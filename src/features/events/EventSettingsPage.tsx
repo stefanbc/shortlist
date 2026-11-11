@@ -13,7 +13,6 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import type { StatusOverride } from '@/domain/eventPhase'
 import type { Id } from '@/domain/types'
 import { cn } from '@/lib/cn'
-import { StageTimerSettings } from './StageTimer'
 import {
   toEventFormState,
   useEvent,
@@ -195,10 +194,7 @@ export function EventSettingsPage() {
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <EventDetailsForm key={event.id} event={event} />
-        <div className="flex flex-col gap-6">
-          <ScoringControl event={event} />
-          <StageTimerSettings eventId={event.id} />
-        </div>
+        <ScoringControl event={event} />
       </div>
     </Page>
   )

@@ -163,22 +163,7 @@
       "open": "Deschis",
       "locked": "Blocat"
     },
-    "detailsTitle": "Detalii",
-    "stagetimer": {
-      "title": "Cronometru de scenă",
-      "label": "Link de vizualizare stagetimer.io",
-      "hint": "Lipește linkul de vizualizare al camerei, nu pe cel de control. Cronometrul apare apoi pe pagina Live. Îl pornești și îl oprești tot din stagetimer.",
-      "save": "Salvează linkul",
-      "saved": "Linkul cronometrului a fost salvat.",
-      "removed": "Cronometrul a fost eliminat.",
-      "saveError": "Linkul nu a putut fi salvat. Încearcă din nou.",
-      "openInTab": "Deschide într-o filă nouă",
-      "frameTitle": "Cronometru de scenă de la stagetimer.io",
-      "errors": {
-        "notStagetimer": "Introdu un link care începe cu https://stagetimer.io/.",
-        "controllerLink": "Acesta este linkul de control. Lipește linkul de vizualizare, ca nimeni altcineva să nu poată controla cronometrul."
-      }
-    }
+    "detailsTitle": "Detalii"
   },
   "criteria": {
     "themesHeading": "Teme",
@@ -321,7 +306,9 @@
       "over": "depășit cu {{time}}",
       "start": "Pornește cronometrul de {{minutes}} min",
       "reset": "Resetează cronometrul",
-      "onStageLabel": "Timpul de prezentare al echipei de pe scenă"
+      "onStageLabel": "Timpul de prezentare al echipei de pe scenă",
+      "ready": "{{time}} pentru pitch",
+      "paused": "{{time}} rămase, în pauză"
     },
     "sync": {
       "saved": "Totul salvat",
@@ -563,5 +550,32 @@
     "excel": "Registru Excel",
     "pdf": "Raport PDF",
     "error": "Exportul nu a putut fi generat. Încearcă din nou."
+  },
+  "timer": {
+    "heading": "Cronometru de pitch",
+    "ready": "Pregătit",
+    "running": "Pornit",
+    "paused": "În pauză",
+    "over": "Timp depășit",
+    "start": "Pornește",
+    "resume": "Continuă",
+    "pause": "Pauză",
+    "reset": "Resetează",
+    "add": "Adaugă 30 de secunde",
+    "remove": "Scade 30 de secunde",
+    "projector": "Vizualizare proiector",
+    "error": "Cronometrul nu a putut fi actualizat. Încearcă din nou.",
+    "fullscreen": "Ecran complet",
+    "exitFullscreen": "Ieși din ecran complet",
+    "nextUp": "Urmează: {{team}}",
+    "nowPitching": "Prezintă acum",
+    "noTeam": "Nicio echipă pe scenă",
+    "nextTeam": "Echipa următoare",
+    "keysHint": "Spațiu pornește și oprește, F comută ecranul complet.",
+    "backToLive": "Înapoi la Live",
+    "clockLeft": "{{time}} rămase",
+    "clockOver": "{{time}} peste timp",
+    "controls": "Comenzi cronometru",
+    "stageTitle": "Cronometru de scenă"
   }
 }
