@@ -297,6 +297,12 @@
       "public": "Repository public găsit: {{repo}}.",
       "missing": "GitHub nu are un repository public la {{repo}}. Poate fi privat sau scris greșit, iar jurații nu îl vor putea deschide până nu devine public.",
       "unknown": "Verificarea la GitHub nu a fost posibilă acum. Linkul este salvat așa cum a fost scris."
+    },
+    "summary": {
+      "count": "Echipe: {{count}}",
+      "noShow": "absente: {{count}}",
+      "noRepo": "fără repository: {{count}}",
+      "noProject": "fără nume de proiect: {{count}}"
     }
   },
   "scoring": {
@@ -410,7 +416,8 @@
       "emptyTitle": "Încă nu sunt destule note",
       "emptyBody": "Podiumul apare după ce cel puțin o echipă are un scor final.",
       "replay": "Reia dezvăluirea",
-      "tieWarning": "{{count}} echipe sunt la egalitate pe locul {{rank}}. Stabilește ordinea înainte să-l anunți."
+      "tieWarning": "{{count}} echipe sunt la egalitate pe locul {{rank}}. Stabilește ordinea înainte să-l anunți.",
+      "runnersUp": "Imediat după podium"
     },
     "rankingPage": {
       "tableCaption": "Scorul final și locul fiecărei echipe, în ordine.",
@@ -540,7 +547,10 @@
     "remove": "Elimină din eveniment",
     "confirmRemoveTitle": "Elimini pe {{name}} din acest eveniment?",
     "confirmRemoveBody": "Notele deja introduse de {{name}} rămân în calculul rezultatelor — aceasta doar îl oprește să mai noteze evenimentul de acum încolo.",
-    "removeError": "Juratul nu a putut fi eliminat. Încearcă din nou."
+    "removeError": "Juratul nu a putut fi eliminat. Încearcă din nou.",
+    "progress": "{{complete}} din {{total}} echipe notate",
+    "progressStarted": "în curs: {{count}}",
+    "summary": "Jurați alocați: {{count}}. Au terminat notarea: {{finished}}."
   },
   "import": {
     "title": "Import din foaia de calcul",
@@ -593,7 +603,22 @@
     "registrationsNote": "Aici se importă un registru de evaluare completat, ca eveniment nou. Pentru a adăuga echipele din formularul de înscriere, deschide fila Echipe a evenimentului și alege Importă înscrierile.",
     "templateHint": "Nu ești sigur de format?",
     "downloadTemplate": "Descarcă un registru exemplu",
-    "templateError": "Registrul exemplu nu a putut fi generat. Încearcă din nou."
+    "templateError": "Registrul exemplu nu a putut fi generat. Încearcă din nou.",
+    "stepsHeading": "Cum funcționează",
+    "steps": {
+      "upload": {
+        "title": "Încarcă registrul",
+        "body": "Registrul de evaluare în format .xlsx, cu o foaie pentru fiecare echipă."
+      },
+      "review": {
+        "title": "Verifică ce a fost citit",
+        "body": "Temele, criteriile, echipele, jurații și notele sunt afișate înainte de a salva ceva, cu o verificare față de rezultatele din foaie."
+      },
+      "import": {
+        "title": "Importă ca eveniment nou",
+        "body": "Evenimentul este creat blocat, cu notele sale. Jurații primesc adrese de e-mail provizorii pe care le poți înlocui în Persoane."
+      }
+    }
   },
   "export": {
     "open": "Exportă",

@@ -112,7 +112,7 @@ export function TeamBreakdownView({
           description={t('reports.teamPage.noShowBody')}
         />
       ) : (
-        <>
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Card className="overflow-hidden">
             <div className="table-scroll">
               <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">
@@ -208,7 +208,7 @@ export function TeamBreakdownView({
               )}
             </CardBody>
           </Card>
-        </>
+        </div>
       )}
     </div>
   )

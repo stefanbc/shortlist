@@ -9,6 +9,11 @@ import { useAssignJuror, useEventJurors, useProfiles, useUnassignJuror } from '.
 import { EventJurorsPage } from './EventJurorsPage'
 import { chooseOption } from '@/test/select'
 
+// Scoring progress and the login-link dialog have their own data; these tests are about
+// assigning and removing jurors.
+vi.mock('./jurorProgress', () => ({ useJurorProgress: () => new Map() }))
+vi.mock('./JurorLinkDialog', () => ({ JurorLinkDialog: () => null }))
+
 vi.mock('@/features/events/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/events/api')>()
   return { ...actual, useEvent: vi.fn() }

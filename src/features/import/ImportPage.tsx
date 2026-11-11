@@ -73,7 +73,7 @@ function DropZone({
           onDragLeave={() => setDragActive(false)}
           onDrop={handleDrop}
           className={cn(
-            'flex w-full items-center gap-4 rounded-control border border-dashed px-5 py-6 text-left',
+            'flex min-h-44 w-full items-center gap-4 rounded-control border border-dashed px-5 py-6 text-left',
             'transition-colors duration-(--duration-fast) disabled:cursor-not-allowed disabled:opacity-70',
             status === 'error'
               ? 'border-danger bg-danger-soft/40'
@@ -224,41 +224,66 @@ export function ImportPage() {
       <PageHeader title={t('import.title')} description={t('import.intro')} />
 
       <div className="flex flex-col gap-6">
-        <p className="-mt-3 max-w-prose text-sm text-ink-muted">{t('import.registrationsNote')}</p>
-        <p className="-mt-3 text-sm text-ink-muted">
-          {t('import.templateHint')}{' '}
-          <button
-            type="button"
-            onClick={() =>
-              void buildWorkbookTemplate()
-                .then((blob) => downloadBlob(blob, WORKBOOK_TEMPLATE_FILENAME))
-                .catch(() => toast.error(t('import.templateError')))
-            }
-            className="inline-flex items-center gap-1 rounded-control font-semibold text-accent-ink underline underline-offset-2"
-          >
-            <Download aria-hidden className="size-3.5" />
-            {t('import.downloadTemplate')}
-          </button>
-        </p>
-        <DropZone
-          status={status}
-          message={status === 'error' ? parseError : null}
-          disabled={status === 'parsing' || importEvent.isPending}
-          onFile={(f) => void handleFile(f)}
-        />
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+          <div className="flex flex-col gap-4">
+          <DropZone
+            status={status}
+            message={status === 'error' ? parseError : null}
+            disabled={status === 'parsing' || importEvent.isPending}
+            onFile={(f) => void handleFile(f)}
+          />
 
-        {status === 'parsing' && (
-          <p className="text-sm text-ink-muted">{t('import.parsing')}</p>
-        )}
+          {status === 'parsing' && (
+            <p className="text-sm text-ink-muted">{t('import.parsing')}</p>
+          )}
 
-        {file && status !== 'idle' && status !== 'parsing' && (
-          <div className="flex items-center gap-2 text-sm text-ink-muted">
-            <FileSpreadsheet aria-hidden className="size-4 shrink-0" />
-            <span className="truncate">
-              {file.name} ({formatFileSize(file.size)})
-            </span>
+          {file && status !== 'idle' && status !== 'parsing' && (
+            <div className="flex items-center gap-2 text-sm text-ink-muted">
+              <FileSpreadsheet aria-hidden className="size-4 shrink-0" />
+              <span className="truncate">
+                {file.name} ({formatFileSize(file.size)})
+              </span>
+            </div>
+          )}
           </div>
-        )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('import.stepsHeading')}</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-4">
+              <ol className="flex flex-col gap-3">
+                {(['upload', 'review', 'import'] as const).map((step, index) => (
+                  <li key={step} className="flex gap-3">
+                    <span className="numeral w-5 shrink-0 text-right text-2xl leading-none text-ink-faint">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-semibold">{t(`import.steps.${step}.title`)}</span>
+                      <span className="block text-sm text-ink-muted">{t(`import.steps.${step}.body`)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <p className="border-t border-line pt-4 text-sm text-ink-muted">
+                {t('import.templateHint')}{' '}
+                <button
+                  type="button"
+                  onClick={() =>
+                    void buildWorkbookTemplate()
+                      .then((blob) => downloadBlob(blob, WORKBOOK_TEMPLATE_FILENAME))
+                      .catch(() => toast.error(t('import.templateError')))
+                  }
+                  className="inline-flex items-center gap-1 rounded-control font-semibold text-accent-ink underline underline-offset-2"
+                >
+                  <Download aria-hidden className="size-3.5" />
+                  {t('import.downloadTemplate')}
+                </button>
+              </p>
+              <p className="text-sm text-ink-muted">{t('import.registrationsNote')}</p>
+            </CardBody>
+          </Card>
+        </div>
 
         {result && (
           <>

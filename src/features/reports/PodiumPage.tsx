@@ -23,6 +23,9 @@ const PLACE_ORDER = [2, 1, 3] as const
 /** Reveal order (time): 3rd first, then 2nd, then 1st -- building to the winner. */
 const REVEAL_DELAY: Record<number, number> = { 3: 0, 2: 0.35, 1: 0.7 }
 
+/** How many places after third are listed under the podium. */
+const RUNNERS_UP = 7
+
 interface PodiumSlot {
   rank: number
   entries: RankedTeam[]
@@ -57,6 +60,11 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
   const slots = useMemo(() => podiumSlots(ranked), [ranked])
   const slotsByRank = useMemo(() => new Map(slots.map((slot) => [slot.rank, slot])), [slots])
 
+  // The places just off the podium, for announcing honourable mentions.
+  const runnersUp = ranked
+    .filter((entry) => entry.rank !== null && entry.rank > 3 && entry.final !== null)
+    .slice(0, RUNNERS_UP)
+
   if (slots.length === 0) {
     return (
       <EmptyState
@@ -78,10 +86,17 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
         </Button>
       </div>
 
-      <div key={replayKey} className="grid grid-cols-3 items-end gap-3 sm:gap-6">
+      {/* Only the places that exist get a column: a tie for second leaves no third. */}
+      <div
+        key={replayKey}
+        className={cn(
+          'grid items-end gap-3 sm:gap-6',
+          slots.length >= 3 ? 'grid-cols-3' : slots.length === 2 ? 'grid-cols-2' : 'grid-cols-1',
+        )}
+      >
         {PLACE_ORDER.map((rank) => {
           const slot = slotsByRank.get(rank)
-          if (!slot) return <div key={rank} />
+          if (!slot) return null
           const tall = rank === 1 ? 'min-h-64' : rank === 2 ? 'min-h-48' : 'min-h-40'
           return (
             <motion.div
@@ -132,6 +147,33 @@ export function PodiumView({ eventId, ranked, teams }: PodiumViewProps) {
           )
         })}
       </div>
+
+      {runnersUp.length > 0 && (
+        <section aria-labelledby="runners-up-heading">
+          <h2 id="runners-up-heading" className="mb-2 text-lg font-semibold">
+            {t('reports.podiumPage.runnersUp')}
+          </h2>
+          <ol className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
+            {runnersUp.map((entry) => {
+              const team = teamsById.get(entry.teamId)
+              return (
+                <li key={entry.teamId} className="flex items-center gap-4 px-4 py-2.5">
+                  <span className="numeral w-8 shrink-0 text-right text-2xl leading-none text-ink-faint">
+                    {entry.rank}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold break-words">{team?.name ?? entry.teamId}</span>
+                    {team?.project.name && (
+                      <span className="block text-sm text-ink-muted">{team.project.name}</span>
+                    )}
+                  </span>
+                  <span className="numeral shrink-0 text-lg">{format(entry.final)}</span>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      )}
 
       {activeTieGroup && (
         <TieBreakDialog

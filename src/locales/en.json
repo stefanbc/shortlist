@@ -297,6 +297,12 @@
       "public": "Public repository found: {{repo}}.",
       "missing": "GitHub has no public repository at {{repo}}. It may be private or misspelled, and jurors won't be able to open it until it is public.",
       "unknown": "Couldn't check with GitHub right now. The link is saved as written."
+    },
+    "summary": {
+      "count": "Teams: {{count}}",
+      "noShow": "no-show: {{count}}",
+      "noRepo": "without a repository: {{count}}",
+      "noProject": "without a project name: {{count}}"
     }
   },
   "scoring": {
@@ -410,7 +416,8 @@
       "emptyTitle": "Not enough scores yet",
       "emptyBody": "The podium appears once at least one team has a final score.",
       "replay": "Replay reveal",
-      "tieWarning": "{{count}} teams are tied for place {{rank}}. Set the order before you announce it."
+      "tieWarning": "{{count}} teams are tied for place {{rank}}. Set the order before you announce it.",
+      "runnersUp": "Just off the podium"
     },
     "rankingPage": {
       "tableCaption": "Every team's final score and rank, in order.",
@@ -540,7 +547,10 @@
     "remove": "Remove from event",
     "confirmRemoveTitle": "Remove {{name}} from this event?",
     "confirmRemoveBody": "Scores {{name}} already entered stay counted in the results — this only stops them from judging the event from now on.",
-    "removeError": "Couldn't remove the juror. Try again."
+    "removeError": "Couldn't remove the juror. Try again.",
+    "progress": "{{complete}} of {{total}} teams scored",
+    "progressStarted": "in progress: {{count}}",
+    "summary": "Jurors assigned: {{count}}. Finished scoring: {{finished}}."
   },
   "import": {
     "title": "Import from spreadsheet",
@@ -593,7 +603,22 @@
     "registrationsNote": "This brings in a finished evaluation workbook as a new event. To add teams from the registration form, open the event's Teams tab and choose Import registrations.",
     "templateHint": "Not sure about the layout?",
     "downloadTemplate": "Download an example workbook",
-    "templateError": "Couldn't build the example workbook. Try again."
+    "templateError": "Couldn't build the example workbook. Try again.",
+    "stepsHeading": "How it works",
+    "steps": {
+      "upload": {
+        "title": "Upload the workbook",
+        "body": "The evaluation workbook as .xlsx, one sheet per team."
+      },
+      "review": {
+        "title": "Review what was read",
+        "body": "Themes, criteria, teams, jurors and scores are shown before anything is saved, with a check against the sheet's own results."
+      },
+      "import": {
+        "title": "Import as a new event",
+        "body": "The event is created locked, with its scores. Jurors get placeholder e-mail addresses you can replace under People."
+      }
+    }
   },
   "export": {
     "open": "Export",

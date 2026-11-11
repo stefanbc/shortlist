@@ -53,7 +53,12 @@ export function SortableList<T extends { id: string }>({
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-        <ul className={cn('flex flex-col gap-2', className)}>
+        <ul
+          className={cn(
+            'divide-y divide-line overflow-hidden rounded-card border border-line bg-surface',
+            className,
+          )}
+        >
           {items.map((item) => (
             <SortableRow key={item.id} id={item.id}>
               {renderItem(item)}
@@ -76,8 +81,8 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'flex items-center gap-1 rounded-control bg-surface ring-1 ring-line',
-        isDragging && 'relative z-10 shadow-pop ring-ink',
+        'flex items-center gap-1 bg-surface',
+        isDragging && 'relative z-10 rounded-control shadow-pop ring-1 ring-ink',
       )}
     >
       <button
