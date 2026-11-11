@@ -38,6 +38,7 @@ lerna-debug.log*
 # Tooling caches / generated
 *.tsbuildinfo
 playwright-report/
+.playwright-mcp/
 test-results/
 coverage/
 e2e/.cache/
