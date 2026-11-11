@@ -387,9 +387,9 @@ export function CriteriaPage() {
         title={t('events.criteria')}
       />
 
-      <div className="flex flex-col gap-6">
-        <ThemesPanel eventId={event.id} />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <CriteriaSection eventId={event.id} requiresConfirm={requiresConfirm} />
+        <ThemesPanel eventId={event.id} />
       </div>
     </Page>
   )

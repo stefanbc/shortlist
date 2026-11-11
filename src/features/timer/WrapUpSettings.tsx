@@ -65,30 +65,32 @@ function WrapUpForm({ event, yellow, red }: { event: EventRow; yellow: number; r
       <CardBody>
         <form onSubmit={(submit) => void handleSubmit(submit)} className="flex flex-col gap-4">
           <p className="text-sm text-ink-muted">{t('timer.wrapUpSettings.description')}</p>
-          {fields.map(({ key, value, set, swatch }) => {
-            const id = `wrap-up-${key}`
-            const fieldError = error?.field === key ? message : undefined
-            return (
-              <Field key={key} id={id} label={t(`timer.wrapUpSettings.${key}Label`)} error={fieldError}>
-                <div className="flex items-center gap-3">
-                  <span aria-hidden className={cn('h-11 w-2 shrink-0 rounded-full', swatch)} />
-                  <Input
-                    id={id}
-                    inputMode="numeric"
-                    autoComplete="off"
-                    value={value}
-                    aria-invalid={Boolean(fieldError)}
-                    aria-describedby={describedBy(id, { error: fieldError })}
-                    onChange={(change) => {
-                      set(change.target.value)
-                      setError(null)
-                    }}
-                    className="numeral max-w-32 text-xl"
-                  />
-                </div>
-              </Field>
-            )
-          })}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {fields.map(({ key, value, set, swatch }) => {
+              const id = `wrap-up-${key}`
+              const fieldError = error?.field === key ? message : undefined
+              return (
+                <Field key={key} id={id} label={t(`timer.wrapUpSettings.${key}Label`)} error={fieldError}>
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden className={cn('h-11 w-2 shrink-0 rounded-full', swatch)} />
+                    <Input
+                      id={id}
+                      inputMode="numeric"
+                      autoComplete="off"
+                      value={value}
+                      aria-invalid={Boolean(fieldError)}
+                      aria-describedby={describedBy(id, { error: fieldError })}
+                      onChange={(change) => {
+                        set(change.target.value)
+                        setError(null)
+                      }}
+                      className="numeral max-w-32 text-xl"
+                    />
+                  </div>
+                </Field>
+              )
+            })}
+          </div>
           <p className="text-sm text-ink-faint">{t('timer.wrapUpSettings.hint')}</p>
           <div>
             <Button type="submit" variant="secondary" loading={pending}>

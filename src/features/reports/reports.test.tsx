@@ -154,13 +154,16 @@ describe('PodiumView (synthetic)', () => {
   ]
   const ranked = rankTeams(teams, criteria, scores)
 
-  it('shows the top 3 team names', () => {
+  it('shows the top 3 team names, and fourth place below the podium', () => {
     render(<PodiumView eventId="ev-1" ranked={ranked} teams={teams.map((tm) => withProject(tm))} />)
 
     expect(screen.getByText('Gold Team')).toBeInTheDocument()
     expect(screen.getByText('Silver Team')).toBeInTheDocument()
     expect(screen.getByText('Bronze Team')).toBeInTheDocument()
-    expect(screen.queryByText('Fourth Team')).not.toBeInTheDocument()
+    // Fourth place is not on the podium; it is listed under it, among the runners-up.
+    const runnersUp = screen.getByRole('list')
+    expect(within(runnersUp).getByText('Fourth Team')).toBeInTheDocument()
+    expect(within(runnersUp).queryByText('Gold Team')).not.toBeInTheDocument()
   })
 
   it('warns about an unresolved top-3 tie and lets the organizer resolve it', async () => {

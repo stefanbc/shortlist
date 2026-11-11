@@ -52,18 +52,26 @@ export function EventFormFields<T extends EventFormFieldsValue>({
           id={`${idPrefix}-starts`}
           label={t('events.startsAtLabel')}
           error={fieldError(errors.startsAt)}
+          labelAs="text"
         >
           <DateTimeField
             id={`${idPrefix}-starts`}
+            label={t('events.startsAtLabel')}
             value={form.startsAt}
             aria-describedby={describedBy(`${idPrefix}-starts`, { error: errors.startsAt })}
             aria-invalid={Boolean(errors.startsAt)}
             onChange={(value) => setForm((prev) => ({ ...prev, startsAt: value }))}
           />
         </Field>
-        <Field id={`${idPrefix}-ends`} label={t('events.endsAtLabel')} error={fieldError(errors.endsAt)}>
+        <Field
+          id={`${idPrefix}-ends`}
+          label={t('events.endsAtLabel')}
+          error={fieldError(errors.endsAt)}
+          labelAs="text"
+        >
           <DateTimeField
             id={`${idPrefix}-ends`}
+            label={t('events.endsAtLabel')}
             value={form.endsAt}
             aria-describedby={describedBy(`${idPrefix}-ends`, { error: errors.endsAt })}
             aria-invalid={Boolean(errors.endsAt)}

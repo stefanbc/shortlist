@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { Page, PageHeader } from '@/components/layout/Page'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/Input'
@@ -32,6 +31,7 @@ import {
 import { cn } from '@/lib/cn'
 import { RegistrationImportDialog } from './RegistrationImportDialog'
 import { TeamForm } from './TeamForm'
+import { safeRepoHref } from '@/domain/repoUrl'
 
 /** An in-flight action that needs the organizer to confirm before it's sent: deleting a
  * team, or flipping its no-show flag. Neither optimistically changes anything beforehand,
@@ -55,6 +55,8 @@ function TeamRow({
   onRequestNoShow(team: TeamWithProject, next: boolean): void
 }) {
   const { t } = useTranslation()
+  // Only a checked address is linked, never the stored value as it is.
+  const repoHref = safeRepoHref(team.project.repoUrl)
 
   return (
     <div className="flex items-start gap-3 py-1.5">
@@ -81,9 +83,9 @@ function TeamRow({
             <span className="text-ink-faint">{t('teams.noProject')}</span>
           )}
           {themeName && <Badge tone="accent">{themeName}</Badge>}
-          {team.project.repoUrl && (
+          {repoHref && (
             <a
-              href={team.project.repoUrl}
+              href={repoHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-accent-ink underline underline-offset-2"
@@ -176,6 +178,9 @@ export function TeamsPage() {
     return haystack.includes(normalizedSearch)
   })
   const paged = paging.of(filteredTeams)
+  const noShowCount = allTeams.filter((team) => team.noShow).length
+  const noRepoCount = allTeams.filter((team) => !team.project.repoUrl).length
+  const noProjectCount = allTeams.filter((team) => !team.project.name).length
 
   function requestDelete(team: TeamWithProject) {
     setPending({ kind: 'delete', team })
@@ -267,11 +272,8 @@ export function TeamsPage() {
         }
       />
 
-      <Card>
-        <CardHeader className="sr-only">
-          <CardTitle>{t('events.teams')}</CardTitle>
-        </CardHeader>
-        <CardBody className="flex flex-col gap-4">
+      <h2 className="sr-only">{t('events.teams')}</h2>
+      <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row">
             <Input
               aria-label={t('teams.searchLabel')}
@@ -283,7 +285,7 @@ export function TeamsPage() {
             <Select
               aria-label={t('teams.themeFilterLabel')}
               value={themeFilter}
-              onChange={(e) => setThemeFilter(e.target.value)}
+              onValueChange={setThemeFilter}
               className="sm:w-56"
             >
               <option value="all">{t('teams.themeFilterAll')}</option>
@@ -294,6 +296,19 @@ export function TeamsPage() {
               ))}
             </Select>
           </div>
+
+          {!teamsLoading && allTeams.length > 0 && (
+            <p className="text-sm text-ink-muted">
+              {[
+                t('teams.summary.count', { count: allTeams.length }),
+                noShowCount > 0 && t('teams.summary.noShow', { count: noShowCount }),
+                noRepoCount > 0 && t('teams.summary.noRepo', { count: noRepoCount }),
+                noProjectCount > 0 && t('teams.summary.noProject', { count: noProjectCount }),
+              ]
+                .filter(Boolean)
+                .join(', ')}
+            </p>
+          )}
 
           {teamsLoading && <Skeleton className="h-40 w-full" />}
 
@@ -344,9 +359,9 @@ export function TeamsPage() {
 
           {!teamsLoading && filteredTeams.length > 0 && hasFilters && (
             <>
-              <ul className="flex flex-col gap-2">
+              <ul className="divide-y divide-line overflow-hidden rounded-card border border-line bg-surface">
                 {paged.visible.map((team) => (
-                  <li key={team.id} className="rounded-control bg-surface px-3 ring-1 ring-line">
+                  <li key={team.id} className="px-4">
                     <TeamRow
                       team={team}
                       themeName={
@@ -363,8 +378,7 @@ export function TeamsPage() {
             </>
           )}
           <LoadMore remaining={teamsLoading ? 0 : paged.remaining} onLoadMore={paged.loadMore} />
-        </CardBody>
-      </Card>
+      </div>
 
       <Sheet open={sheetOpen} onOpenChange={(open) => !open && setEditingTeam(null)}>
         <SheetContent

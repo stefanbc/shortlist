@@ -143,7 +143,7 @@ function CopyEventDialog({
               value={form.sourceId}
               aria-describedby={describedBy('copy-event-source', { error: errors.sourceId })}
               aria-invalid={Boolean(errors.sourceId)}
-              onChange={(e) => setForm({ ...form, sourceId: e.target.value })}
+              onValueChange={(sourceId) => setForm({ ...form, sourceId })}
             >
               <option value="">{t('events.copySourcePlaceholder')}</option>
               {sources.map((source) => (

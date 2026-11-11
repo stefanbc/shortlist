@@ -1,4 +1,4 @@
-import { FileSpreadsheet, Upload } from 'lucide-react'
+import { Download, FileSpreadsheet, Upload } from 'lucide-react'
 import { useId, useRef, useState, type ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/Button'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/Dialog'
 import type { Id } from '@/domain/types'
 import { cn } from '@/lib/cn'
+import { downloadBlob } from '@/lib/download'
 import { useImportRegistrations } from './api'
+import { buildRegistrationTemplateCsv, REGISTRATION_TEMPLATE_FILENAME } from './registrationTemplate'
 import {
   parseRegistrations,
   RegistrationFormatError,
@@ -125,6 +127,25 @@ export function RegistrationImportDialog({
 
           {!parsed && !errorCode && (
             <p className="text-sm text-ink-muted">{t('teams.registrations.privacy')}</p>
+          )}
+
+          {!parsed && (
+            <p className="text-sm text-ink-muted">
+              {t('teams.registrations.templateHint')}{' '}
+              <button
+                type="button"
+                onClick={() =>
+                  downloadBlob(
+                    new Blob([buildRegistrationTemplateCsv()], { type: 'text/csv;charset=utf-8' }),
+                    REGISTRATION_TEMPLATE_FILENAME,
+                  )
+                }
+                className="inline-flex items-center gap-1 rounded-control font-semibold text-accent-ink underline underline-offset-2"
+              >
+                <Download aria-hidden className="size-3.5" />
+                {t('teams.registrations.downloadTemplate')}
+              </button>
+            </p>
           )}
 
           {parsed && (

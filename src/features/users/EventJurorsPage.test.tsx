@@ -7,6 +7,12 @@ import { useEvent } from '@/features/events/api'
 import type { Profile } from '@/stores/session'
 import { useAssignJuror, useEventJurors, useProfiles, useUnassignJuror } from './api'
 import { EventJurorsPage } from './EventJurorsPage'
+import { chooseOption } from '@/test/select'
+
+// Scoring progress and the login-link dialog have their own data; these tests are about
+// assigning and removing jurors.
+vi.mock('./jurorProgress', () => ({ useJurorProgress: () => new Map() }))
+vi.mock('./JurorLinkDialog', () => ({ JurorLinkDialog: () => null }))
 
 vi.mock('@/features/events/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/events/api')>()
@@ -106,7 +112,7 @@ describe('EventJurorsPage', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Assign juror' })[0])
     const dialog = await screen.findByRole('dialog')
-    await user.selectOptions(within(dialog).getByLabelText('Juror'), 'j-sam')
+    await chooseOption(user, within(dialog).getByLabelText('Juror'), 'Sam Sample')
     await user.click(within(dialog).getByRole('button', { name: 'Assign juror' }))
 
     await waitFor(() => expect(assign).toHaveBeenCalledWith({ eventId: 'ev-1', jurorId: 'j-sam' }))

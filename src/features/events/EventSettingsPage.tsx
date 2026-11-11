@@ -24,6 +24,7 @@ import {
 } from './api'
 import { EventFormFields } from './EventFormFields'
 import { EventPhaseBadge } from './EventPhaseBadge'
+import { EventSetupOverview } from './EventSetupOverview'
 
 type StatusDialogContent = { title: string; body: string; tone: 'default' | 'danger' }
 
@@ -184,6 +185,10 @@ export function EventSettingsPage() {
       <PageHeader
         title={t('events.settings')}
       />
+
+      <div className="mb-6">
+        <EventSetupOverview eventId={event.id} />
+      </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <EventDetailsForm key={event.id} event={event} />

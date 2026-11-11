@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EventRow } from './api'
 import { useCopyEvent, useEvents, useSaveEvent } from './api'
 import { EventsPage } from './EventsPage'
+import { chooseOption } from '@/test/select'
 
 vi.mock('./api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api')>()
@@ -56,8 +57,7 @@ describe('EventsPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Copy from event' }))
 
-    const sourceSelect = await screen.findByLabelText('Copy setup from')
-    fireEvent.change(sourceSelect, { target: { value: 'ev-previous' } })
+    await chooseOption(user, await screen.findByLabelText('Copy setup from'), 'Astra Hack 2025')
     await user.type(screen.getByLabelText('Name'), 'Astra Hack 2026')
     fireEvent.change(screen.getByLabelText('Starts'), { target: { value: '2026-02-01T09:00' } })
     fireEvent.change(screen.getByLabelText('Ends'), { target: { value: '2026-02-01T18:00' } })

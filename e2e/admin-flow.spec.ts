@@ -45,8 +45,9 @@ test('setting who is pitching prompts an already-open juror to switch', async ({
     await openJurorLink(jurorPage, seed.jurors[0].linkPath)
     await expect(jurorPage.getByRole('list', { name: 'Your teams' })).toBeVisible()
 
-    await page.getByLabel('Team on stage').selectOption({ label: 'Team Beta' })
-    await expect(page.getByLabel('Team on stage')).toHaveValue(beta.id)
+    await page.getByLabel('Team on stage').click()
+    await page.getByRole('option', { name: 'Team Beta' }).click()
+    await expect(page.getByLabel('Team on stage')).toHaveText('Team Beta')
 
     const dialog = jurorPage.getByRole('alertdialog')
     await expect(dialog).toBeVisible()

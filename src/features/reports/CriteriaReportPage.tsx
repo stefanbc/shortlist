@@ -45,7 +45,7 @@ export function CriteriaReportView({ criteria, stats }: CriteriaReportViewProps)
     }))
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="grid items-start gap-6 xl:grid-cols-2">
       <Card className="overflow-hidden">
         <div className="table-scroll">
           <table className="ruled w-full min-w-max border-separate border-spacing-0 text-[0.95rem]">

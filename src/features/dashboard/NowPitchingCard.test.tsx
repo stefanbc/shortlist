@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useSetNowPitching, type EventRow } from '@/features/events/api'
 import type { TeamWithProject } from '@/features/teams/api'
 import { NowPitchingCard } from './DashboardPage'
+import { chooseOption } from '@/test/select'
 
 vi.mock('@/features/events/api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/events/api')>()
@@ -72,7 +73,7 @@ describe('NowPitchingCard', () => {
     vi.mocked(useSetNowPitching).mockReturnValue({ mutateAsync } as never)
 
     render(<NowPitchingCard event={EVENT} teams={TEAMS} />)
-    await user.selectOptions(screen.getByLabelText('Team on stage'), 't2')
+    await chooseOption(user, screen.getByLabelText('Team on stage'), 'Team Two')
 
     expect(mutateAsync).toHaveBeenCalledWith({ eventId: 'ev-1', teamId: 't2' })
   })

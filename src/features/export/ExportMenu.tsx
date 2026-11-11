@@ -13,6 +13,7 @@ import { cn } from '@/lib/cn'
 import { resolveLang, usePreferences } from '@/stores/preferences'
 import { buildScoresCsv } from './csv'
 import { buildExportData } from './types'
+import { downloadBlob } from '@/lib/download'
 
 type ExportFormat = 'csv' | 'xlsx' | 'pdf'
 
@@ -35,17 +36,6 @@ function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
   return slug || 'event'
-}
-
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  URL.revokeObjectURL(url)
 }
 
 export interface ExportMenuProps {

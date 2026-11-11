@@ -21,7 +21,15 @@
     "goHome": "Go to start",
     "errorTitle": "Something broke on this page",
     "errorBody": "Reload the page. If it keeps happening, your entered scores are still saved on this device.",
-    "showMore": "Show {{count}} more ({{remaining}} left)"
+    "showMore": "Show {{count}} more ({{remaining}} left)",
+    "date": {
+      "day": "day",
+      "month": "month",
+      "year": "year",
+      "hour": "hour",
+      "minute": "minute",
+      "openCalendar": "open calendar"
+    }
   },
   "nav": {
     "main": "Main navigation",
@@ -86,8 +94,9 @@
       "next": "Next team",
       "clear": "Clear",
       "error": "Couldn't update who's pitching. Try again.",
-      "upNext": "Up next: {{team}}",
-      "lastTeam": "Last team in the pitch order."
+      "lastTeam": "Last team in the pitch order.",
+      "position": "Team {{n}} of {{total}}",
+      "upNextLabel": "Up next"
     },
     "progress": {
       "heading": "Scoring progress",
@@ -169,7 +178,17 @@
       "open": "Open",
       "locked": "Locked"
     },
-    "detailsTitle": "Details"
+    "detailsTitle": "Details",
+    "overview": {
+      "heading": "Set-up at a glance",
+      "teams": "Teams",
+      "criteria": "Criteria",
+      "jurors": "Jurors",
+      "themes": "Themes",
+      "teamsMissing": "Add teams",
+      "criteriaMissing": "Add criteria",
+      "jurorsMissing": "Assign jurors"
+    }
   },
   "criteria": {
     "themesHeading": "Themes",
@@ -234,8 +253,8 @@
     "themeLabel": "Theme",
     "themeNone": "No theme",
     "repoUrlLabel": "GitHub repository",
-    "repoUrlHint": "Link to the team's repo (optional).",
-    "repoUrlInvalid": "Enter a valid link starting with http:// or https://.",
+    "repoUrlHint": "The team's repository on GitHub. Jurors can open it while scoring.",
+    "repoUrlInvalid": "Enter a GitHub repository link, like https://github.com/team/project.",
     "viewRepo": "Repository",
     "sheetCreateTitle": "Add team",
     "sheetEditTitle": "Edit team",
@@ -254,7 +273,7 @@
         "missingName": "Skipped: no team name",
         "duplicateInFile": "Skipped: this team answered again later",
         "alreadyInEvent": "Skipped: already in this event",
-        "badRepoUrl": "Repository answer isn't a link, left empty",
+        "badRepoUrl": "Repository answer isn't a GitHub repository link, left empty",
         "descriptionTrimmed": "Description cut to 5,000 characters"
       },
       "errors": {
@@ -267,7 +286,23 @@
       "summaryThemes": "Themes used: {{count}}. Any this event doesn't have yet are added.",
       "memberCount": "members: {{count}}",
       "confirm": "Import teams ({{count}})",
-      "imported": "Teams imported: {{count}}."
+      "imported": "Teams imported: {{count}}.",
+      "templateHint": "Setting up the sheet by hand?",
+      "downloadTemplate": "Download a template"
+    },
+    "repoUrlNotGithub": "This link isn't on github.com. Enter the team's GitHub repository link.",
+    "repoUrlNotRepo": "This is a GitHub page, not a repository. The link should look like https://github.com/team/project.",
+    "repoCheck": {
+      "checking": "Checking with GitHub…",
+      "public": "Public repository found: {{repo}}.",
+      "missing": "GitHub has no public repository at {{repo}}. It may be private or misspelled, and jurors won't be able to open it until it is public.",
+      "unknown": "Couldn't check with GitHub right now. The link is saved as written."
+    },
+    "summary": {
+      "count": "Teams: {{count}}",
+      "noShow": "no-show: {{count}}",
+      "noRepo": "without a repository: {{count}}",
+      "noProject": "without a project name: {{count}}"
     }
   },
   "scoring": {
@@ -352,7 +387,16 @@
     "discardRejected": "Discard unsaved score",
     "noCriteriaTitle": "No criteria yet",
     "noCriteriaBody": "The organizer hasn't set up the scoring criteria for this event yet. Check back once they have.",
-    "breakHeading": "Break"
+    "breakHeading": "Break",
+    "brief": {
+      "heading": "Team and project",
+      "description": "About the project",
+      "members": "Team members ({{count}})",
+      "openRepo": "Open the repository",
+      "showAll": "Show the whole description",
+      "showLess": "Show less",
+      "empty": "The organizer hasn't added details for this team yet."
+    }
   },
   "reports": {
     "podium": "Podium",
@@ -372,7 +416,8 @@
       "emptyTitle": "Not enough scores yet",
       "emptyBody": "The podium appears once at least one team has a final score.",
       "replay": "Replay reveal",
-      "tieWarning": "{{count}} teams are tied for place {{rank}}. Set the order before you announce it."
+      "tieWarning": "{{count}} teams are tied for place {{rank}}. Set the order before you announce it.",
+      "runnersUp": "Just off the podium"
     },
     "rankingPage": {
       "tableCaption": "Every team's final score and rank, in order.",
@@ -480,7 +525,12 @@
     "confirmRevokeBody": "{{name}} won't be able to sign in with it anymore. You can generate a new one anytime.",
     "linkRevokeError": "Couldn't revoke the link. Try again.",
     "linkRevokedHint": "The link for {{name}} is revoked. Generate a new one when they need it.",
-    "qrTitle": "QR code for the login link for {{name}}"
+    "qrTitle": "QR code for the login link for {{name}}",
+    "filterAll": "Everyone",
+    "filterAdmins": "Admins",
+    "filterJurors": "Jurors",
+    "filterInactive": "Inactive",
+    "adminAccess": "Manages every event"
   },
   "eventJurors": {
     "heading": "Assigned jurors",
@@ -497,7 +547,10 @@
     "remove": "Remove from event",
     "confirmRemoveTitle": "Remove {{name}} from this event?",
     "confirmRemoveBody": "Scores {{name}} already entered stay counted in the results — this only stops them from judging the event from now on.",
-    "removeError": "Couldn't remove the juror. Try again."
+    "removeError": "Couldn't remove the juror. Try again.",
+    "progress": "{{complete}} of {{total}} teams scored",
+    "progressStarted": "in progress: {{count}}",
+    "summary": "Jurors assigned: {{count}}. Finished scoring: {{finished}}."
   },
   "import": {
     "title": "Import from spreadsheet",
@@ -547,7 +600,25 @@
     "importButton": "Import event",
     "importing": "Importing…",
     "success": "{{name}} imported.",
-    "registrationsNote": "This brings in a finished evaluation workbook as a new event. To add teams from the registration form, open the event's Teams tab and choose Import registrations."
+    "registrationsNote": "This brings in a finished evaluation workbook as a new event. To add teams from the registration form, open the event's Teams tab and choose Import registrations.",
+    "templateHint": "Not sure about the layout?",
+    "downloadTemplate": "Download an example workbook",
+    "templateError": "Couldn't build the example workbook. Try again.",
+    "stepsHeading": "How it works",
+    "steps": {
+      "upload": {
+        "title": "Upload the workbook",
+        "body": "The evaluation workbook as .xlsx, one sheet per team."
+      },
+      "review": {
+        "title": "Review what was read",
+        "body": "Themes, criteria, teams, jurors and scores are shown before anything is saved, with a check against the sheet's own results."
+      },
+      "import": {
+        "title": "Import as a new event",
+        "body": "The event is created locked, with its scores. Jurors get placeholder e-mail addresses you can replace under People."
+      }
+    }
   },
   "export": {
     "open": "Export",

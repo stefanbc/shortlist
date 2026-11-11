@@ -6,6 +6,9 @@ import type { EventRow } from './api'
 import { useEvent, useSaveEvent, useSetEventStatus } from './api'
 import { EventSettingsPage } from './EventSettingsPage'
 
+// The set-up overview loads teams, criteria, themes and jurors; these tests are about the forms.
+vi.mock('./EventSetupOverview', () => ({ EventSetupOverview: () => null }))
+
 vi.mock('./api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api')>()
   return {
