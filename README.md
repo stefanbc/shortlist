@@ -154,8 +154,18 @@ headers: `X-Frame-Options: DENY` and a matching `Content-Security-Policy: frame-
 'none'` (the app is never meant to be framed), `Referrer-Policy: no-referrer` (so the
 `/j/:token` URL — a bearer credential — never leaks via the `Referer` header to whatever a
 juror taps next), and a `connect-src` scoped to Supabase's hosted domain (`*.supabase.co`,
-including `wss:` for Realtime). The CSP was verified against a production build served
-locally (`npm run build && vite preview`, with the header applied) — script/style need
-`'unsafe-inline'` for `index.html`'s small inline dark-mode script and Tailwind's injected
-styles. If you move to a different (self-hosted) Supabase instance, update `connect-src` in
+including `wss:` for Realtime). `script-src` needs `'unsafe-inline'` for `index.html`'s small
+inline dark-mode script and `'wasm-unsafe-eval'` for the PDF export (react-pdf's layout
+engine compiles WebAssembly, which it loads from an inlined `data:` URL — hence `data:` in
+`connect-src`); `style-src` needs `'unsafe-inline'` for injected styles. Plain `eval` stays
+blocked.
+
+What was verified: a production build (`npm run build`) served by `scripts/serve-dist.mjs`,
+which applies `vercel.json`'s rewrite and headers verbatim except that `connect-src` also
+allows the local Supabase origin the build talks to. Against that, in headless Chromium:
+admin sign-in, the dashboard, and the ranking page's CSV, Excel and PDF exports all worked
+with no CSP violations in the console (without `'wasm-unsafe-eval'` the PDF export fails
+with a WebAssembly CompileError). Not verified: the headers as actually served by Vercel, or
+browsers other than Chromium — worth a quick PDF export on the real deployment.
+If you move to a different (self-hosted) Supabase instance, update `connect-src` in
 `vercel.json` to that host.
